@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Assignments | Admin</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+.assign-admin-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px; }
+.assign-admin-header { display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px; }
+.assign-admin-title { font-size:.9rem;font-weight:700; }
+.assign-admin-meta { font-size:.74rem;color:var(--muted);margin-bottom:10px; }
+.submissions-table { width:100%;border-collapse:collapse;margin-top:12px; }
+.submissions-table th, .submissions-table td { padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:.8rem; }
+.submissions-table th { font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);background:var(--bg); }
+.grade-input { width:60px;padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82rem;text-align:center; }
+.grade-input:focus { outline:none;border-color:var(--primary); }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Admin</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Overview</div>
+    <a href="/admin/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <div class="nav-section">Management</div>
+    <a href="/admin/students.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</a>
+    <a href="/admin/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
+    <a href="/admin/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/admin/assignments.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <a href="/admin/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">A</div>
+      <div class="user-info"><div class="user-name" id="u-name">Admin</div><div class="user-role">Administrator</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Assignments</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="openModal()">+ New Assignment</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <div id="assign-body">
+      <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:10px"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New Assignment Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title">New Assignment</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" class="form-input" id="a-title" placeholder="Assignment title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-input" id="a-desc" rows="3" placeholder="Instructions for students…" style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Course *</label>
+        <select class="form-input" id="a-course"><option value="">Select course…</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="datetime-local" class="form-input" id="a-due">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Score</label>
+          <input type="number" class="form-input" id="a-score" placeholder="100" min="1">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAssignment()">Create Assignment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grade Modal -->
+<div class="modal-overlay" id="grade-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">Grade Submission</div>
+      <button class="modal-close" onclick="closeGradeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="grade-sub-id">
+      <div class="form-group">
+        <label class="form-label">Score</label>
+        <input type="number" class="form-input" id="grade-score" placeholder="e.g. 85" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Feedback (optional)</label>
+        <textarea class="form-input" id="grade-feedback" rows="3" placeholder="Comments for the student…" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeGradeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitGrade()">Save Grade</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let assignments = [];
+let subsMap = {};
+
+(async () => {
+  const profile = await requireAuth('admin');
+  if (!profile) return;
+
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+
+  const { data: courses } = await sb.from('courses').select('id, title').eq('is_active', true).order('title');
+  const sel = document.getElementById('a-course');
+  (courses || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.title;
+    sel.appendChild(o);
+  });
+
+  await loadAssignments();
+})();
+
+async function loadAssignments() {
+  const { data } = await sb.from('assignments').select('id, title, description, due_at, max_score, course_id, courses(title)').order('created_at', { ascending: false });
+  assignments = data || [];
+
+  if (assignments.length > 0) {
+    const { data: subs } = await sb.from('assignment_submissions').select('id, assignment_id, student_id, file_url, score, feedback, submitted_at, profiles(full_name)').in('assignment_id', assignments.map(a => a.id)).order('submitted_at', { ascending: false });
+    subsMap = {};
+    (subs || []).forEach(s => {
+      if (!subsMap[s.assignment_id]) subsMap[s.assignment_id] = [];
+      subsMap[s.assignment_id].push(s);
+    });
+  }
+
+  renderAssignments();
+}
+
+function renderAssignments() {
+  const body = document.getElementById('assign-body');
+  if (!assignments.length) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-title">No Assignments</div><div class="empty-sub">Create assignments for your students.</div></div>';
+    return;
+  }
+
+  body.innerHTML = assignments.map(a => {
+    const subs = subsMap[a.id] || [];
+    const pending = subs.filter(s => s.score === null).length;
+
+    return `
+      <div class="assign-admin-card">
+        <div class="assign-admin-header">
+          <div>
+            <div class="assign-admin-title">${escHtml(a.title)} ${pending ? `<span class="badge badge-warning" style="font-size:.62rem">${pending} pending</span>` : ''}</div>
+            <div class="assign-admin-meta">${escHtml(a.courses?.title || '—')}${a.due_at ? ' · Due ' + fmtDate(a.due_at) : ''}${a.max_score ? ' · Max: ' + a.max_score : ''} · ${subs.length} submission${subs.length!==1?'s':''}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteAssignment('${a.id}')">Delete</button>
+        </div>
+
+        ${subs.length > 0 ? `
+          <div style="overflow-x:auto">
+            <table class="submissions-table">
+              <thead><tr><th>Student</th><th>Submitted</th><th>File</th><th>Score</th><th></th></tr></thead>
+              <tbody>
+                ${subs.map(s => `
+                  <tr>
+                    <td>${escHtml(s.profiles?.full_name || 'Unknown')}</td>
+                    <td>${fmtDate(s.submitted_at)}</td>
+                    <td><a href="${escHtml(s.file_url)}" target="_blank" class="btn btn-ghost btn-sm" style="padding:2px 8px">View</a></td>
+                    <td>${s.score !== null ? s.score + '/' + (a.max_score || '?') : '<span style="color:var(--muted)">—</span>'}</td>
+                    <td><button class="btn btn-outline btn-sm" onclick="openGradeModal('${s.id}', ${s.score !== null ? s.score : 'null'}, '${escHtml(s.feedback||'')}')">Grade</button></td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>` : '<div style="font-size:.8rem;color:var(--muted)">No submissions yet.</div>'}
+      </div>`;
+  }).join('');
+}
+
+function openModal() { document.getElementById('modal-overlay').classList.add('show'); }
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+async function saveAssignment() {
+  const title  = document.getElementById('a-title').value.trim();
+  const courseId = document.getElementById('a-course').value;
+  if (!title || !courseId) { showToast('Title and course are required.', 'warning'); return; }
+
+  const payload = {
+    title,
+    description: document.getElementById('a-desc').value.trim() || null,
+    course_id: courseId,
+    due_at: document.getElementById('a-due').value || null,
+    max_score: parseInt(document.getElementById('a-score').value) || null,
+  };
+
+  const { error } = await sb.from('assignments').insert(payload);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeModal();
+  await loadAssignments();
+  showToast('Assignment created!', 'success');
+}
+
+async function deleteAssignment(id) {
+  if (!confirm('Delete this assignment and all submissions?')) return;
+  await sb.from('assignment_submissions').delete().eq('assignment_id', id);
+  const { error } = await sb.from('assignments').delete().eq('id', id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  await loadAssignments();
+  showToast('Deleted.', 'success');
+}
+
+function openGradeModal(subId, score, feedback) {
+  document.getElementById('grade-sub-id').value       = subId;
+  document.getElementById('grade-score').value        = score !== null ? score : '';
+  document.getElementById('grade-feedback').value     = feedback || '';
+  document.getElementById('grade-modal').classList.add('show');
+}
+function closeGradeModal() { document.getElementById('grade-modal').classList.remove('show'); }
+
+async function submitGrade() {
+  const subId    = document.getElementById('grade-sub-id').value;
+  const score    = parseInt(document.getElementById('grade-score').value);
+  const feedback = document.getElementById('grade-feedback').value.trim() || null;
+  if (isNaN(score)) { showToast('Please enter a valid score.', 'warning'); return; }
+
+  const { error } = await sb.from('assignment_submissions').update({ score, feedback }).eq('id', subId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeGradeModal();
+  await loadAssignments();
+  showToast('Grade saved!', 'success');
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

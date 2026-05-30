@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Courses | Admin</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+.course-row { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px; }
+.course-dot { width:12px;height:12px;border-radius:50%;flex-shrink:0; }
+.course-info { flex:1;min-width:0; }
+.course-title-row { font-size:.9rem;font-weight:700; }
+.course-sub { font-size:.75rem;color:var(--muted);margin-top:2px; }
+.course-actions { display:flex;gap:6px;align-items:center;flex-wrap:wrap; }
+.module-block { background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden; }
+.module-header { display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none; }
+.module-header:hover { background:rgba(26,86,219,.04); }
+.module-title-text { flex:1;font-size:.84rem;font-weight:700; }
+.module-lessons { padding:0 14px 10px; }
+.lesson-row-admin { display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border); }
+.lesson-row-admin:last-child { border-bottom:none; }
+.lesson-title-admin { flex:1;font-size:.82rem;font-weight:500; }
+.yt-input { font-family:monospace;font-size:.8rem; }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Admin</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Overview</div>
+    <a href="/admin/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <div class="nav-section">Management</div>
+    <a href="/admin/students.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</a>
+    <a href="/admin/courses.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
+    <a href="/admin/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/admin/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <a href="/admin/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">A</div>
+      <div class="user-info"><div class="user-name" id="u-name">Admin</div><div class="user-role">Administrator</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Courses</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="openCourseModal()">+ New Course</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <div id="courses-body">
+      <div class="skeleton" style="height:70px;border-radius:12px;margin-bottom:10px"></div>
+      <div class="skeleton" style="height:70px;border-radius:12px"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New Course Modal -->
+<div class="modal-overlay" id="course-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title" id="course-modal-title">New Course</div>
+      <button class="modal-close" onclick="closeCourseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="course-modal-id">
+      <div class="form-group">
+        <label class="form-label">Course Title *</label>
+        <input type="text" class="form-input" id="course-title" placeholder="e.g. SAT Biology">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subject</label>
+        <input type="text" class="form-input" id="course-subject" placeholder="e.g. Biology, Chemistry">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-input" id="course-desc" rows="3" placeholder="Brief course description"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCourseModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCourse()">Save Course</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Module Modal -->
+<div class="modal-overlay" id="module-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">Add Module</div>
+      <button class="modal-close" onclick="closeModuleModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="module-course-id">
+      <div class="form-group">
+        <label class="form-label">Module Title *</label>
+        <input type="text" class="form-input" id="module-title" placeholder="e.g. Unit 1: Cell Biology">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModuleModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModule()">Add Module</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Lesson Modal -->
+<div class="modal-overlay" id="lesson-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Add Lesson</div>
+      <button class="modal-close" onclick="closeLessonModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="lesson-module-id">
+      <div class="form-group">
+        <label class="form-label">Lesson Title *</label>
+        <input type="text" class="form-input" id="lesson-title" placeholder="e.g. Cell Membrane Structure">
+      </div>
+      <div class="form-group">
+        <label class="form-label">YouTube Video ID</label>
+        <input type="text" class="form-input yt-input" id="lesson-yt" placeholder="e.g. dQw4w9WgXcQ">
+        <div class="form-hint">Paste just the ID from the YouTube URL (after v=)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duration (minutes)</label>
+        <input type="number" class="form-input" id="lesson-dur" placeholder="45" min="1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeLessonModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLesson()">Add Lesson</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let courses = [];
+let modulesMap = {};
+const COLORS = ['#1a56db','#7c3aed','#dc2626','#059669','#d97706','#0891b2'];
+
+(async () => {
+  const profile = await requireAuth('admin');
+  if (!profile) return;
+
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+
+  await loadCourses();
+})();
+
+async function loadCourses() {
+  const { data } = await sb.from('courses').select('id, title, subject, description, is_active').order('created_at', { ascending: false });
+  courses = data || [];
+
+  if (courses.length > 0) {
+    const { data: mods } = await sb.from('modules').select('id, title, course_id, order_index, lessons(id, title, youtube_id, duration_min, order_index)').in('course_id', courses.map(c => c.id)).order('order_index');
+    modulesMap = {};
+    (mods || []).forEach(m => {
+      if (!modulesMap[m.course_id]) modulesMap[m.course_id] = [];
+      modulesMap[m.course_id].push(m);
+    });
+  }
+
+  renderCourses();
+}
+
+function renderCourses() {
+  const body = document.getElementById('courses-body');
+  if (!courses.length) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-title">No Courses</div><div class="empty-sub">Create your first course to get started.</div></div>';
+    return;
+  }
+
+  body.innerHTML = courses.map((c, idx) => {
+    const color = COLORS[idx % COLORS.length];
+    const mods  = modulesMap[c.id] || [];
+    const totalLessons = mods.reduce((s, m) => s + (m.lessons?.length || 0), 0);
+
+    return `
+      <div class="course-row">
+        <div class="course-dot" style="background:${color}"></div>
+        <div class="course-info">
+          <div class="course-title-row">${escHtml(c.title)} <span class="badge ${c.is_active ? 'badge-success' : 'badge-danger'}" style="font-size:.65rem">${c.is_active ? 'Active' : 'Hidden'}</span></div>
+          <div class="course-sub">${escHtml(c.subject || '')} · ${mods.length} module${mods.length!==1?'s':''} · ${totalLessons} lesson${totalLessons!==1?'s':''}</div>
+        </div>
+        <div class="course-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleCourseDetails('${c.id}')">Manage</button>
+          <button class="btn btn-ghost btn-sm" onclick="editCourse('${c.id}')">Edit</button>
+          <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="toggleCourseActive('${c.id}', ${c.is_active})">${c.is_active ? 'Hide' : 'Show'}</button>
+        </div>
+      </div>
+      <div id="details-${c.id}" style="display:none;padding:0 0 16px 26px">
+        ${mods.map(m => `
+          <div class="module-block">
+            <div class="module-header" onclick="toggleMod('mod-${m.id}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--muted)"><polyline points="9 18 15 12 9 6"/></svg>
+              <div class="module-title-text">${escHtml(m.title)}</div>
+              <span style="font-size:.72rem;color:var(--muted)">${(m.lessons||[]).length} lessons</span>
+            </div>
+            <div id="mod-${m.id}" style="display:none">
+              <div class="module-lessons">
+                ${(m.lessons||[]).sort((a,b)=>a.order_index-b.order_index).map(l => `
+                  <div class="lesson-row-admin">
+                    <div class="lesson-title-admin">${escHtml(l.title)}</div>
+                    ${l.youtube_id ? `<span class="badge badge-success" style="font-size:.62rem">Video</span>` : `<span class="badge" style="font-size:.62rem">No video</span>`}
+                    <button class="btn btn-ghost btn-sm" style="color:#dc2626;padding:2px 6px" onclick="deleteLesson('${l.id}','${c.id}')">✕</button>
+                  </div>`).join('')}
+                <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="openLessonModal('${m.id}')">+ Add Lesson</button>
+              </div>
+            </div>
+          </div>`).join('')}
+        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="openModuleModal('${c.id}')">+ Add Module</button>
+      </div>`;
+  }).join('');
+}
+
+function toggleCourseDetails(id) {
+  const el = document.getElementById('details-' + id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleMod(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function openCourseModal() {
+  document.getElementById('course-modal-id').value = '';
+  document.getElementById('course-modal-title').textContent = 'New Course';
+  document.getElementById('course-title').value = '';
+  document.getElementById('course-subject').value = '';
+  document.getElementById('course-desc').value = '';
+  document.getElementById('course-modal').classList.add('show');
+}
+
+function editCourse(id) {
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('course-modal-id').value   = c.id;
+  document.getElementById('course-modal-title').textContent = 'Edit Course';
+  document.getElementById('course-title').value   = c.title;
+  document.getElementById('course-subject').value = c.subject || '';
+  document.getElementById('course-desc').value    = c.description || '';
+  document.getElementById('course-modal').classList.add('show');
+}
+
+function closeCourseModal() { document.getElementById('course-modal').classList.remove('show'); }
+
+async function saveCourse() {
+  const title = document.getElementById('course-title').value.trim();
+  if (!title) { showToast('Title is required.', 'warning'); return; }
+  const payload = { title, subject: document.getElementById('course-subject').value.trim() || null, description: document.getElementById('course-desc').value.trim() || null };
+  const id = document.getElementById('course-modal-id').value;
+
+  let error;
+  if (id) {
+    ({ error } = await sb.from('courses').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('courses').insert({ ...payload, is_active: true }));
+  }
+
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeCourseModal();
+  await loadCourses();
+  showToast(id ? 'Course updated.' : 'Course created!', 'success');
+}
+
+async function toggleCourseActive(id, current) {
+  const { error } = await sb.from('courses').update({ is_active: !current }).eq('id', id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  await loadCourses();
+}
+
+function openModuleModal(courseId) {
+  document.getElementById('module-course-id').value = courseId;
+  document.getElementById('module-title').value = '';
+  document.getElementById('module-modal').classList.add('show');
+}
+
+function closeModuleModal() { document.getElementById('module-modal').classList.remove('show'); }
+
+async function saveModule() {
+  const title    = document.getElementById('module-title').value.trim();
+  const courseId = document.getElementById('module-course-id').value;
+  if (!title) { showToast('Title is required.', 'warning'); return; }
+  const existingMods = modulesMap[courseId] || [];
+  const { error } = await sb.from('modules').insert({ course_id: courseId, title, order_index: existingMods.length });
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeModuleModal();
+  await loadCourses();
+  showToast('Module added!', 'success');
+  document.getElementById('details-' + courseId).style.display = 'block';
+}
+
+function openLessonModal(moduleId) {
+  document.getElementById('lesson-module-id').value = moduleId;
+  document.getElementById('lesson-title').value = '';
+  document.getElementById('lesson-yt').value = '';
+  document.getElementById('lesson-dur').value = '';
+  document.getElementById('lesson-modal').classList.add('show');
+}
+
+function closeLessonModal() { document.getElementById('lesson-modal').classList.remove('show'); }
+
+async function saveLesson() {
+  const title    = document.getElementById('lesson-title').value.trim();
+  const moduleId = document.getElementById('lesson-module-id').value;
+  const ytId     = document.getElementById('lesson-yt').value.trim() || null;
+  const dur      = parseInt(document.getElementById('lesson-dur').value) || null;
+  if (!title) { showToast('Title is required.', 'warning'); return; }
+
+  const courseId = Object.entries(modulesMap).find(([, mods]) => mods.some(m => m.id === moduleId))?.[0];
+  const mods = modulesMap[courseId] || [];
+  const mod  = mods.find(m => m.id === moduleId);
+  const lessonCount = mod?.lessons?.length || 0;
+
+  const { error } = await sb.from('lessons').insert({ module_id: moduleId, title, youtube_id: ytId, duration_min: dur, order_index: lessonCount });
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeLessonModal();
+  await loadCourses();
+  showToast('Lesson added!', 'success');
+  if (courseId) document.getElementById('details-' + courseId).style.display = 'block';
+  document.getElementById('mod-' + moduleId).style.display = 'block';
+}
+
+async function deleteLesson(lessonId, courseId) {
+  if (!confirm('Delete this lesson?')) return;
+  const { error } = await sb.from('lessons').delete().eq('id', lessonId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  await loadCourses();
+  document.getElementById('details-' + courseId).style.display = 'block';
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

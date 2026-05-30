@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dashboard | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="b-dot"></div>
+    Dr Mai <span>Portal</span>
+  </div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Main</div>
+    <a href="/portal/" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Dashboard
+    </a>
+    <a href="/portal/courses.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      My Courses
+    </a>
+    <a href="/portal/lessons.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+      Recordings
+    </a>
+    <a href="/portal/pdfs.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Lesson PDFs
+    </a>
+    <div class="nav-section">Practice</div>
+    <a href="/portal/tests.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="11" y2="16"/></svg>
+      Practice Tests
+    </a>
+    <a href="/portal/assignments.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+      Assignments
+    </a>
+    <div class="nav-section">More</div>
+    <a href="/portal/announcements.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Announcements
+    </a>
+    <a href="/portal/progress.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      My Progress
+    </a>
+    <a href="/portal/settings.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">…</div>
+      <div class="user-info">
+        <div class="user-name" id="u-name">Loading…</div>
+        <div class="user-role">Student</div>
+      </div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="page-title">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <a href="/portal/announcements.html" class="btn btn-ghost btn-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <main class="content" id="content">
+
+    <!-- Welcome banner -->
+    <div class="welcome-banner">
+      <div>
+        <p class="welcome-sub">Good to see you</p>
+        <h1 class="welcome-name" id="wname">…</h1>
+      </div>
+      <a href="/portal/courses.html" class="btn btn-white btn-sm">View All Courses</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#eff6ff">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <div class="stat-n" id="s-courses">—</div>
+        <div class="stat-l">Enrolled Courses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f0fdf4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        </div>
+        <div class="stat-n" id="s-lessons">—</div>
+        <div class="stat-l">Lessons Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#faf5ff">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        </div>
+        <div class="stat-n" id="s-score">—</div>
+        <div class="stat-l">Avg Test Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fff7ed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        </div>
+        <div class="stat-n" id="s-assign">—</div>
+        <div class="stat-l">Pending Assignments</div>
+      </div>
+    </div>
+
+    <!-- Courses + Announcements -->
+    <div class="g2">
+      <!-- Courses -->
+      <div>
+        <div class="card mb24">
+          <div class="card-header">
+            <span class="card-title">My Courses</span>
+            <a href="/portal/courses.html" class="btn btn-ghost btn-xs">View all</a>
+          </div>
+          <div class="card-body" id="courses-list">
+            <div class="skel" style="height:90px;margin-bottom:10px"></div>
+            <div class="skel" style="height:90px;margin-bottom:10px"></div>
+            <div class="skel" style="height:90px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcements -->
+      <div>
+        <div class="card mb24">
+          <div class="card-header">
+            <span class="card-title">Announcements</span>
+            <a href="/portal/announcements.html" class="btn btn-ghost btn-xs">View all</a>
+          </div>
+          <div class="card-body">
+            <div class="ann-list" id="ann-list">
+              <div class="skel" style="height:60px;margin-bottom:10px"></div>
+              <div class="skel" style="height:60px;margin-bottom:10px"></div>
+              <div class="skel" style="height:60px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile = null;
+
+(async () => {
+  profile = await requireAuth('student');
+  if (!profile) return;
+  setUser(profile);
+  await Promise.all([loadStats(), loadCourses(), loadAnnouncements()]);
+})();
+
+function setUser(p) {
+  document.getElementById('u-name').textContent = p.full_name;
+  document.getElementById('u-av').textContent   = initials(p.full_name);
+  document.getElementById('wname').textContent  = p.full_name.split(' ')[0];
+}
+
+async function loadStats() {
+  const uid = profile.id;
+
+  const [{ count: courses }, { count: lessons }, { data: attempts }, { count: pending }] = await Promise.all([
+    sb.from('enrollments').select('*', { count: 'exact', head: true }).eq('student_id', uid),
+    sb.from('lesson_completions').select('*', { count: 'exact', head: true }).eq('student_id', uid),
+    sb.from('test_attempts').select('percentage').eq('student_id', uid).not('percentage', 'is', null),
+    sb.from('assignments')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .not('id', 'in',
+        `(SELECT assignment_id FROM assignment_submissions WHERE student_id='${uid}')`
+      ),
+  ]);
+
+  const avg = attempts?.length
+    ? Math.round(attempts.reduce((s, a) => s + parseFloat(a.percentage), 0) / attempts.length)
+    : null;
+
+  document.getElementById('s-courses').textContent = courses ?? 0;
+  document.getElementById('s-lessons').textContent = lessons ?? 0;
+  document.getElementById('s-score').textContent   = avg != null ? `${avg}%` : '—';
+  document.getElementById('s-assign').textContent  = pending ?? 0;
+}
+
+async function loadCourses() {
+  const { data: enrollments } = await sb
+    .from('enrollments')
+    .select('course_id, enrolled_at, courses(id,title,subject)')
+    .eq('student_id', profile.id)
+    .order('enrolled_at', { ascending: false })
+    .limit(4);
+
+  const el = document.getElementById('courses-list');
+
+  if (!enrollments?.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <h3>No courses yet</h3><p>Your instructor will assign courses to you.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = enrollments.map((e, i) => {
+    const c = e.courses;
+    return `<a href="/portal/courses.html" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit" ${i === enrollments.length - 1 ? 'style="border-bottom:none;padding-bottom:0"' : ''}>
+      <div style="width:44px;height:44px;border-radius:10px;flex-shrink:0;background:${courseGradient(i)};display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" style="width:20px;height:20px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.83rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(c.title)}</div>
+        <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${escHtml(c.subject || 'Biology')}</div>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>`;
+  }).join('');
+}
+
+async function loadAnnouncements() {
+  const { data: anns } = await sb
+    .from('announcements')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const el = document.getElementById('ann-list');
+  if (!anns?.length) {
+    el.innerHTML = '<div class="empty-state"><p>No announcements yet.</p></div>';
+    return;
+  }
+  el.innerHTML = anns.map(a => `
+    <div class="ann-item">
+      <div class="ann-dot ${a.priority}"></div>
+      <div>
+        <div class="ann-title-text">${escHtml(a.title)}</div>
+        <div class="ann-body-text">${escHtml(a.body.substring(0, 100))}${a.body.length > 100 ? '…' : ''}</div>
+        <div class="ann-meta">${timeAgo(a.created_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

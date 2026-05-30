@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Dashboard | Dr Mai Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Admin</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Overview</div>
+    <a href="/admin/" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-section">Students</div>
+    <a href="/admin/students.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Manage Students
+    </a>
+    <div class="nav-section">Content</div>
+    <a href="/admin/courses.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Courses
+    </a>
+    <a href="/admin/tests.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+      Practice Tests
+    </a>
+    <a href="/admin/assignments.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+      Assignments
+    </a>
+    <div class="nav-section">Communication</div>
+    <a href="/admin/announcements.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Announcements
+    </a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">A</div>
+      <div class="user-info">
+        <div class="user-name" id="u-name">Admin</div>
+        <div class="user-role">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="page-title">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <a href="/admin/students.html" class="btn btn-primary btn-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Student
+      </a>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- Stats -->
+    <div class="stats-grid mb24">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#eff6ff">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="stat-n" id="s-students">—</div>
+        <div class="stat-l">Total Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f0fdf4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <div class="stat-n" id="s-courses">—</div>
+        <div class="stat-l">Active Courses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#faf5ff">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        </div>
+        <div class="stat-n" id="s-attempts">—</div>
+        <div class="stat-l">Tests Taken</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fff7ed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        </div>
+        <div class="stat-n" id="s-pending">—</div>
+        <div class="stat-l">Pending Grades</div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="card mb24">
+      <div class="card-header"><span class="card-title">Quick Actions</span></div>
+      <div class="card-body">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="/admin/students.html?action=new" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Add Student
+          </a>
+          <a href="/admin/courses.html?action=new" class="btn btn-outline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            New Course
+          </a>
+          <a href="/admin/announcements.html?action=new" class="btn btn-outline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Send Announcement
+          </a>
+          <a href="/admin/tests.html?action=new" class="btn btn-outline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+            New Practice Test
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <!-- Recent students -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Recent Students</span>
+          <a href="/admin/students.html" class="btn btn-ghost btn-xs">View all</a>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>Name</th><th>Enrolled</th><th>Status</th></tr>
+            </thead>
+            <tbody id="students-tbody">
+              <tr><td colspan="3"><div class="skel" style="height:14px;width:80%"></div></td></tr>
+              <tr><td colspan="3"><div class="skel" style="height:14px;width:65%"></div></td></tr>
+              <tr><td colspan="3"><div class="skel" style="height:14px;width:73%"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent test attempts -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Recent Test Attempts</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>Student</th><th>Score</th><th>When</th></tr>
+            </thead>
+            <tbody id="attempts-tbody">
+              <tr><td colspan="3"><div class="skel" style="height:14px;width:80%"></div></td></tr>
+              <tr><td colspan="3"><div class="skel" style="height:14px;width:60%"></div></td></tr>
+              <tr><td colspan="3"><div class="skel" style="height:14px;width:70%"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- Add Student Modal -->
+<div class="modal-backdrop" id="new-student-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head">
+      <span class="modal-title">Add New Student</span>
+      <button class="modal-close" onclick="closeModal('new-student-modal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-alert" class="alert" style="display:none;margin-bottom:16px"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-input" id="ns-name" placeholder="Sara Ahmed">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email *</label>
+          <input type="email" class="form-input" id="ns-email" placeholder="sara@example.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone (for WhatsApp)</label>
+        <input type="tel" class="form-input" id="ns-phone" placeholder="+20 1xx xxx xxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Courses</label>
+        <div id="course-checkboxes" style="display:flex;flex-direction:column;gap:8px;max-height:160px;overflow-y:auto;padding:2px">
+          <div style="font-size:.8rem;color:var(--muted)">Loading courses…</div>
+        </div>
+      </div>
+
+      <!-- Credentials box (shown after creation) -->
+      <div id="creds-box" style="display:none">
+        <div class="alert alert-success" style="margin-bottom:12px">
+          Student account created successfully!
+        </div>
+        <div style="background:#f8f9fa;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px">Login Credentials</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:.8rem;color:var(--muted)">Email</span>
+            <span style="font-size:.8rem;font-weight:700" id="cred-email">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:.8rem;color:var(--muted)">Password</span>
+            <span style="font-size:.8rem;font-weight:700;font-family:monospace" id="cred-pw">—</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-success btn-sm" onclick="sendWhatsApp()">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.852L0 24l6.278-1.493A11.96 11.96 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.004-1.369l-.36-.214-3.727.886.924-3.638-.234-.374A9.818 9.818 0 1 1 12 21.818z"/></svg>
+            Send via WhatsApp
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="copyCredentials()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Credentials
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot" id="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('new-student-modal')">Cancel</button>
+      <button class="btn btn-primary" id="create-btn" onclick="createStudent()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile = null;
+let newStudentData = null;
+let allCourses = [];
+
+(async () => {
+  profile = await requireAuth('admin');
+  if (!profile) return;
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+  await Promise.all([loadStats(), loadRecentStudents(), loadRecentAttempts(), loadCourses()]);
+
+  if (new URLSearchParams(location.search).get('action') === 'new') openModal('new-student-modal');
+})();
+
+async function loadStats() {
+  const [
+    { count: students },
+    { count: courses },
+    { count: attempts },
+    { count: pending }
+  ] = await Promise.all([
+    sb.from('profiles').select('*', { count:'exact', head:true }).eq('role','student').eq('is_active', true),
+    sb.from('courses').select('*', { count:'exact', head:true }).eq('is_active', true),
+    sb.from('test_attempts').select('*', { count:'exact', head:true }).not('completed_at','is',null),
+    sb.from('assignment_submissions').select('*', { count:'exact', head:true }).is('score', null),
+  ]);
+  document.getElementById('s-students').textContent = students ?? 0;
+  document.getElementById('s-courses').textContent  = courses ?? 0;
+  document.getElementById('s-attempts').textContent = attempts ?? 0;
+  document.getElementById('s-pending').textContent  = pending ?? 0;
+}
+
+async function loadRecentStudents() {
+  const { data } = await sb.from('profiles')
+    .select('full_name, created_at, is_active')
+    .eq('role', 'student')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const tbody = document.getElementById('students-tbody');
+  if (!data?.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);font-size:.8rem">No students yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td style="font-weight:600">${escHtml(s.full_name)}</td>
+      <td style="color:var(--muted)">${fmtDate(s.created_at)}</td>
+      <td><span class="badge ${s.is_active ? 'b-green' : 'b-gray'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
+    </tr>`).join('');
+}
+
+async function loadRecentAttempts() {
+  const { data } = await sb.from('test_attempts')
+    .select('percentage, passed, completed_at, profiles(full_name), practice_tests(title)')
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(5);
+
+  const tbody = document.getElementById('attempts-tbody');
+  if (!data?.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);font-size:.8rem">No tests taken yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td style="font-weight:600">${escHtml(a.profiles?.full_name ?? '—')}</td>
+      <td><span class="badge ${a.passed ? 'b-green' : 'b-red'}">${a.percentage?.toFixed(0) ?? '—'}%</span></td>
+      <td style="color:var(--muted)">${timeAgo(a.completed_at)}</td>
+    </tr>`).join('');
+}
+
+async function loadCourses() {
+  const { data } = await sb.from('courses').select('id,title,subject').eq('is_active', true);
+  allCourses = data ?? [];
+  const box = document.getElementById('course-checkboxes');
+  if (!allCourses.length) { box.innerHTML = '<div style="font-size:.8rem;color:var(--muted)">No courses yet.</div>'; return; }
+  box.innerHTML = allCourses.map(c => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;cursor:pointer">
+      <input type="checkbox" value="${c.id}" style="accent-color:var(--accent);width:15px;height:15px">
+      ${escHtml(c.title)} ${c.subject ? `<span style="color:var(--muted);font-weight:500">(${escHtml(c.subject)})</span>` : ''}
+    </label>`).join('');
+}
+
+async function createStudent() {
+  const name   = document.getElementById('ns-name').value.trim();
+  const email  = document.getElementById('ns-email').value.trim();
+  const phone  = document.getElementById('ns-phone').value.trim();
+  const checks = [...document.querySelectorAll('#course-checkboxes input:checked')];
+  const courseIds = checks.map(c => c.value);
+
+  if (!name || !email) { showModalAlert('Name and email are required.', 'error'); return; }
+
+  const btn = document.getElementById('create-btn');
+  btn.textContent = 'Creating…';
+  btn.disabled = true;
+  hideModalAlert();
+
+  const session = await getSession();
+  const res = await fetch('/api/create-student', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`
+    },
+    body: JSON.stringify({ full_name: name, email, phone, course_ids: courseIds })
+  });
+
+  const json = await res.json();
+
+  if (!res.ok || json.error) {
+    showModalAlert(json.error || 'Failed to create account.', 'error');
+    btn.textContent = 'Create Account';
+    btn.disabled = false;
+    return;
+  }
+
+  newStudentData = { email, password: json.password, phone };
+  document.getElementById('cred-email').textContent = email;
+  document.getElementById('cred-pw').textContent    = json.password;
+  document.getElementById('creds-box').style.display = 'block';
+  document.getElementById('modal-foot').style.display = 'none';
+  document.getElementById('ns-name').value = '';
+  document.getElementById('ns-email').value = '';
+  document.getElementById('ns-phone').value = '';
+  document.querySelectorAll('#course-checkboxes input').forEach(c => c.checked = false);
+
+  // Refresh student list
+  loadRecentStudents();
+  loadStats();
+}
+
+function sendWhatsApp() {
+  if (!newStudentData) return;
+  const phone = newStudentData.phone?.replace(/\D/g, '');
+  const msg = encodeURIComponent(
+    `Hello! Your Dr Mai Abd El Salam portal account has been created.\n\n` +
+    `Login URL: ${location.origin}/login.html\n` +
+    `Email: ${newStudentData.email}\n` +
+    `Password: ${newStudentData.password}\n\n` +
+    `Please change your password after your first login.`
+  );
+  window.open(phone ? `https://wa.me/${phone}?text=${msg}` : `https://wa.me/?text=${msg}`, '_blank');
+}
+
+function copyCredentials() {
+  if (!newStudentData) return;
+  const text = `Portal: ${location.origin}/login.html\nEmail: ${newStudentData.email}\nPassword: ${newStudentData.password}`;
+  navigator.clipboard.writeText(text).then(() => toast('Credentials copied!', 'success'));
+}
+
+function showModalAlert(msg, type) {
+  const el = document.getElementById('modal-alert');
+  el.textContent = msg;
+  el.className = `alert alert-${type}`;
+  el.style.display = 'flex';
+}
+function hideModalAlert() { document.getElementById('modal-alert').style.display = 'none'; }
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.getElementById('creds-box').style.display = 'none';
+  document.getElementById('modal-foot').style.display = 'flex';
+  document.getElementById('create-btn').textContent = 'Create Account';
+  document.getElementById('create-btn').disabled = false;
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); newStudentData = null; }
+
+function toast(msg, type = '') {
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast-msg${type ? ' '+type : ''}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Practice Tests | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+.test-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;transition:border-color .15s; }
+.test-card:hover { border-color:var(--primary); }
+.test-icon { width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#1a56db,#0e38b1);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.test-icon svg { width:22px;height:22px;color:#fff; }
+.test-info { flex:1;min-width:0; }
+.test-name { font-size:.92rem;font-weight:700;color:var(--text); }
+.test-meta { font-size:.75rem;color:var(--muted);margin-top:4px; }
+.test-actions { display:flex;gap:8px;margin-top:12px;flex-wrap:wrap; }
+.attempt-row { font-size:.75rem;padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:inline-flex;align-items:center;gap:6px;color:var(--text-2); }
+
+/* Test runner modal */
+.runner-modal { max-width:700px;width:100%; }
+.runner-header { display:flex;align-items:center;gap:12px;margin-bottom:20px; }
+.runner-timer { margin-left:auto;font-size:1rem;font-weight:700;color:var(--primary); }
+.q-num { font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px; }
+.q-text { font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:16px;line-height:1.5; }
+.q-options { display:flex;flex-direction:column;gap:8px; }
+.q-opt { display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:9px;cursor:pointer;transition:all .15s;font-size:.88rem;font-weight:500; }
+.q-opt:hover { border-color:var(--primary);background:rgba(26,86,219,.04); }
+.q-opt.selected { border-color:var(--primary);background:rgba(26,86,219,.08); }
+.q-opt.correct { border-color:#16a34a;background:#f0fdf4;color:#166534; }
+.q-opt.wrong { border-color:#dc2626;background:#fef2f2;color:#991b1b; }
+.opt-letter { width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0; }
+.q-nav { display:flex;justify-content:space-between;align-items:center;margin-top:24px; }
+.progress-dots { display:flex;gap:4px;flex-wrap:wrap; }
+.dot { width:10px;height:10px;border-radius:50%;background:var(--border); }
+.dot.answered { background:var(--primary); }
+.dot.current { background:var(--primary);outline:2px solid rgba(26,86,219,.3);outline-offset:2px; }
+.result-block { text-align:center;padding:20px 0; }
+.result-score { font-size:3rem;font-weight:900;color:var(--primary); }
+.result-label { font-size:.88rem;color:var(--muted);margin-top:4px; }
+.result-badge { display:inline-block;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Portal</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Main</div>
+    <a href="/portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <a href="/portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>My Courses</a>
+    <a href="/portal/lessons.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Recordings</a>
+    <a href="/portal/pdfs.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lesson PDFs</a>
+    <div class="nav-section">Practice</div>
+    <a href="/portal/tests.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <div class="nav-section">More</div>
+    <a href="/portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+    <a href="/portal/progress.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>My Progress</a>
+    <a href="/portal/settings.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">…</div>
+      <div class="user-info"><div class="user-name" id="u-name">Loading…</div><div class="user-role">Student</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Practice Tests</span>
+    </div>
+  </header>
+
+  <main class="content">
+    <div id="tests-body">
+      <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:12px"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Test Runner Modal -->
+<div class="modal-overlay" id="runner-overlay">
+  <div class="modal runner-modal">
+    <div class="modal-header">
+      <div class="modal-title" id="runner-title">Test</div>
+      <div class="runner-timer" id="runner-timer" style="display:none"></div>
+      <button class="modal-close" onclick="confirmClose()">✕</button>
+    </div>
+    <div class="modal-body" id="runner-body"></div>
+    <div class="modal-footer" id="runner-footer"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile = null;
+let tests = [];
+let attemptsMap = {};
+
+// Runner state
+let runnerTest = null;
+let questions  = [];
+let answers    = {};
+let currentQ   = 0;
+let timerInterval = null;
+let secondsLeft   = 0;
+let finished      = false;
+
+const LETTERS = ['A','B','C','D','E'];
+
+(async () => {
+  profile = await requireAuth('student');
+  if (!profile) return;
+
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+
+  const { data: enrollments } = await sb
+    .from('enrollments')
+    .select('course_id')
+    .eq('student_id', profile.id);
+
+  const courseIds = (enrollments || []).map(e => e.course_id);
+
+  const [{ data: testsData }, { data: attempts }] = await Promise.all([
+    sb.from('practice_tests').select('id, title, subject, time_limit_min, is_active').in('course_id', courseIds).eq('is_active', true).order('created_at', { ascending: false }),
+    sb.from('test_attempts').select('id, test_id, percentage, passed, created_at').eq('student_id', profile.id).order('created_at', { ascending: false })
+  ]);
+
+  tests = testsData || [];
+
+  attemptsMap = {};
+  (attempts || []).forEach(a => {
+    if (!attemptsMap[a.test_id]) attemptsMap[a.test_id] = [];
+    attemptsMap[a.test_id].push(a);
+  });
+
+  renderTests();
+})();
+
+function renderTests() {
+  const body = document.getElementById('tests-body');
+  if (tests.length === 0) {
+    body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg><div class="empty-title">No Tests Yet</div><div class="empty-sub">Practice tests will appear here once your instructor adds them.</div></div>';
+    return;
+  }
+
+  body.innerHTML = tests.map(t => {
+    const myAttempts = attemptsMap[t.id] || [];
+    const best = myAttempts.length ? Math.max(...myAttempts.map(a => a.percentage || 0)) : null;
+    const attemptBadges = myAttempts.slice(0, 3).map(a =>
+      `<span class="attempt-row"><span class="badge ${a.passed ? 'badge-success' : 'badge-danger'}" style="font-size:.65rem">${a.passed ? 'Pass' : 'Fail'}</span> ${a.percentage}%</span>`
+    ).join('');
+
+    return `
+      <div class="test-card">
+        <div class="test-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+        </div>
+        <div class="test-info">
+          <div class="test-name">${escHtml(t.title)}</div>
+          <div class="test-meta">${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${myAttempts.length} attempt${myAttempts.length !== 1 ? 's' : ''}${best !== null ? ' · Best: ' + best + '%' : ''}</div>
+          ${myAttempts.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${attemptBadges}</div>` : ''}
+          <div class="test-actions">
+            <button class="btn btn-primary btn-sm" onclick="startTest('${t.id}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              ${myAttempts.length ? 'Retake' : 'Start Test'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function startTest(testId) {
+  runnerTest = tests.find(t => t.id === testId);
+  if (!runnerTest) return;
+
+  const { data: qs } = await sb
+    .from('test_questions')
+    .select('id, question_text, options, correct_index, order_index')
+    .eq('test_id', testId)
+    .order('order_index');
+
+  questions = qs || [];
+  if (questions.length === 0) { showToast('This test has no questions yet.', 'warning'); return; }
+
+  answers  = {};
+  currentQ = 0;
+  finished = false;
+
+  document.getElementById('runner-title').textContent = runnerTest.title;
+  document.getElementById('runner-overlay').classList.add('show');
+
+  if (runnerTest.time_limit_min) {
+    secondsLeft = runnerTest.time_limit_min * 60;
+    document.getElementById('runner-timer').style.display = '';
+    timerInterval = setInterval(tickTimer, 1000);
+    updateTimerDisplay();
+  } else {
+    document.getElementById('runner-timer').style.display = 'none';
+  }
+
+  renderQuestion();
+}
+
+function tickTimer() {
+  secondsLeft--;
+  updateTimerDisplay();
+  if (secondsLeft <= 0) {
+    clearInterval(timerInterval);
+    submitTest();
+  }
+}
+
+function updateTimerDisplay() {
+  const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+  const s = String(secondsLeft % 60).padStart(2, '0');
+  const el = document.getElementById('runner-timer');
+  el.textContent = `${m}:${s}`;
+  el.style.color = secondsLeft < 60 ? '#dc2626' : 'var(--primary)';
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const opts = q.options || [];
+  const sel  = answers[q.id];
+
+  document.getElementById('runner-body').innerHTML = `
+    <div class="progress-dots" style="margin-bottom:20px">
+      ${questions.map((qq, i) => `<div class="dot${i===currentQ?' current':answers[qq.id]!==undefined?' answered':''}"></div>`).join('')}
+    </div>
+    <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>
+    <div class="q-text">${escHtml(q.question_text)}</div>
+    <div class="q-options">
+      ${opts.map((opt, i) => `
+        <div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})">
+          <div class="opt-letter">${LETTERS[i]}</div>
+          <span>${escHtml(opt)}</span>
+        </div>`).join('')}
+    </div>`;
+
+  document.getElementById('runner-footer').innerHTML = `
+    <div style="display:flex;gap:8px;justify-content:space-between;width:100%">
+      <button class="btn btn-outline btn-sm" onclick="goQ(${currentQ-1})" ${currentQ===0?'disabled':''}>← Prev</button>
+      ${currentQ < questions.length - 1
+        ? `<button class="btn btn-primary btn-sm" onclick="goQ(${currentQ+1})">Next →</button>`
+        : `<button class="btn btn-success btn-sm" onclick="submitTest()">Submit Test</button>`}
+    </div>`;
+}
+
+function selectOpt(idx) {
+  if (finished) return;
+  answers[questions[currentQ].id] = idx;
+  renderQuestion();
+}
+
+function goQ(idx) {
+  if (idx < 0 || idx >= questions.length) return;
+  currentQ = idx;
+  renderQuestion();
+}
+
+async function submitTest() {
+  if (timerInterval) clearInterval(timerInterval);
+  finished = true;
+
+  let correct = 0;
+  questions.forEach(q => {
+    if (answers[q.id] === q.correct_index) correct++;
+  });
+
+  const pct   = Math.round((correct / questions.length) * 100);
+  const passed = pct >= 60;
+
+  const { error } = await sb.from('test_attempts').insert({
+    test_id: runnerTest.id,
+    student_id: profile.id,
+    answers: answers,
+    score: correct,
+    total: questions.length,
+    percentage: pct,
+    passed,
+  });
+
+  if (error) showToast('Could not save attempt: ' + error.message, 'error');
+
+  // Update local attemptsMap
+  if (!attemptsMap[runnerTest.id]) attemptsMap[runnerTest.id] = [];
+  attemptsMap[runnerTest.id].unshift({ percentage: pct, passed });
+
+  // Show results
+  document.getElementById('runner-timer').style.display = 'none';
+  document.getElementById('runner-body').innerHTML = `
+    <div class="result-block">
+      <div class="result-score">${pct}%</div>
+      <div class="result-label">${correct} / ${questions.length} correct</div>
+      <div class="result-badge badge ${passed?'badge-success':'badge-danger'}" style="font-size:.88rem;margin-top:12px">${passed ? 'Passed ✓' : 'Not Passed'}</div>
+    </div>
+    <div style="margin-top:24px">
+      ${questions.map((q, i) => {
+        const chosen  = answers[q.id];
+        const opts    = q.options || [];
+        return `
+          <div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:6px">Q${i+1}</div>
+            <div style="font-size:.88rem;font-weight:600;margin-bottom:10px">${escHtml(q.question_text)}</div>
+            ${opts.map((opt, oi) => {
+              let cls = '';
+              if (oi === q.correct_index) cls = 'correct';
+              else if (oi === chosen && chosen !== q.correct_index) cls = 'wrong';
+              return `<div class="q-opt ${cls}" style="cursor:default;margin-bottom:4px"><div class="opt-letter">${LETTERS[oi]}</div><span>${escHtml(opt)}</span></div>`;
+            }).join('')}
+          </div>`;
+      }).join('')}
+    </div>`;
+
+  document.getElementById('runner-footer').innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="closeRunner()">Close</button>
+    <button class="btn btn-primary btn-sm" onclick="startTest('${runnerTest.id}')">Retake</button>`;
+
+  renderTests();
+}
+
+function confirmClose() {
+  if (finished || Object.keys(answers).length === 0) { closeRunner(); return; }
+  if (confirm('Exit test? Your progress will be lost.')) closeRunner();
+}
+
+function closeRunner() {
+  clearInterval(timerInterval);
+  document.getElementById('runner-overlay').classList.remove('show');
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

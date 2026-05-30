@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Recordings | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+.module-block { margin-bottom: 32px; }
+.module-title { font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border); }
+.lesson-row { display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s; }
+.lesson-row:hover { border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.08); }
+.lesson-row.done { background:#f0fdf4; border-color:#bbf7d0; }
+.lesson-num { width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.lesson-row.done .lesson-num { background:#16a34a; }
+.lesson-info { flex:1;min-width:0; }
+.lesson-name { font-size:.88rem;font-weight:600;color:var(--text); }
+.lesson-meta { font-size:.72rem;color:var(--muted);margin-top:2px; }
+.lesson-play { width:32px;height:32px;border-radius:50%;border:none;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s; }
+.lesson-play:hover { background:#1648c0; }
+.check-icon { width:20px;height:20px;color:#16a34a;flex-shrink:0; }
+.player-modal .modal-body { padding:0;background:#000;border-radius:0 0 14px 14px; }
+.player-modal .modal-header { border-radius:14px 14px 0 0; }
+.player-wrap { position:relative;padding-top:56.25%;background:#000;border-radius:0 0 12px 12px;overflow:hidden; }
+.player-wrap iframe { position:absolute;top:0;left:0;width:100%;height:100%;border:none; }
+.course-select { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px; }
+.course-chip { padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;background:var(--surface); }
+.course-chip.active { background:var(--primary);color:#fff;border-color:var(--primary); }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Portal</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Main</div>
+    <a href="/portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <a href="/portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>My Courses</a>
+    <a href="/portal/lessons.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Recordings</a>
+    <a href="/portal/pdfs.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lesson PDFs</a>
+    <div class="nav-section">Practice</div>
+    <a href="/portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <div class="nav-section">More</div>
+    <a href="/portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+    <a href="/portal/progress.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>My Progress</a>
+    <a href="/portal/settings.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">…</div>
+      <div class="user-info"><div class="user-name" id="u-name">Loading…</div><div class="user-role">Student</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Recordings</span>
+    </div>
+  </header>
+
+  <main class="content">
+    <div id="course-chips" class="course-select"></div>
+    <div id="lessons-body"></div>
+  </main>
+</div>
+
+<!-- Player Modal -->
+<div class="modal-overlay" id="player-modal-overlay">
+  <div class="modal player-modal" style="max-width:760px;width:100%">
+    <div class="modal-header">
+      <div class="modal-title" id="player-title">Lesson</div>
+      <button class="modal-close" onclick="closePlayer()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;background:#000;border-radius:0 0 14px 14px">
+      <div class="player-wrap">
+        <iframe id="player-iframe" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile = null;
+let allData  = [];
+let completedSet = new Set();
+let activeCourse = null;
+
+(async () => {
+  profile = await requireAuth('student');
+  if (!profile) return;
+
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+
+  // Courses enrolled
+  const { data: enrollments } = await sb
+    .from('enrollments')
+    .select('courses(id, title)')
+    .eq('student_id', profile.id);
+
+  const courses = (enrollments || []).map(e => e.courses).filter(Boolean);
+
+  // Lesson completions
+  const { data: comps } = await sb
+    .from('lesson_completions')
+    .select('lesson_id')
+    .eq('student_id', profile.id);
+  completedSet = new Set((comps || []).map(c => c.lesson_id));
+
+  // Modules + lessons for all enrolled courses
+  const courseIds = courses.map(c => c.id);
+  if (courseIds.length === 0) {
+    document.getElementById('lessons-body').innerHTML = '<div class="empty-state"><div class="empty-title">No Courses</div><div class="empty-sub">You have no enrolled courses.</div></div>';
+    return;
+  }
+
+  const { data: modules } = await sb
+    .from('modules')
+    .select('id, title, order_index, course_id, lessons(id, title, youtube_id, order_index, duration_min)')
+    .in('course_id', courseIds)
+    .order('order_index');
+
+  allData = modules || [];
+
+  // Build course chips
+  const chipsEl = document.getElementById('course-chips');
+  if (courses.length > 1) {
+    courses.forEach((c, i) => {
+      const chip = document.createElement('button');
+      chip.className = 'course-chip' + (i === 0 ? ' active' : '');
+      chip.textContent = c.title;
+      chip.dataset.courseId = c.id;
+      chip.onclick = () => switchCourse(c.id, chip);
+      chipsEl.appendChild(chip);
+    });
+    activeCourse = courses[0].id;
+  } else {
+    activeCourse = courses[0]?.id;
+  }
+
+  renderLessons();
+
+  // Pre-select from URL param
+  const urlCourse = new URLSearchParams(location.search).get('course');
+  if (urlCourse && courseIds.includes(urlCourse)) {
+    switchCourse(urlCourse, chipsEl.querySelector(`[data-course-id="${urlCourse}"]`));
+  }
+})();
+
+function switchCourse(courseId, chip) {
+  activeCourse = courseId;
+  document.querySelectorAll('.course-chip').forEach(c => c.classList.remove('active'));
+  if (chip) chip.classList.add('active');
+  renderLessons();
+}
+
+function renderLessons() {
+  const container = document.getElementById('lessons-body');
+  const mods = allData.filter(m => m.course_id === activeCourse);
+  if (mods.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-title">No Recordings Yet</div><div class="empty-sub">Lesson recordings will appear here once uploaded.</div></div>';
+    return;
+  }
+  let html = '';
+  let globalIdx = 0;
+  mods.sort((a,b) => a.order_index - b.order_index).forEach(mod => {
+    const lessons = (mod.lessons || []).sort((a,b) => a.order_index - b.order_index);
+    html += `<div class="module-block"><div class="module-title">${escHtml(mod.title)}</div>`;
+    lessons.forEach(lesson => {
+      globalIdx++;
+      const done = completedSet.has(lesson.id);
+      html += `
+        <div class="lesson-row${done?' done':''}" onclick="openPlayer('${lesson.id}','${escHtml(lesson.title)}','${lesson.youtube_id||''}')">
+          <div class="lesson-num">${globalIdx}</div>
+          <div class="lesson-info">
+            <div class="lesson-name">${escHtml(lesson.title)}</div>
+            <div class="lesson-meta">${lesson.duration_min ? lesson.duration_min + ' min' : ''}</div>
+          </div>
+          ${done
+            ? `<svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+            : `<button class="lesson-play" title="Watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>`}
+        </div>`;
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function openPlayer(lessonId, title, youtubeId) {
+  if (!youtubeId) { showToast('No recording available for this lesson yet.', 'warning'); return; }
+  document.getElementById('player-title').textContent = title;
+  document.getElementById('player-iframe').src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1`;
+  document.getElementById('player-modal-overlay').classList.add('show');
+
+  // Mark as complete
+  if (!completedSet.has(lessonId)) {
+    completedSet.add(lessonId);
+    sb.from('lesson_completions').upsert({ student_id: profile.id, lesson_id: lessonId }).then(() => renderLessons());
+  }
+}
+
+function closePlayer() {
+  document.getElementById('player-modal-overlay').classList.remove('show');
+  document.getElementById('player-iframe').src = '';
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

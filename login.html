@@ -1,140 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JYXM3L51HL"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-JYXM3L51HL');
-</script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Student Portal | Dr Mai Abd El Salam Biology</title>
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
-<script>
-  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/speed-insights/script.js"></script>
+<title>Sign In | Dr Mai Abd El Salam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'Montserrat',sans-serif;color:#111;background:#fff;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-img{display:block;max-width:100%}
+body{font-family:'Montserrat',sans-serif;background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}
-ul{list-style:none}
-button,input,select,textarea{font-family:inherit}
-nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 6%;background:#fff;border-bottom:1px solid #e8e8e8;transition:box-shadow .3s}
-nav.scrolled{box-shadow:0 1px 16px rgba(0,0,0,.07)}
-.logo{font-size:.88rem;font-weight:800;letter-spacing:.01em;color:#111}
-.logo span{color:#1a56db}
-.nav-links{display:flex;align-items:center;gap:2px}
-.nav-links a{font-size:.78rem;font-weight:600;color:#666;padding:7px 13px;border-radius:6px;transition:all .2s}
-.nav-links a:hover,.nav-links a.active{color:#111;background:#f4f4f4}
-.nav-cta{background:#111!important;color:#fff!important;border-radius:7px!important;padding:8px 16px!important}
-.nav-cta:hover{background:#333!important}
-.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
-.hamburger span{display:block;width:22px;height:2px;background:#111;border-radius:2px;transition:all .3s}
-.mob-nav{display:none;position:fixed;top:60px;left:0;right:0;background:#fff;border-bottom:1px solid #e8e8e8;padding:12px 6%;flex-direction:column;gap:2px;z-index:899}
-.mob-nav.open{display:flex}
-.mob-nav a{font-size:.88rem;font-weight:600;color:#555;padding:11px 14px;border-radius:8px;transition:all .2s}
-.mob-nav a:hover{background:#f4f4f4;color:#111}
-.mob-cta{background:#111!important;color:#fff!important;text-align:center;margin-top:6px;border-radius:8px!important}
-.page{padding-top:60px}
-section{padding:80px 6%}
-.inner{max-width:1100px;margin:0 auto}
-.inner-sm{max-width:640px;margin:0 auto}
-.eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1a56db;margin-bottom:14px}
-h1.ht{font-size:clamp(2.2rem,5vw,3.8rem);font-weight:900;line-height:1.05;letter-spacing:-.03em;color:#111;margin-bottom:20px}
-h1.ht em{font-style:normal;color:#1a56db}
-h2.st{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:900;line-height:1.1;letter-spacing:-.025em;color:#111;margin-bottom:16px}
-.lead{font-size:1rem;font-weight:400;color:#555;line-height:1.75}
-.rule{width:36px;height:3px;background:#111;margin:18px 0}
-.btn{display:inline-flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;padding:11px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .22s;text-decoration:none;line-height:1}
-.btn-dark{background:#111;color:#fff}.btn-dark:hover{background:#2a2a2a;transform:translateY(-1px)}
-.btn-outline{background:transparent;color:#111;border:1.5px solid #ccc}.btn-outline:hover{border-color:#111;background:#f8f8f8}
-.btn-sm{padding:9px 16px;font-size:.76rem}
-.fade-up{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
-.fade-up.in{opacity:1;transform:translateY(0)}
-footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
-.footer-in{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
-.footer-copy{font-size:.73rem;color:#aaa;font-weight:500}
-.footer-links{display:flex;gap:20px;flex-wrap:wrap}
-.footer-links a{font-size:.73rem;font-weight:600;color:#888;transition:color .2s}
-.footer-links a:hover{color:#111}
-.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:#111;color:#fff;font-size:.82rem;font-weight:600;padding:12px 18px;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);transform:translateY(50px);opacity:0;transition:all .3s}
-.toast.show{transform:translateY(0);opacity:1}
-@media(max-width:760px){nav .nav-links{display:none}.hamburger{display:flex}section{padding:56px 5%}h1.ht{font-size:2rem}}
+
+.login-wrap{width:100%;max-width:420px}
+
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo a{font-size:1.1rem;font-weight:800;color:#111}
+.login-logo a span{color:#1a56db}
+.login-logo p{font-size:.75rem;color:#6b7280;margin-top:4px;font-weight:500}
+
+.login-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:36px 32px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.login-card h1{font-size:1.4rem;font-weight:900;letter-spacing:-.02em;margin-bottom:6px}
+.login-card .subtitle{font-size:.82rem;color:#6b7280;margin-bottom:28px;font-weight:500}
+
+.alert-box{display:none;padding:11px 14px;border-radius:8px;font-size:.8rem;font-weight:600;margin-bottom:20px}
+.alert-box.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.alert-box.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+
+.field{margin-bottom:18px}
+.field label{display:flex;align-items:center;justify-content:space-between;font-size:.78rem;font-weight:600;color:#111827;margin-bottom:6px}
+.field label a{font-weight:600;color:#1a56db;font-size:.75rem}
+.field label a:hover{text-decoration:underline}
+.pw-wrap{position:relative}
+.field input{width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.88rem;font-family:inherit;color:#111;outline:none;transition:border-color .2s,box-shadow .2s}
+.pw-wrap input{padding-right:56px}
+.field input:focus{border-color:#1a56db;box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:.72rem;font-weight:700;color:#1a56db;cursor:pointer;padding:4px 2px}
+
+.btn-login{width:100%;padding:12px;background:#111827;color:#fff;border:none;border-radius:9px;font-size:.88rem;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s;margin-top:4px}
+.btn-login:hover{background:#1f2937}
+.btn-login:disabled{background:#9ca3af;cursor:not-allowed}
+
+.login-foot{text-align:center;margin-top:24px}
+.login-foot a{font-size:.78rem;font-weight:600;color:#6b7280}
+.login-foot a:hover{color:#111}
+
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#d1d5db;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+
+@media(max-width:440px){
+  .login-card{padding:28px 20px;border-radius:12px}
+}
 </style>
 </head>
 <body>
-<nav id="nav">
-  <a href="index.html" class="logo">Dr Mai <span>Abd El Salam</span></a>
-  <ul class="nav-links">
-    <li><a href="index.html" >Home</a></li>
-    <li><a href="courses.html" >Courses</a></li>
-    <li><a href="testimonials.html" >Results</a></li>
-    <li><a href="resources.html" >Resources</a></li>
-    <li><a href="contact.html" >Contact</a></li>
-    <li><a href="register.html" class="btn btn-dark btn-sm nav-cta">Register</a></li>
-  </ul>
-  <div class="hamburger" onclick="toggleMob()"><span></span><span></span><span></span></div>
-</nav>
-<div class="mob-nav" id="mob">
-  <a href="index.html" onclick="closeMob()">Home</a>
-  <a href="courses.html" onclick="closeMob()">Courses</a>
-  <a href="testimonials.html" onclick="closeMob()">Results</a>
-  <a href="resources.html" onclick="closeMob()">Free Resources</a>
-  <a href="contact.html" onclick="closeMob()">Contact</a>
-  <a href="register.html" class="mob-cta" onclick="closeMob()">Register Now</a>
+<div class="login-wrap">
+
+  <div class="login-logo">
+    <a href="/">Dr Mai <span>Abd El Salam</span></a>
+    <p>Biology Education Portal</p>
+  </div>
+
+  <div class="login-card">
+    <h1>Welcome back</h1>
+    <p class="subtitle">Sign in to access your courses and materials.</p>
+
+    <div class="alert-box" id="alert"></div>
+
+    <form id="login-form" autocomplete="on">
+      <div class="field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="password">
+          Password
+          <a href="/forgot-password.html">Forgot password?</a>
+        </label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+          <button type="button" class="pw-toggle" id="pw-toggle" onclick="togglePw()">Show</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-login" id="submit-btn">Sign In</button>
+    </form>
+  </div>
+
+  <div class="login-foot">
+    <a href="/">← Back to main site</a>
+  </div>
+
 </div>
-<div class="page">
-<section>
-  <div class="inner-sm fade-up" style="text-align:center;padding-bottom:0">
-    <div class="eyebrow" style="display:flex;justify-content:center">Student Portal</div>
-    <h1 class="ht" style="font-size:2.2rem">Course access<br>coming soon.</h1>
-    <div class="rule" style="margin:18px auto"></div>
-    <p class="lead" style="margin:0 auto 40px;max-width:420px">The student portal is under development. Once live, you will be able to access all your lessons, practice tests, and progress reports here.</p>
-  </div>
-  <div style="max-width:380px;margin:0 auto;border:1px solid #e8e8e8;border-radius:14px;padding:36px" class="fade-up">
-    <div style="display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:#f0f0f0;color:#aaa;padding:5px 14px;border-radius:100px;margin-bottom:20px">Coming Soon</div>
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#ccc;margin-bottom:6px">Email Address</label>
-      <input type="email" placeholder="your@email.com" disabled style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:8px;font-size:.84rem;color:#ccc;background:#fafafa;cursor:not-allowed;font-family:'Montserrat',sans-serif"/>
-    </div>
-    <div style="margin-bottom:20px">
-      <label style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#ccc;margin-bottom:6px">Password</label>
-      <input type="password" placeholder="Password" disabled style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:8px;font-size:.84rem;color:#ccc;background:#fafafa;cursor:not-allowed;font-family:'Montserrat',sans-serif"/>
-    </div>
-    <button style="width:100%;background:#e8e8e8;color:#bbb;font-family:'Montserrat',sans-serif;font-size:.86rem;font-weight:700;padding:13px;border:none;border-radius:8px;cursor:not-allowed" disabled>Login (Coming Soon)</button>
-  </div>
-</section><footer>
-  <div class="footer-in">
-    <span class="footer-copy">2026 Dr Mai Abd El Salam Biology</span>
-    <div class="footer-links">
-      <a href="index.html">Home</a>
-      <a href="courses.html">Courses</a>
-      <a href="testimonials.html">Results</a>
-      <a href="resources.html">Resources</a>
-      <a href="register.html">Register</a>
-      <a href="contact.html">Contact</a>
-    </div>
-  </div>
-</footer></div>
-<div class="toast" id="_toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
 <script>
-window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>10));
-function toggleMob(){document.getElementById('mob').classList.toggle('open')}
-function closeMob(){document.getElementById('mob').classList.remove('open')}
-const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target)}}),{threshold:.06});
-document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
-function toast(m){const t=document.getElementById('_toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200)}
+// Redirect if already logged in
+(async () => {
+  const session = await getSession();
+  if (session) await handlePostLogin();
+
+  // Show error from URL param (e.g. account deactivated)
+  const e = new URLSearchParams(location.search).get('e');
+  if (e === 'inactive') showAlert('Your account has been deactivated. Please contact Dr Mai.', 'error');
+})();
+
+document.getElementById('login-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn      = document.getElementById('submit-btn');
+
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+  hideAlert();
+
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    const msg = error.message.includes('Invalid login credentials')
+      ? 'Incorrect email or password. Please try again.'
+      : error.message;
+    showAlert(msg, 'error');
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+    return;
+  }
+
+  await handlePostLogin();
+});
+
+function togglePw() {
+  const inp = document.getElementById('password');
+  const btn = document.getElementById('pw-toggle');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
+}
+
+function showAlert(msg, type = 'error') {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.className = `alert-box ${type}`;
+  el.style.display = 'block';
+}
+function hideAlert() {
+  document.getElementById('alert').style.display = 'none';
+}
 </script>
 </body>
 </html>

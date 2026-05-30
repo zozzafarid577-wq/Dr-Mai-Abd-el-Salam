@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Settings | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Portal</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Main</div>
+    <a href="/portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <a href="/portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>My Courses</a>
+    <a href="/portal/lessons.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Recordings</a>
+    <a href="/portal/pdfs.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lesson PDFs</a>
+    <div class="nav-section">Practice</div>
+    <a href="/portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <div class="nav-section">More</div>
+    <a href="/portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+    <a href="/portal/progress.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>My Progress</a>
+    <a href="/portal/settings.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">…</div>
+      <div class="user-info"><div class="user-name" id="u-name">Loading…</div><div class="user-role">Student</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Settings</span>
+    </div>
+  </header>
+
+  <main class="content">
+    <div style="max-width:520px;margin:0 auto">
+
+      <!-- First-login banner -->
+      <div id="first-banner" style="display:none;margin-bottom:24px">
+        <div class="alert alert-warning">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div>
+            <strong>Welcome! Please change your password.</strong><br>
+            You're using a temporary password. Set a new one to continue.
+          </div>
+        </div>
+      </div>
+
+      <!-- Change password card -->
+      <div class="card mb24">
+        <div class="card-header">
+          <span class="card-title">Change Password</span>
+        </div>
+        <div class="card-body">
+          <div id="pw-alert" class="alert" style="display:none;margin-bottom:16px"></div>
+          <form id="pw-form">
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <div class="pw-wrap">
+                <input type="password" class="form-input" id="pw-new" placeholder="Min. 8 characters" required>
+                <button type="button" class="pw-toggle" onclick="togglePw('pw-new',this)">Show</button>
+              </div>
+              <div style="height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden">
+                <div id="str-bar" style="height:100%;border-radius:2px;transition:width .3s,background .3s;width:0"></div>
+              </div>
+              <div class="form-hint" id="str-lbl"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <div class="pw-wrap">
+                <input type="password" class="form-input" id="pw-confirm" placeholder="Repeat password" required>
+                <button type="button" class="pw-toggle" onclick="togglePw('pw-confirm',this)">Show</button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="pw-btn">Update Password</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Profile info (read-only) -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Account Info</span></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div style="font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Full Name</div>
+              <div style="font-size:.88rem;font-weight:600" id="info-name">—</div>
+            </div>
+            <div>
+              <div style="font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Email</div>
+              <div style="font-size:.88rem;font-weight:600" id="info-email">—</div>
+            </div>
+            <div>
+              <div style="font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Member Since</div>
+              <div style="font-size:.88rem;font-weight:600" id="info-date">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile = null;
+
+(async () => {
+  profile = await requireAuth('student');
+  if (!profile) return;
+
+  document.getElementById('u-name').textContent  = profile.full_name;
+  document.getElementById('u-av').textContent    = initials(profile.full_name);
+  document.getElementById('info-name').textContent  = profile.full_name;
+  document.getElementById('info-date').textContent  = fmtDate(profile.created_at);
+
+  const session = await getSession();
+  document.getElementById('info-email').textContent = session.user.email;
+
+  if (new URLSearchParams(location.search).get('first') === '1' || profile.must_change_pw) {
+    document.getElementById('first-banner').style.display = 'block';
+  }
+})();
+
+document.getElementById('pw-new').addEventListener('input', checkStrength);
+
+document.getElementById('pw-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const pw1 = document.getElementById('pw-new').value;
+  const pw2 = document.getElementById('pw-confirm').value;
+  const btn = document.getElementById('pw-btn');
+
+  hideAlert();
+
+  if (pw1.length < 8) { showAlert('Password must be at least 8 characters.', 'error'); return; }
+  if (pw1 !== pw2)    { showAlert('Passwords do not match.', 'error'); return; }
+
+  btn.textContent = 'Updating…';
+  btn.disabled = true;
+
+  const { error } = await sb.auth.updateUser({ password: pw1 });
+
+  if (error) {
+    showAlert(error.message, 'error');
+    btn.textContent = 'Update Password';
+    btn.disabled = false;
+    return;
+  }
+
+  // Clear must_change_pw flag
+  if (profile.must_change_pw) {
+    await sb.from('profiles').update({ must_change_pw: false }).eq('id', profile.id);
+  }
+
+  showAlert('Password updated successfully!', 'success');
+  btn.textContent = 'Update Password';
+  btn.disabled = false;
+  document.getElementById('pw-form').reset();
+  document.getElementById('first-banner').style.display = 'none';
+
+  // Redirect to dashboard after first-login pw change
+  if (new URLSearchParams(location.search).get('first') === '1') {
+    setTimeout(() => location.replace('/portal/'), 1200);
+  }
+});
+
+function showAlert(msg, type) {
+  const el = document.getElementById('pw-alert');
+  el.textContent = msg;
+  el.className = `alert alert-${type}`;
+  el.style.display = 'flex';
+}
+function hideAlert() { document.getElementById('pw-alert').style.display = 'none'; }
+
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
+}
+
+function checkStrength() {
+  const pw = document.getElementById('pw-new').value;
+  let score = 0;
+  if (pw.length >= 8)        score++;
+  if (/[A-Z]/.test(pw))      score++;
+  if (/[0-9]/.test(pw))      score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const lvl = [
+    { w:'25%', bg:'#ef4444', t:'Too weak' },
+    { w:'50%', bg:'#f59e0b', t:'Fair' },
+    { w:'75%', bg:'#3b82f6', t:'Good' },
+    { w:'100%', bg:'#10b981', t:'Strong' },
+  ][Math.max(0, score - 1)];
+  const bar = document.getElementById('str-bar');
+  bar.style.width = pw.length ? lvl.w : '0';
+  bar.style.background = lvl.bg;
+  document.getElementById('str-lbl').textContent = pw.length ? lvl.t : '';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

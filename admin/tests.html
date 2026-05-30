@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Practice Tests | Admin</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+.test-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px; }
+.test-card-header { display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px; }
+.test-card-title { font-size:.9rem;font-weight:700; }
+.test-card-meta { font-size:.74rem;color:var(--muted);margin-bottom:10px; }
+.q-admin-row { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border); }
+.q-admin-row:last-child { border-bottom:none; }
+.q-num-badge { width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px; }
+.q-admin-body { flex:1;min-width:0; }
+.q-text-preview { font-size:.84rem;font-weight:600;margin-bottom:4px; }
+.q-opts-preview { font-size:.75rem;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap; }
+.q-opt-chip { padding:2px 8px;border-radius:12px;background:var(--bg);border:1px solid var(--border); }
+.q-opt-chip.correct { background:#f0fdf4;border-color:#bbf7d0;color:#166534;font-weight:700; }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Admin</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Overview</div>
+    <a href="/admin/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <div class="nav-section">Management</div>
+    <a href="/admin/students.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</a>
+    <a href="/admin/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
+    <a href="/admin/tests.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/admin/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <a href="/admin/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">A</div>
+      <div class="user-info"><div class="user-name" id="u-name">Admin</div><div class="user-role">Administrator</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Practice Tests</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="openTestModal()">+ New Test</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <div id="tests-body">
+      <div class="skeleton" style="height:80px;border-radius:12px;margin-bottom:10px"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New Test Modal -->
+<div class="modal-overlay" id="test-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title">New Practice Test</div>
+      <button class="modal-close" onclick="closeTestModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Test Title *</label>
+        <input type="text" class="form-input" id="test-title" placeholder="e.g. Unit 1 Practice Quiz">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Course *</label>
+        <select class="form-input" id="test-course"><option value="">Select course…</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Time Limit (minutes, leave blank for untimed)</label>
+        <input type="number" class="form-input" id="test-time" placeholder="e.g. 30" min="1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTestModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTest()">Create Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal-overlay" id="q-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">Add Question</div>
+      <button class="modal-close" onclick="closeQModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="q-test-id">
+      <div class="form-group">
+        <label class="form-label">Question Text *</label>
+        <textarea class="form-input" id="q-text" rows="3" placeholder="Enter the question…" style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Answer Options (one per line, 2-5 options) *</label>
+        <textarea class="form-input" id="q-opts" rows="5" placeholder="Option A&#10;Option B&#10;Option C&#10;Option D" style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correct Answer (1-based index) *</label>
+        <input type="number" class="form-input" id="q-correct" placeholder="e.g. 1 for first option" min="1" max="5">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeQModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">Add Question</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let tests = [];
+let questionsMap = {};
+const LETTERS = ['A','B','C','D','E'];
+
+(async () => {
+  const profile = await requireAuth('admin');
+  if (!profile) return;
+
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+
+  const { data: courses } = await sb.from('courses').select('id, title').eq('is_active', true).order('title');
+  const sel = document.getElementById('test-course');
+  (courses || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.title;
+    sel.appendChild(o);
+  });
+
+  await loadTests();
+})();
+
+async function loadTests() {
+  const { data } = await sb.from('practice_tests').select('id, title, course_id, time_limit_min, is_active, created_at, courses(title)').order('created_at', { ascending: false });
+  tests = data || [];
+
+  if (tests.length > 0) {
+    const { data: qs } = await sb.from('test_questions').select('id, test_id, question_text, options, correct_index, order_index').in('test_id', tests.map(t => t.id)).order('order_index');
+    questionsMap = {};
+    (qs || []).forEach(q => {
+      if (!questionsMap[q.test_id]) questionsMap[q.test_id] = [];
+      questionsMap[q.test_id].push(q);
+    });
+  }
+
+  renderTests();
+}
+
+function renderTests() {
+  const body = document.getElementById('tests-body');
+  if (!tests.length) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-title">No Tests</div><div class="empty-sub">Create your first practice test.</div></div>';
+    return;
+  }
+
+  body.innerHTML = tests.map(t => {
+    const qs = questionsMap[t.id] || [];
+    return `
+      <div class="test-card">
+        <div class="test-card-header">
+          <div>
+            <div class="test-card-title">${escHtml(t.title)} <span class="badge ${t.is_active ? 'badge-success' : 'badge-danger'}" style="font-size:.62rem">${t.is_active ? 'Active' : 'Hidden'}</span></div>
+            <div class="test-card-meta">${escHtml(t.courses?.title || '—')} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${qs.length} question${qs.length!==1?'s':''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="toggleTestVis('${t.id}', ${t.is_active})">${t.is_active ? 'Hide' : 'Show'}</button>
+            <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteTest('${t.id}')">Delete</button>
+          </div>
+        </div>
+
+        ${qs.length > 0 ? `
+          <div style="margin-bottom:10px">
+            ${qs.map((q, i) => `
+              <div class="q-admin-row">
+                <div class="q-num-badge">${i+1}</div>
+                <div class="q-admin-body">
+                  <div class="q-text-preview">${escHtml(q.question_text)}</div>
+                  <div class="q-opts-preview">
+                    ${(q.options||[]).map((opt, oi) => `<span class="q-opt-chip${oi===q.correct_index?' correct':''}">${LETTERS[oi]}) ${escHtml(opt)}</span>`).join('')}
+                  </div>
+                </div>
+                <button class="btn btn-ghost btn-sm" style="color:#dc2626;padding:2px 6px;flex-shrink:0" onclick="deleteQuestion('${q.id}','${t.id}')">✕</button>
+              </div>`).join('')}
+          </div>` : ''}
+
+        <button class="btn btn-outline btn-sm" onclick="openQModal('${t.id}')">+ Add Question</button>
+      </div>`;
+  }).join('');
+}
+
+function openTestModal() { document.getElementById('test-modal').classList.add('show'); }
+function closeTestModal() { document.getElementById('test-modal').classList.remove('show'); }
+
+async function saveTest() {
+  const title    = document.getElementById('test-title').value.trim();
+  const courseId = document.getElementById('test-course').value;
+  const timeLim  = parseInt(document.getElementById('test-time').value) || null;
+  if (!title || !courseId) { showToast('Title and course are required.', 'warning'); return; }
+  const { error } = await sb.from('practice_tests').insert({ title, course_id: courseId, time_limit_min: timeLim, is_active: true });
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeTestModal();
+  await loadTests();
+  showToast('Test created!', 'success');
+}
+
+async function toggleTestVis(id, current) {
+  await sb.from('practice_tests').update({ is_active: !current }).eq('id', id);
+  await loadTests();
+}
+
+async function deleteTest(id) {
+  if (!confirm('Delete this test and all its questions?')) return;
+  await sb.from('test_questions').delete().eq('test_id', id);
+  const { error } = await sb.from('practice_tests').delete().eq('id', id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  await loadTests();
+  showToast('Test deleted.', 'success');
+}
+
+function openQModal(testId) {
+  document.getElementById('q-test-id').value = testId;
+  document.getElementById('q-text').value = '';
+  document.getElementById('q-opts').value = '';
+  document.getElementById('q-correct').value = '';
+  document.getElementById('q-modal').classList.add('show');
+}
+function closeQModal() { document.getElementById('q-modal').classList.remove('show'); }
+
+async function saveQuestion() {
+  const testId  = document.getElementById('q-test-id').value;
+  const text    = document.getElementById('q-text').value.trim();
+  const optsRaw = document.getElementById('q-opts').value.trim();
+  const correct = parseInt(document.getElementById('q-correct').value) - 1;
+
+  if (!text || !optsRaw) { showToast('Question and options are required.', 'warning'); return; }
+  const options = optsRaw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (options.length < 2) { showToast('At least 2 options required.', 'warning'); return; }
+  if (isNaN(correct) || correct < 0 || correct >= options.length) { showToast('Valid correct index required.', 'warning'); return; }
+
+  const existingQs = questionsMap[testId] || [];
+  const { error } = await sb.from('test_questions').insert({ test_id: testId, question_text: text, options, correct_index: correct, order_index: existingQs.length });
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeQModal();
+  await loadTests();
+  showToast('Question added!', 'success');
+}
+
+async function deleteQuestion(qId, testId) {
+  if (!confirm('Delete this question?')) return;
+  await sb.from('test_questions').delete().eq('id', qId);
+  await loadTests();
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

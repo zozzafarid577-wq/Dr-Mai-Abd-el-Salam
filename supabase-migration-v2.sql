@@ -14,24 +14,7 @@ ALTER TABLE public.test_questions ADD COLUMN IF NOT EXISTS correct_index INTEGER
 -- practice_tests: add is_mock flag to distinguish full mock exams
 ALTER TABLE public.practice_tests ADD COLUMN IF NOT EXISTS is_mock BOOLEAN NOT NULL DEFAULT false;
 
--- ── 2. Storage buckets ───────────────────────────────────────────
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('quiz-pdfs', 'quiz-pdfs', false, 10485760, ARRAY['application/pdf'])
-ON CONFLICT (id) DO NOTHING;
-
--- Allow admins to upload PDFs
-CREATE POLICY IF NOT EXISTS "admins_upload_quizpdfs" ON storage.objects
-  FOR INSERT TO authenticated
-  WITH CHECK (
-    bucket_id = 'quiz-pdfs'
-    AND (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-  );
-
-CREATE POLICY IF NOT EXISTS "auth_read_quizpdfs" ON storage.objects
-  FOR SELECT TO authenticated
-  USING (bucket_id = 'quiz-pdfs');
-
--- ── 3. Clean up & seed the 4 official courses ───────────────────
+-- ── 2. Clean up & seed the 4 official courses ───────────────────
 
 -- Remove duplicate courses (keep oldest of each name)
 DELETE FROM public.courses a

@@ -79,18 +79,15 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
 .stat .n{font-size:2rem;font-weight:900;letter-spacing:-.04em;color:#111;line-height:1}
 .stat .l{font-size:.68rem;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
 .hero-btns{display:flex;gap:10px;flex-wrap:wrap}
-.phone-outer{display:flex;flex-direction:column;align-items:center;gap:12px}
-.phone-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#aaa}
-.phone-frame{position:relative;background:#1c1c1e;border-radius:44px;padding:14px 10px;box-shadow:0 0 0 2px #3a3a3c,0 28px 70px rgba(0,0,0,.5),inset 0 0 0 1px #48484a}
-.phone-frame::before{content:'';position:absolute;right:-4px;top:90px;width:3px;height:52px;background:#3a3a3c;border-radius:0 2px 2px 0}
-.phone-frame::after{content:'';position:absolute;left:-4px;top:76px;width:3px;height:36px;background:#3a3a3c;border-radius:2px 0 0 2px;box-shadow:0 48px 0 #3a3a3c}
-.phone-notch{width:100px;height:24px;background:#1c1c1e;border-radius:0 0 18px 18px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;gap:7px}
-.phone-camera{width:9px;height:9px;background:#2c2c2e;border-radius:50%;border:1.5px solid #48484a}
-.phone-speaker{width:44px;height:5px;background:#2c2c2e;border-radius:3px}
-.phone-screen{border-radius:32px;overflow:hidden;background:#000;line-height:0}
-.phone-screen iframe{width:280px;height:560px;border:none;display:block}
-.phone-home{height:24px;display:flex;align-items:center;justify-content:center;margin-top:8px}
-.phone-home-bar{width:100px;height:4px;background:#48484a;border-radius:2px}
+.laptop-outer{display:flex;flex-direction:column;align-items:center}
+.laptop-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:14px}
+.laptop-lid{background:#d2d2d2;border-radius:10px 10px 0 0;padding:8px 8px 0;box-shadow:0 0 0 1.5px #b6b6b6,0 20px 50px rgba(0,0,0,.3)}
+.laptop-cam{width:6px;height:6px;background:#999;border-radius:50%;margin:0 auto 5px;box-shadow:0 0 0 1px #777}
+.laptop-screen{width:444px;height:380px;background:#0a0a0a;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.laptop-screen iframe{width:215px;height:380px;border:none;display:block;flex-shrink:0}
+.laptop-hinge{height:5px;background:#bbb;border:1px solid #aaa;border-top:none}
+.laptop-base{width:476px;height:26px;background:linear-gradient(to bottom,#c8c8c8,#b6b6b6);border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 16px rgba(0,0,0,.2)}
+.laptop-trackpad{width:62px;height:9px;background:#aaa;border-radius:2px;border:1px solid #999}
 .strip{background:#f7f7f7;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;padding:28px 6%}
 .strip-in{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
 .s-item{text-align:center}
@@ -100,7 +97,7 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
 .preview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .prev-item{border-radius:10px;overflow:hidden;aspect-ratio:4/5}
 .prev-item img{width:100%;height:100%;object-fit:cover}
-@media(max-width:900px){.hero-wrap{grid-template-columns:1fr;min-height:auto;padding:60px 5%}.phone-outer{display:none}}
+@media(max-width:900px){.hero-wrap{grid-template-columns:1fr;min-height:auto;padding:60px 5%}.laptop-outer{display:none}}
 </style>
 </head>
 <body>
@@ -136,18 +133,16 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
     </div>
   </div>
   <div class="fade-up" style="animation-delay:.12s">
-    <div class="phone-outer">
-      <div class="phone-label">Biology TikTok Page</div>
-      <div class="phone-frame">
-        <div class="phone-notch">
-          <div class="phone-speaker"></div>
-          <div class="phone-camera"></div>
+    <div class="laptop-outer">
+      <div class="laptop-label">Biology TikTok Page</div>
+      <div class="laptop-lid">
+        <div class="laptop-cam"></div>
+        <div class="laptop-screen">
+          <iframe src="https://www.tiktok.com/embed/v2/7525518699202170119" scrolling="no" allowfullscreen></iframe>
         </div>
-        <div class="phone-screen">
-          <iframe src="https://www.tiktok.com/embed/v2/7525518699202170119" allowfullscreen></iframe>
-        </div>
-        <div class="phone-home"><div class="phone-home-bar"></div></div>
       </div>
+      <div class="laptop-hinge"></div>
+      <div class="laptop-base"><div class="laptop-trackpad"></div></div>
     </div>
   </div>
 </div>

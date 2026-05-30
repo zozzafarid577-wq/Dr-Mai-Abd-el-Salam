@@ -5,8 +5,8 @@
 // SETUP: Replace the two constants below with your Supabase values.
 // Find them at: Supabase Dashboard → Project Settings → API
 // ─────────────────────────────────────────────────────────────────
-const SUPABASE_URL      = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+const SUPABASE_URL      = 'https://plcrxugvvnyuoakfxvnk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsY3J4dWd2dm55dW9ha2Z4dm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTI1NjgsImV4cCI6MjA5NTcyODU2OH0.wShniliV9_MpF86yVrZPJzXBctVXN-zP-G-XgBYlVAw';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true }

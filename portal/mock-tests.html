@@ -3,22 +3,19 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Practice Tests | Student Portal</title>
+<title>Mock Tests | Student Portal</title>
 <link rel="stylesheet" href="/css/portal.css">
 <style>
 .test-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;transition:border-color .15s; }
 .test-card:hover { border-color:var(--primary); }
-.test-icon { width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#1a56db,#0e38b1);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.test-icon { width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
 .test-icon svg { width:22px;height:22px;color:#fff; }
 .test-info { flex:1;min-width:0; }
 .test-name { font-size:.92rem;font-weight:700;color:var(--text); }
 .test-meta { font-size:.75rem;color:var(--muted);margin-top:4px; }
 .test-actions { display:flex;gap:8px;margin-top:12px;flex-wrap:wrap; }
 .attempt-row { font-size:.75rem;padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:inline-flex;align-items:center;gap:6px;color:var(--text-2); }
-
-/* Test runner modal */
 .runner-modal { max-width:700px;width:100%; }
-.runner-header { display:flex;align-items:center;gap:12px;margin-bottom:20px; }
 .runner-timer { margin-left:auto;font-size:1rem;font-weight:700;color:var(--primary); }
 .q-num { font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px; }
 .q-text { font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:16px;line-height:1.5; }
@@ -38,6 +35,10 @@
 .result-score { font-size:3rem;font-weight:900;color:var(--primary); }
 .result-label { font-size:.88rem;color:var(--muted);margin-top:4px; }
 .result-badge { display:inline-block;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;margin-top:8px; }
+.mock-banner { background:linear-gradient(135deg,#7c3aed,#4c1d95);border-radius:12px;padding:16px 20px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:14px; }
+.mock-banner svg { width:28px;height:28px;flex-shrink:0;opacity:.9; }
+.mock-banner-text .title { font-size:.95rem;font-weight:700; }
+.mock-banner-text .sub { font-size:.78rem;opacity:.8;margin-top:2px; }
 </style>
 </head>
 <body>
@@ -52,8 +53,8 @@
     <a href="/portal/lessons.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Recordings</a>
     <a href="/portal/pdfs.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lesson PDFs</a>
     <div class="nav-section">Practice</div>
-    <a href="/portal/tests.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
-    <a href="/portal/mock-tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>/svg>Mock Tests</a>
+    <a href="/portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/portal/mock-tests.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>Mock Tests</a>
     <a href="/portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
     <div class="nav-section">More</div>
     <a href="/portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
@@ -73,11 +74,18 @@
   <header class="topbar">
     <div class="topbar-left">
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <span class="page-title">Practice Tests</span>
+      <span class="page-title">Mock Tests</span>
     </div>
   </header>
 
   <main class="content">
+    <div class="mock-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+      <div class="mock-banner-text">
+        <div class="title">Full Mock Exams</div>
+        <div class="sub">Timed, full-length exams simulating real ACT / EST Biology conditions. Complete each mock under exam conditions for best results.</div>
+      </div>
+    </div>
     <div id="tests-body">
       <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:12px"></div>
       <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:12px"></div>
@@ -89,7 +97,7 @@
 <div class="modal-overlay" id="runner-overlay">
   <div class="modal runner-modal">
     <div class="modal-header">
-      <div class="modal-title" id="runner-title">Test</div>
+      <div class="modal-title" id="runner-title">Mock Test</div>
       <div class="runner-timer" id="runner-timer" style="display:none"></div>
       <button class="modal-close" onclick="confirmClose()">✕</button>
     </div>
@@ -107,7 +115,6 @@ let profile = null;
 let tests = [];
 let attemptsMap = {};
 
-// Runner state
 let runnerTest = null;
 let questions  = [];
 let answers    = {};
@@ -125,20 +132,25 @@ const LETTERS = ['A','B','C','D','E'];
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
 
-  const { data: enrollments } = await sb
-    .from('enrollments')
-    .select('course_id')
-    .eq('student_id', profile.id);
-
+  const { data: enrollments } = await sb.from('enrollments').select('course_id').eq('student_id', profile.id);
   const courseIds = (enrollments || []).map(e => e.course_id);
 
+  if (!courseIds.length) { renderTests(); return; }
+
   const [{ data: testsData }, { data: attempts }] = await Promise.all([
-    sb.from('practice_tests').select('id, title, subject, time_limit_min, is_active').in('course_id', courseIds).eq('is_active', true).order('created_at', { ascending: false }),
-    sb.from('test_attempts').select('id, test_id, percentage, passed, created_at').eq('student_id', profile.id).order('created_at', { ascending: false })
+    sb.from('practice_tests')
+      .select('id, title, time_limit_min, is_active, courses(title)')
+      .in('course_id', courseIds)
+      .eq('is_active', true)
+      .eq('is_mock', true)
+      .order('created_at', { ascending: false }),
+    sb.from('test_attempts')
+      .select('id, test_id, percentage, passed, created_at')
+      .eq('student_id', profile.id)
+      .order('created_at', { ascending: false })
   ]);
 
   tests = testsData || [];
-
   attemptsMap = {};
   (attempts || []).forEach(a => {
     if (!attemptsMap[a.test_id]) attemptsMap[a.test_id] = [];
@@ -150,31 +162,29 @@ const LETTERS = ['A','B','C','D','E'];
 
 function renderTests() {
   const body = document.getElementById('tests-body');
-  if (tests.length === 0) {
-    body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg><div class="empty-title">No Tests Yet</div><div class="empty-sub">Practice tests will appear here once your instructor adds them.</div></div>';
+  if (!tests.length) {
+    body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg><div class="empty-title">No Mock Tests Yet</div><div class="empty-sub">Full mock exams will appear here once your instructor uploads them.</div></div>';
     return;
   }
-
   body.innerHTML = tests.map(t => {
     const myAttempts = attemptsMap[t.id] || [];
     const best = myAttempts.length ? Math.max(...myAttempts.map(a => a.percentage || 0)) : null;
     const attemptBadges = myAttempts.slice(0, 3).map(a =>
       `<span class="attempt-row"><span class="badge ${a.passed ? 'badge-success' : 'badge-danger'}" style="font-size:.65rem">${a.passed ? 'Pass' : 'Fail'}</span> ${a.percentage}%</span>`
     ).join('');
-
     return `
       <div class="test-card">
         <div class="test-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
         </div>
         <div class="test-info">
           <div class="test-name">${escHtml(t.title)}</div>
-          <div class="test-meta">${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${myAttempts.length} attempt${myAttempts.length !== 1 ? 's' : ''}${best !== null ? ' · Best: ' + best + '%' : ''}</div>
+          <div class="test-meta">${escHtml(t.courses?.title || '')} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${myAttempts.length} attempt${myAttempts.length !== 1 ? 's' : ''}${best !== null ? ' · Best: ' + best + '%' : ''}</div>
           ${myAttempts.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${attemptBadges}</div>` : ''}
           <div class="test-actions">
-            <button class="btn btn-primary btn-sm" onclick="startTest('${t.id}')">
+            <button class="btn btn-primary btn-sm" onclick="startTest('${t.id}')" style="background:linear-gradient(135deg,#7c3aed,#4c1d95)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              ${myAttempts.length ? 'Retake' : 'Start Test'}
+              ${myAttempts.length ? 'Retake' : 'Start Mock'}
             </button>
           </div>
         </div>
@@ -185,23 +195,12 @@ function renderTests() {
 async function startTest(testId) {
   runnerTest = tests.find(t => t.id === testId);
   if (!runnerTest) return;
-
-  const { data: qs } = await sb
-    .from('test_questions')
-    .select('id, question_text, options, correct_index, order_index')
-    .eq('test_id', testId)
-    .order('order_index');
-
+  const { data: qs } = await sb.from('test_questions').select('id, question_text, options, correct_index, order_index').eq('test_id', testId).order('order_index');
   questions = qs || [];
-  if (questions.length === 0) { showToast('This test has no questions yet.', 'warning'); return; }
-
-  answers  = {};
-  currentQ = 0;
-  finished = false;
-
+  if (!questions.length) { showToast('This mock test has no questions yet.', 'warning'); return; }
+  answers = {}; currentQ = 0; finished = false;
   document.getElementById('runner-title').textContent = runnerTest.title;
   document.getElementById('runner-overlay').classList.add('show');
-
   if (runnerTest.time_limit_min) {
     secondsLeft = runnerTest.time_limit_min * 60;
     document.getElementById('runner-timer').style.display = '';
@@ -210,17 +209,13 @@ async function startTest(testId) {
   } else {
     document.getElementById('runner-timer').style.display = 'none';
   }
-
   renderQuestion();
 }
 
 function tickTimer() {
   secondsLeft--;
   updateTimerDisplay();
-  if (secondsLeft <= 0) {
-    clearInterval(timerInterval);
-    submitTest();
-  }
+  if (secondsLeft <= 0) { clearInterval(timerInterval); submitTest(); }
 }
 
 function updateTimerDisplay() {
@@ -228,14 +223,13 @@ function updateTimerDisplay() {
   const s = String(secondsLeft % 60).padStart(2, '0');
   const el = document.getElementById('runner-timer');
   el.textContent = `${m}:${s}`;
-  el.style.color = secondsLeft < 60 ? '#dc2626' : 'var(--primary)';
+  el.style.color = secondsLeft < 120 ? '#dc2626' : 'var(--primary)';
 }
 
 function renderQuestion() {
   const q = questions[currentQ];
   const opts = q.options || [];
-  const sel  = answers[q.id];
-
+  const sel = answers[q.id];
   document.getElementById('runner-body').innerHTML = `
     <div class="progress-dots" style="margin-bottom:20px">
       ${questions.map((qq, i) => `<div class="dot${i===currentQ?' current':answers[qq.id]!==undefined?' answered':''}"></div>`).join('')}
@@ -243,63 +237,43 @@ function renderQuestion() {
     <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>
     <div class="q-text">${escHtml(q.question_text)}</div>
     <div class="q-options">
-      ${opts.map((opt, i) => `
-        <div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})">
-          <div class="opt-letter">${LETTERS[i]}</div>
-          <span>${escHtml(opt)}</span>
-        </div>`).join('')}
+      ${opts.map((opt, i) => `<div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})"><div class="opt-letter">${LETTERS[i]}</div><span>${escHtml(opt)}</span></div>`).join('')}
     </div>`;
-
   document.getElementById('runner-footer').innerHTML = `
     <div style="display:flex;gap:8px;justify-content:space-between;width:100%">
       <button class="btn btn-outline btn-sm" onclick="goQ(${currentQ-1})" ${currentQ===0?'disabled':''}>← Prev</button>
       ${currentQ < questions.length - 1
-        ? `<button class="btn btn-primary btn-sm" onclick="goQ(${currentQ+1})">Next →</button>`
-        : `<button class="btn btn-success btn-sm" onclick="submitTest()">Submit Test</button>`}
+        ? `<button class="btn btn-primary btn-sm" onclick="goQ(${currentQ+1})" style="background:linear-gradient(135deg,#7c3aed,#4c1d95)">Next →</button>`
+        : `<button class="btn btn-success btn-sm" onclick="submitTest()">Submit Mock</button>`}
     </div>`;
 }
 
-function selectOpt(idx) {
-  if (finished) return;
-  answers[questions[currentQ].id] = idx;
-  renderQuestion();
+function selectOpt(idx) { if (finished) return; answers[questions[currentQ].id] = idx; renderQuestion(); }
+function goQ(idx) { if (idx < 0 || idx >= questions.length) return; currentQ = idx; renderQuestion(); }
+
+function confirmClose() {
+  if (!finished && Object.keys(answers).length > 0) {
+    if (!confirm('Are you sure you want to exit? Your progress will be lost.')) return;
+  }
+  closeRunner();
 }
 
-function goQ(idx) {
-  if (idx < 0 || idx >= questions.length) return;
-  currentQ = idx;
-  renderQuestion();
+function closeRunner() {
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('runner-overlay').classList.remove('show');
+  document.getElementById('runner-iframe') && (document.getElementById('runner-iframe').src = '');
 }
 
 async function submitTest() {
   if (timerInterval) clearInterval(timerInterval);
   finished = true;
-
   let correct = 0;
-  questions.forEach(q => {
-    if (answers[q.id] === q.correct_index) correct++;
-  });
-
-  const pct   = Math.round((correct / questions.length) * 100);
+  questions.forEach(q => { if (answers[q.id] === q.correct_index) correct++; });
+  const pct = Math.round((correct / questions.length) * 100);
   const passed = pct >= 60;
-
-  const { error } = await sb.from('test_attempts').insert({
-    test_id: runnerTest.id,
-    student_id: profile.id,
-    answers: answers,
-    score: correct,
-    total: questions.length,
-    percentage: pct,
-    passed,
-  });
-
-  if (error) showToast('Could not save attempt: ' + error.message, 'error');
-
-  // Update local attemptsMap
+  await sb.from('test_attempts').insert({ test_id: runnerTest.id, student_id: profile.id, answers, score: correct, max_score: questions.length, percentage: pct, passed, completed_at: new Date().toISOString() });
   if (!attemptsMap[runnerTest.id]) attemptsMap[runnerTest.id] = [];
   attemptsMap[runnerTest.id].unshift({ percentage: pct, passed });
-
-  // Show results
   document.getElementById('runner-timer').style.display = 'none';
   document.getElementById('runner-body').innerHTML = `
     <div class="result-block">
@@ -309,37 +283,22 @@ async function submitTest() {
     </div>
     <div style="margin-top:24px">
       ${questions.map((q, i) => {
-        const chosen  = answers[q.id];
-        const opts    = q.options || [];
-        return `
-          <div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-            <div style="font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:6px">Q${i+1}</div>
-            <div style="font-size:.88rem;font-weight:600;margin-bottom:10px">${escHtml(q.question_text)}</div>
-            ${opts.map((opt, oi) => {
-              let cls = '';
-              if (oi === q.correct_index) cls = 'correct';
-              else if (oi === chosen && chosen !== q.correct_index) cls = 'wrong';
-              return `<div class="q-opt ${cls}" style="cursor:default;margin-bottom:4px"><div class="opt-letter">${LETTERS[oi]}</div><span>${escHtml(opt)}</span></div>`;
-            }).join('')}
-          </div>`;
+        const chosen = answers[q.id];
+        return `<div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:6px">Q${i+1}</div>
+          <div style="font-size:.88rem;font-weight:600;margin-bottom:10px">${escHtml(q.question_text)}</div>
+          ${(q.options||[]).map((opt, oi) => {
+            let cls = '';
+            if (oi === q.correct_index) cls = 'correct';
+            else if (oi === chosen && chosen !== q.correct_index) cls = 'wrong';
+            return `<div class="q-opt ${cls}" style="cursor:default;margin-bottom:4px"><div class="opt-letter">${LETTERS[oi]}</div><span>${escHtml(opt)}</span></div>`;
+          }).join('')}
+        </div>`;
       }).join('')}
     </div>`;
-
   document.getElementById('runner-footer').innerHTML = `
-    <button class="btn btn-outline btn-sm" onclick="closeRunner()">Close</button>
-    <button class="btn btn-primary btn-sm" onclick="startTest('${runnerTest.id}')">Retake</button>`;
-
-  renderTests();
-}
-
-function confirmClose() {
-  if (finished || Object.keys(answers).length === 0) { closeRunner(); return; }
-  if (confirm('Exit test? Your progress will be lost.')) closeRunner();
-}
-
-function closeRunner() {
-  clearInterval(timerInterval);
-  document.getElementById('runner-overlay').classList.remove('show');
+    <button class="btn btn-outline btn-sm" onclick="closeRunner();renderTests()">Close</button>
+    <button class="btn btn-sm" onclick="startTest('${runnerTest.id}')" style="background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff">Retake</button>`;
 }
 
 function showToast(msg, type='info') {
@@ -349,15 +308,8 @@ function showToast(msg, type='info') {
   document.getElementById('toasts').appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('show');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
-}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 </script>
 </body>
 </html>

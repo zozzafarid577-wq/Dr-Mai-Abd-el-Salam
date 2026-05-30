@@ -87,8 +87,9 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
 .phone-notch{width:90px;height:22px;background:#1c1c1e;border-radius:0 0 16px 16px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;gap:6px}
 .phone-speaker{width:40px;height:4px;background:#2c2c2e;border-radius:3px}
 .phone-camera{width:8px;height:8px;background:#2c2c2e;border-radius:50%;border:1px solid #3c3c3e}
-.phone-screen{border-radius:36px;overflow:hidden;background:#000;line-height:0}
+.phone-screen{position:relative;border-radius:36px;overflow:hidden;background:#000;line-height:0}
 .phone-screen video{width:280px;height:500px;display:block;object-fit:cover}
+.snd-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:5px 12px;border-radius:20px;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap;user-select:none}
 .phone-home{height:22px;display:flex;align-items:center;justify-content:center;margin-top:6px}
 .phone-home-bar{width:90px;height:4px;background:#48484a;border-radius:2px}
 .strip{background:#f7f7f7;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;padding:28px 6%}
@@ -137,16 +138,16 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
   </div>
   <div class="fade-up" style="animation-delay:.12s">
     <div class="phone-outer">
-      <div class="phone-label">Biology TikTok Page</div>
       <div class="phone-frame">
         <div class="phone-notch">
           <div class="phone-speaker"></div>
           <div class="phone-camera"></div>
         </div>
         <div class="phone-screen">
-          <video autoplay muted loop playsinline>
+          <video autoplay muted loop playsinline id="tik-vid">
             <source src="tiktok.mp4" type="video/mp4">
           </video>
+          <div class="snd-hint" onclick="document.getElementById('tik-vid').muted=false;this.style.display='none'">tap for sound</div>
         </div>
         <div class="phone-home"><div class="phone-home-bar"></div></div>
       </div>

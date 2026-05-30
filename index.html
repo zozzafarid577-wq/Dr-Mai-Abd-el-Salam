@@ -79,16 +79,18 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
 .stat .n{font-size:2rem;font-weight:900;letter-spacing:-.04em;color:#111;line-height:1}
 .stat .l{font-size:.68rem;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
 .hero-btns{display:flex;gap:10px;flex-wrap:wrap}
-.laptop-outer{display:flex;flex-direction:column;align-items:center}
-.laptop-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:16px}
-.laptop-shell{background:linear-gradient(155deg,#727274,#3a3a3c);border-radius:16px 16px 0 0;padding:3px 3px 0;box-shadow:0 0 0 1px #28282a,0 40px 90px rgba(0,0,0,.6)}
-.laptop-bezel{background:#0f0f0f;border-radius:14px 14px 0 0;padding:14px 14px 5px}
-.laptop-cam{width:5px;height:5px;background:#282828;border-radius:50%;margin:0 auto 8px;box-shadow:0 0 0 1.5px #3a3a3a}
-.laptop-screen{width:454px;height:356px;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.laptop-screen iframe{width:200px;height:356px;border:none;display:block;flex-shrink:0}
-.laptop-hinge{width:488px;height:4px;background:#242426;border-top:1px solid #3a3a3c}
-.laptop-base{width:490px;height:16px;background:linear-gradient(to bottom,#4a4a4c,#323234);border-radius:0 0 10px 10px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.laptop-trackpad{width:50px;height:7px;background:#28282a;border-radius:2px;border:1px solid #202022}
+.phone-outer{display:flex;flex-direction:column;align-items:center;gap:12px}
+.phone-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#aaa}
+.phone-frame{position:relative;background:#1c1c1e;border-radius:48px;padding:14px 10px;box-shadow:0 0 0 2px #3a3a3c,0 30px 80px rgba(0,0,0,.55),inset 0 0 0 1px #48484a}
+.phone-frame::before{content:'';position:absolute;right:-4px;top:90px;width:3px;height:52px;background:#3a3a3c;border-radius:0 2px 2px 0}
+.phone-frame::after{content:'';position:absolute;left:-4px;top:76px;width:3px;height:36px;background:#3a3a3c;border-radius:2px 0 0 2px;box-shadow:0 48px 0 #3a3a3c}
+.phone-notch{width:90px;height:22px;background:#1c1c1e;border-radius:0 0 16px 16px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;gap:6px}
+.phone-speaker{width:40px;height:4px;background:#2c2c2e;border-radius:3px}
+.phone-camera{width:8px;height:8px;background:#2c2c2e;border-radius:50%;border:1px solid #3c3c3e}
+.phone-screen{border-radius:36px;overflow:hidden;background:#000;line-height:0}
+.phone-screen video{width:280px;height:500px;display:block;object-fit:cover}
+.phone-home{height:22px;display:flex;align-items:center;justify-content:center;margin-top:6px}
+.phone-home-bar{width:90px;height:4px;background:#48484a;border-radius:2px}
 .strip{background:#f7f7f7;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;padding:28px 6%}
 .strip-in{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
 .s-item{text-align:center}
@@ -98,7 +100,7 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
 .preview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .prev-item{border-radius:10px;overflow:hidden;aspect-ratio:4/5}
 .prev-item img{width:100%;height:100%;object-fit:cover}
-@media(max-width:900px){.hero-wrap{grid-template-columns:1fr;min-height:auto;padding:60px 5%}.laptop-outer{display:none}}
+@media(max-width:900px){.hero-wrap{grid-template-columns:1fr;min-height:auto;padding:60px 5%}.phone-outer{display:none}}
 </style>
 </head>
 <body>
@@ -134,18 +136,20 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
     </div>
   </div>
   <div class="fade-up" style="animation-delay:.12s">
-    <div class="laptop-outer">
-      <div class="laptop-label">Biology TikTok Page</div>
-      <div class="laptop-shell">
-        <div class="laptop-bezel">
-          <div class="laptop-cam"></div>
-          <div class="laptop-screen">
-            <iframe src="https://www.tiktok.com/embed/v2/7525518699202170119" scrolling="no" allowfullscreen></iframe>
-          </div>
+    <div class="phone-outer">
+      <div class="phone-label">Biology TikTok Page</div>
+      <div class="phone-frame">
+        <div class="phone-notch">
+          <div class="phone-speaker"></div>
+          <div class="phone-camera"></div>
         </div>
+        <div class="phone-screen">
+          <video autoplay muted loop playsinline>
+            <source src="tiktok.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="phone-home"><div class="phone-home-bar"></div></div>
       </div>
-      <div class="laptop-hinge"></div>
-      <div class="laptop-base"><div class="laptop-trackpad"></div></div>
     </div>
   </div>
 </div>

@@ -110,8 +110,11 @@ footer{border-top:1px solid #e8e8e8;padding:36px 6%;background:#fff}
 @media(max-width:900px){
   .hero-wrap{grid-template-columns:1fr;min-height:auto;padding:44px 5% 52px;gap:34px}
   .phone-outer{align-items:center}
-  .preview-grid{grid-template-columns:repeat(2,1fr)}
+  .preview-grid{grid-template-columns:repeat(2,1fr);gap:14px}
   .about-grid{grid-template-columns:1fr!important;gap:36px!important}
+}
+@media(max-width:600px){
+  .preview-grid{grid-template-columns:1fr;gap:16px;max-width:360px;margin:0 auto}
 }
 @media(max-width:400px){
   .phone-screen video{width:240px;height:430px}

@@ -46,7 +46,7 @@ async function requireAuth(role) {
   }
 
   if (role && profile.role !== role) {
-    location.replace(profile.role === 'admin' ? '/admin/' : '/portal/');
+    location.replace(profile.role === 'admin' ? '/drmai-staff-portal/' : '/portal/');
     return null;
   }
 
@@ -73,7 +73,7 @@ async function signOut() {
 async function handlePostLogin() {
   const profile = await getProfile();
   if (!profile) { location.replace('/login.html'); return; }
-  if (profile.role === 'admin') { location.replace('/admin/'); return; }
+  if (profile.role === 'admin') { location.replace('/drmai-staff-portal/'); return; }
   location.replace(profile.must_change_pw ? '/portal/settings.html?first=1' : '/portal/');
 }
 

@@ -41,7 +41,15 @@ export default async function handler(req, res) {
 
   const { data: { user }, error: authErr } = await anonClient.auth.getUser(token);
   if (authErr || !user) return res.status(401).json({ error: 'Invalid token' });
-  if (user.app_metadata?.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+
+  // Verify admin: check JWT app_metadata first, then fall back to the profiles table
+  let isAdmin = user.app_metadata?.role === 'admin';
+  if (!isAdmin) {
+    const { data: prof } = await supabaseAdmin
+      .from('profiles').select('role').eq('id', user.id).single();
+    isAdmin = prof?.role === 'admin';
+  }
+  if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
 
   const { student_id } = req.body;
   if (!student_id) return res.status(400).json({ error: 'student_id is required' });

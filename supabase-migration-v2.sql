@@ -21,21 +21,19 @@ DELETE FROM public.courses a
 USING public.courses b
 WHERE a.title = b.title AND a.created_at > b.created_at;
 
--- Remove any courses that are NOT one of the 4 official ones
+-- Remove any courses that are NOT one of the 3 official ones
 DELETE FROM public.courses WHERE title NOT IN (
   'ACT Biology Basics',
   'ACT Biology Revision',
-  'EST Biology Basics',
   'EST Biology Revision'
 );
 
--- Insert the 4 official courses if they don't exist yet
+-- Insert the 3 official courses if they don't exist yet
 INSERT INTO public.courses (title, subject, is_active)
 SELECT v.title, v.subject, true
 FROM (VALUES
   ('ACT Biology Basics',   'ACT'),
   ('ACT Biology Revision', 'ACT'),
-  ('EST Biology Basics',   'EST'),
   ('EST Biology Revision', 'EST')
 ) AS v(title, subject)
 WHERE NOT EXISTS (SELECT 1 FROM public.courses c WHERE c.title = v.title);

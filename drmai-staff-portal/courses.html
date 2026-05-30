@@ -3,24 +3,100 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Courses | Admin</title>
+<title>Lesson Management | Admin</title>
 <link rel="stylesheet" href="/css/portal.css">
 <style>
-.course-row { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px; }
-.course-dot { width:12px;height:12px;border-radius:50%;flex-shrink:0; }
-.course-info { flex:1;min-width:0; }
-.course-title-row { font-size:.9rem;font-weight:700; }
-.course-sub { font-size:.75rem;color:var(--muted);margin-top:2px; }
-.course-actions { display:flex;gap:6px;align-items:center;flex-wrap:wrap; }
-.module-block { background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden; }
-.module-header { display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none; }
-.module-header:hover { background:rgba(26,86,219,.04); }
-.module-title-text { flex:1;font-size:.84rem;font-weight:700; }
-.module-lessons { padding:0 14px 10px; }
-.lesson-row-admin { display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border); }
-.lesson-row-admin:last-child { border-bottom:none; }
-.lesson-title-admin { flex:1;font-size:.82rem;font-weight:500; }
-.yt-input { font-family:monospace;font-size:.8rem; }
+/* ── Course cards ── */
+.course-cards { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px; }
+.course-card { background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s,box-shadow .15s; }
+.course-card:hover { border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.07); }
+.card-dot { width:10px;height:10px;border-radius:50%; }
+.card-subject { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted); }
+.card-title { font-size:1rem;font-weight:800;color:var(--text); }
+.card-stats { display:flex;gap:12px;font-size:.75rem;color:var(--muted); }
+.card-stat { display:flex;align-items:center;gap:4px; }
+
+/* ── Lesson view ── */
+.lessons-back { display:flex;align-items:center;gap:10px;margin-bottom:20px; }
+.lessons-course-label { font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px; }
+.lessons-course-name { font-size:1.15rem;font-weight:800; }
+
+/* ── Module rows ── */
+.module-row { background:var(--surface);border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:border-color .15s; }
+.module-row.expanded { border-color:var(--primary); }
+.module-header { display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none; }
+.module-header:hover { background:rgba(26,86,219,.03); }
+.mod-num { width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.mod-num.inactive { background:var(--muted); }
+.mod-title { flex:1;font-size:.88rem;font-weight:700; }
+.mod-badges { display:flex;gap:6px;align-items:center;flex-wrap:wrap; }
+.mod-badge { padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700;background:var(--bg);border:1px solid var(--border);color:var(--muted); }
+.mod-badge.has { background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8; }
+.mod-actions { display:flex;gap:4px;align-items:center; }
+.icon-btn { width:28px;height:28px;border:none;background:transparent;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .12s,color .12s; }
+.icon-btn:hover { background:var(--bg);color:var(--text); }
+.icon-btn svg { width:14px;height:14px; }
+.toggle-pill { position:relative;width:36px;height:20px;cursor:pointer; }
+.toggle-pill input { opacity:0;width:0;height:0; }
+.toggle-track { position:absolute;inset:0;background:#d1d5db;border-radius:20px;transition:background .2s; }
+.toggle-thumb { position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.toggle-pill input:checked + .toggle-track { background:var(--primary); }
+.toggle-pill input:checked ~ .toggle-thumb { left:18px; }
+.chevron { transition:transform .2s; }
+.expanded .chevron { transform:rotate(90deg); }
+
+/* ── Module detail sections ── */
+.module-detail { border-top:1px solid var(--border);background:var(--bg); }
+.detail-section { padding:16px 18px;border-bottom:1px solid var(--border); }
+.detail-section:last-child { border-bottom:none; }
+.detail-section-title { font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between; }
+.recording-row { display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px; }
+.recording-yt { font-family:monospace;font-size:.78rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.recording-title-txt { font-size:.8rem;font-weight:600;min-width:0;flex:1; }
+.pdf-row { display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px; }
+.pdf-row-title { font-size:.82rem;font-weight:600;flex:1; }
+.test-row { display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px; }
+.test-row-title { font-size:.84rem;font-weight:700;flex:1; }
+.test-row-meta { font-size:.72rem;color:var(--muted); }
+.assign-row { display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px; }
+.assign-row-title { font-size:.84rem;font-weight:700;flex:1; }
+
+/* ── Modals ── */
+.step-indicator { display:flex;align-items:center;gap:8px;margin-bottom:20px; }
+.step-dot { width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--muted); }
+.step-dot.active { border-color:var(--primary);background:var(--primary);color:#fff; }
+.step-dot.done { border-color:#16a34a;background:#16a34a;color:#fff; }
+.step-line { flex:1;height:2px;background:var(--border); }
+.step-line.done { background:#16a34a; }
+
+/* ── Question review cards ── */
+.q-review { background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px; }
+.q-review-header { display:flex;align-items:center;gap:8px;margin-bottom:10px; }
+.q-idx-badge { width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.q-text-area { width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.82rem;resize:vertical;min-height:60px;box-sizing:border-box; }
+.q-text-area:focus { outline:none;border-color:var(--primary); }
+.q-options-grid { display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin-top:10px; }
+.q-opt-radio { width:16px;height:16px;accent-color:var(--primary);cursor:pointer; }
+.q-opt-input { padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:.8rem;width:100%;box-sizing:border-box; }
+.q-opt-input.correct-opt { border-color:#16a34a;background:#f0fdf4; }
+.q-opt-input:focus { outline:none;border-color:var(--primary); }
+.expl-input { width:100%;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:.78rem;margin-top:8px;box-sizing:border-box; }
+.expl-input:focus { outline:none;border-color:var(--primary); }
+
+/* ── Inline edit ── */
+.inline-edit-form { display:flex;gap:8px;align-items:center;margin-top:8px;padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border); }
+.inline-edit-input { flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:.85rem; }
+.inline-edit-input:focus { outline:none;border-color:var(--primary); }
+
+/* ── Loading overlay ── */
+.loading-overlay { position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:14px;z-index:10; }
+.spinner { width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+@media (max-width:600px) {
+  .mod-badges { display:none; }
+  .course-cards { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
@@ -51,97 +127,309 @@
   <header class="topbar">
     <div class="topbar-left">
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <span class="page-title">Courses</span>
-    </div>
-    <div class="topbar-right">
-      <button class="btn btn-primary btn-sm" onclick="openCourseModal()">+ New Course</button>
+      <span class="page-title" id="page-title">Courses</span>
     </div>
   </header>
 
   <main class="content">
-    <div id="courses-body">
-      <div class="skeleton" style="height:70px;border-radius:12px;margin-bottom:10px"></div>
-      <div class="skeleton" style="height:70px;border-radius:12px"></div>
+    <!-- View 1: Courses -->
+    <div id="view-courses">
+      <div id="course-cards-grid" class="course-cards">
+        <div class="skeleton" style="height:140px;border-radius:14px"></div>
+        <div class="skeleton" style="height:140px;border-radius:14px"></div>
+        <div class="skeleton" style="height:140px;border-radius:14px"></div>
+      </div>
+    </div>
+
+    <!-- View 2: Lesson Management -->
+    <div id="view-lessons" style="display:none">
+      <div class="lessons-back">
+        <button class="btn btn-outline btn-sm" onclick="showCoursesView()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><polyline points="15 18 9 12 15 6"/></svg>
+          Courses
+        </button>
+        <div style="flex:1">
+          <div class="lessons-course-label" id="lessons-subject-label"></div>
+          <div class="lessons-course-name" id="lessons-course-name"></div>
+        </div>
+      </div>
+      <div id="modules-list"></div>
     </div>
   </main>
 </div>
 
-<!-- New Course Modal -->
-<div class="modal-overlay" id="course-modal">
-  <div class="modal" style="max-width:500px">
-    <div class="modal-header">
-      <div class="modal-title" id="course-modal-title">New Course</div>
-      <button class="modal-close" onclick="closeCourseModal()">✕</button>
+<!-- ═══════════════════════════════════════════
+     PDF Test Creation Modal (2-step)
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="pdf-test-modal">
+  <div class="modal" style="max-width:700px;max-height:92vh;display:flex;flex-direction:column;position:relative">
+    <div id="pdf-modal-loading" class="loading-overlay" style="display:none">
+      <div class="spinner"></div>
+      <div style="font-size:.88rem;font-weight:600;color:var(--muted)">Extracting questions with AI…</div>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="course-modal-id">
-      <div class="form-group">
-        <label class="form-label">Course Title *</label>
-        <input type="text" class="form-input" id="course-title" placeholder="e.g. SAT Biology">
+
+    <!-- Step 1: Upload -->
+    <div id="pdf-step-1">
+      <div class="modal-header">
+        <div>
+          <div class="step-indicator">
+            <div class="step-dot active">1</div>
+            <div class="step-line"></div>
+            <div class="step-dot">2</div>
+          </div>
+          <div class="modal-title">Create Test from PDF</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:2px" id="pdf-modal-lesson-name"></div>
+        </div>
+        <button class="modal-close" onclick="closePdfTestModal()">✕</button>
       </div>
-      <div class="form-group">
-        <label class="form-label">Subject</label>
-        <input type="text" class="form-input" id="course-subject" placeholder="e.g. Biology, Chemistry">
+      <div class="modal-body" style="overflow-y:auto">
+        <div class="form-group">
+          <label class="form-label">Test Title *</label>
+          <input type="text" class="form-input" id="pt-title" placeholder="e.g. Animal Behavior Quiz">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Time Limit (min, blank = untimed)</label>
+            <input type="number" class="form-input" id="pt-time" placeholder="e.g. 30" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-input" id="pt-type">
+              <option value="">Practice Quiz</option>
+              <option value="mock">Mock Exam</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PDF File * <span style="color:var(--muted);font-weight:400">(max 4 MB)</span></label>
+          <input type="file" class="form-input" id="pt-file" accept=".pdf" style="padding:8px">
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea class="form-input" id="course-desc" rows="3" placeholder="Brief course description"></textarea>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closePdfTestModal()">Cancel</button>
+        <button class="btn btn-primary" id="extract-btn" onclick="extractFromPdf()">Extract Questions →</button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeCourseModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveCourse()">Save Course</button>
+
+    <!-- Step 2: Review -->
+    <div id="pdf-step-2" style="display:none;display:flex;flex-direction:column;min-height:0">
+      <div class="modal-header" style="flex-shrink:0">
+        <div>
+          <div class="step-indicator">
+            <div class="step-dot done">✓</div>
+            <div class="step-line done"></div>
+            <div class="step-dot active">2</div>
+          </div>
+          <div class="modal-title">Review & Edit Questions</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:2px" id="review-q-count"></div>
+        </div>
+        <button class="modal-close" onclick="closePdfTestModal()">✕</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <div id="questions-review"></div>
+        <button class="btn btn-outline btn-sm" onclick="addBlankQuestion()" style="margin-top:8px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Question
+        </button>
+      </div>
+      <div class="modal-footer" style="flex-shrink:0">
+        <button class="btn btn-outline" onclick="backToStep1()">← Back</button>
+        <button class="btn btn-primary" id="publish-btn" onclick="publishTest()">Publish Test</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Add Module Modal -->
-<div class="modal-overlay" id="module-modal">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header">
-      <div class="modal-title">Add Module</div>
-      <button class="modal-close" onclick="closeModuleModal()">✕</button>
+<!-- ═══════════════════════════════════════════
+     Manual Test Creation Modal
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="manual-test-modal">
+  <div class="modal" style="max-width:660px;max-height:92vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title">Create Test Manually</div>
+      <button class="modal-close" onclick="closeManualTestModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="module-course-id">
+    <div class="modal-body" style="overflow-y:auto;flex:1">
       <div class="form-group">
-        <label class="form-label">Module Title *</label>
-        <input type="text" class="form-input" id="module-title" placeholder="e.g. Unit 1: Cell Biology">
+        <label class="form-label">Test Title *</label>
+        <input type="text" class="form-input" id="mt-title" placeholder="e.g. Cell Division Quiz">
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Time Limit (min, blank = untimed)</label>
+          <input type="number" class="form-input" id="mt-time" placeholder="30" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-input" id="mt-type">
+            <option value="">Practice Quiz</option>
+            <option value="mock">Mock Exam</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:4px;margin-bottom:10px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Questions</div>
+      <div id="manual-questions-list"></div>
+      <button class="btn btn-outline btn-sm" onclick="addManualQuestion()" style="margin-top:4px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Question
+      </button>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModuleModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveModule()">Add Module</button>
+    <div class="modal-footer" style="flex-shrink:0">
+      <button class="btn btn-outline" onclick="closeManualTestModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveManualTest()">Create &amp; Publish</button>
     </div>
   </div>
 </div>
 
-<!-- Add Lesson Modal -->
-<div class="modal-overlay" id="lesson-modal">
-  <div class="modal" style="max-width:480px">
+<!-- ═══════════════════════════════════════════
+     Edit Test Modal (manage existing test)
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="edit-test-modal">
+  <div class="modal" style="max-width:660px;max-height:92vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div>
+        <div class="modal-title" id="edit-test-modal-title">Edit Test</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:2px" id="edit-test-q-count"></div>
+      </div>
+      <button class="modal-close" onclick="closeEditTestModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;flex:1">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-input" id="et-title">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time Limit (min)</label>
+          <input type="number" class="form-input" id="et-time" min="1">
+        </div>
+      </div>
+      <div style="margin-bottom:10px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Questions</div>
+      <div id="edit-test-questions"></div>
+      <button class="btn btn-outline btn-sm" onclick="addEditQuestion()" style="margin-top:4px">+ Add Question</button>
+    </div>
+    <div class="modal-footer" style="flex-shrink:0">
+      <button class="btn btn-outline" onclick="closeEditTestModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditTest()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     Add Recording Modal
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="add-recording-modal">
+  <div class="modal" style="max-width:460px">
     <div class="modal-header">
-      <div class="modal-title">Add Lesson</div>
-      <button class="modal-close" onclick="closeLessonModal()">✕</button>
+      <div class="modal-title">Add Recording</div>
+      <button class="modal-close" onclick="closeAddRecordingModal()">✕</button>
     </div>
     <div class="modal-body">
-      <input type="hidden" id="lesson-module-id">
       <div class="form-group">
-        <label class="form-label">Lesson Title *</label>
-        <input type="text" class="form-input" id="lesson-title" placeholder="e.g. Cell Membrane Structure">
+        <label class="form-label">Session Title *</label>
+        <input type="text" class="form-input" id="rec-title" placeholder="e.g. Session 1">
       </div>
       <div class="form-group">
-        <label class="form-label">YouTube Video ID</label>
-        <input type="text" class="form-input yt-input" id="lesson-yt" placeholder="e.g. dQw4w9WgXcQ">
-        <div class="form-hint">Paste just the ID from the YouTube URL (after v=)</div>
+        <label class="form-label">YouTube Video ID *</label>
+        <input type="text" class="form-input" id="rec-yt" placeholder="e.g. dQw4w9WgXcQ" style="font-family:monospace">
+        <div class="form-hint">Paste only the ID part after <code>?v=</code> in the YouTube URL</div>
       </div>
       <div class="form-group">
         <label class="form-label">Duration (minutes)</label>
-        <input type="number" class="form-input" id="lesson-dur" placeholder="45" min="1">
+        <input type="number" class="form-input" id="rec-dur" placeholder="45" min="1">
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeLessonModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveLesson()">Add Lesson</button>
+      <button class="btn btn-outline" onclick="closeAddRecordingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRecording()">Add Recording</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     Add PDF Modal
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="add-pdf-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Add PDF Resource</div>
+      <button class="modal-close" onclick="closeAddPdfModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">PDF Title *</label>
+        <input type="text" class="form-input" id="pdf-title-input" placeholder="e.g. Animal Behavior Worksheet">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Public URL * <span style="color:var(--muted);font-weight:400">(Google Drive, Dropbox, etc.)</span></label>
+        <input type="url" class="form-input" id="pdf-url-input" placeholder="https://drive.google.com/file/d/…">
+        <div class="form-hint">Make sure the link is publicly accessible (Anyone with link can view)</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddPdfModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePdf()">Add PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     Create Assignment Modal
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="create-assign-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Create Assignment</div>
+      <button class="modal-close" onclick="closeAssignModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" class="form-input" id="asgn-title" placeholder="e.g. Animal Behavior HW">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description / Instructions</label>
+        <textarea class="form-input" id="asgn-desc" rows="3" placeholder="Instructions for students…" style="resize:vertical"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="datetime-local" class="form-input" id="asgn-due">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Score</label>
+          <input type="number" class="form-input" id="asgn-score" placeholder="100" min="1">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAssignModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAssignment()">Create Assignment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Module Title (inline) -->
+<div id="edit-mod-modal" class="modal-overlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">Edit Lesson Title</div>
+      <button class="modal-close" onclick="closeEditModModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-mod-id">
+      <div class="form-group">
+        <label class="form-label">Lesson Title</label>
+        <input type="text" class="form-input" id="edit-mod-title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <textarea class="form-input" id="edit-mod-desc" rows="2" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEditModModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModuleTitle()">Save</button>
     </div>
   </div>
 </div>
@@ -151,201 +439,781 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/auth.js"></script>
 <script>
-let courses = [];
-let modulesMap = {};
-const COLORS = ['#1a56db','#7c3aed','#dc2626','#059669','#d97706','#0891b2'];
+// ── State ──────────────────────────────────────────────────────────
+let courses      = [];
+let moduleMap    = {}; // courseId → [module, ...]
+let recordingMap = {}; // moduleId → [lesson, ...]
+let testMap      = {}; // moduleId → [test, ...]
+let assignMap    = {}; // moduleId → [assign, ...]
+let pdfMap       = {}; // moduleId → [pdf, ...]
+let expandedMods = new Set();
 
+let activeCourseId = null;
+let activeModuleId = null; // context for modals
+
+// PDF test creation state
+let pendingQuestions = [];
+let pdfTestCourseId  = null;
+let pdfTestModuleId  = null;
+
+// Manual test creation state
+let manualModuleId = null;
+let manualCourseId = null;
+let manualQs       = [];
+
+// Edit test state
+let editTestId        = null;
+let editTestModuleId  = null;
+let editTestQs        = [];
+
+const COLORS = ['#1a56db','#7c3aed','#dc2626','#059669'];
+
+// ── Init ───────────────────────────────────────────────────────────
 (async () => {
   const profile = await requireAuth('admin');
   if (!profile) return;
-
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
-
-  await loadCourses();
+  await loadAll();
+  renderCourseCards();
 })();
 
-async function loadCourses() {
-  const { data } = await sb.from('courses').select('id, title, subject, description, is_active').order('created_at', { ascending: false });
-  courses = data || [];
+async function loadAll() {
+  const { data: c } = await sb.from('courses').select('id, title, subject, is_active').order('title');
+  courses = c || [];
 
-  if (courses.length > 0) {
-    const { data: mods } = await sb.from('modules').select('id, title, course_id, order_index, lessons(id, title, youtube_id, duration_min, order_index)').in('course_id', courses.map(c => c.id)).order('order_index');
-    modulesMap = {};
-    (mods || []).forEach(m => {
-      if (!modulesMap[m.course_id]) modulesMap[m.course_id] = [];
-      modulesMap[m.course_id].push(m);
-    });
-  }
+  if (!courses.length) return;
+  const ids = courses.map(x => x.id);
 
-  renderCourses();
+  const [{ data: mods }, { data: recs }, { data: tests }, { data: assigns }, { data: pdfs }] = await Promise.all([
+    sb.from('modules').select('id, course_id, title, description, order_index, is_active').in('course_id', ids).order('order_index'),
+    sb.from('lessons').select('id, module_id, title, youtube_id, duration_min, order_index').order('order_index'),
+    sb.from('practice_tests').select('id, module_id, course_id, title, is_mock, is_active, time_limit_min').order('created_at', { ascending: false }),
+    sb.from('assignments').select('id, module_id, course_id, title, description, due_at, max_score, is_active').order('created_at', { ascending: false }),
+    sb.from('module_pdfs').select('id, module_id, title, file_url, created_at').order('created_at', { ascending: false }),
+  ]);
+
+  moduleMap    = {};
+  recordingMap = {};
+  testMap      = {};
+  assignMap    = {};
+  pdfMap       = {};
+
+  (mods    || []).forEach(m => { (moduleMap[m.course_id]   ||= []).push(m); });
+  (recs    || []).forEach(r => { (recordingMap[r.module_id]||= []).push(r); });
+  (tests   || []).forEach(t => { if (t.module_id) (testMap[t.module_id]   ||= []).push(t); });
+  (assigns || []).forEach(a => { if (a.module_id) (assignMap[a.module_id] ||= []).push(a); });
+  (pdfs    || []).forEach(p => { (pdfMap[p.module_id]      ||= []).push(p); });
 }
 
-function renderCourses() {
-  const body = document.getElementById('courses-body');
+// ── Course Cards View ──────────────────────────────────────────────
+function showCoursesView() {
+  activeCourseId = null;
+  expandedMods.clear();
+  document.getElementById('view-courses').style.display = '';
+  document.getElementById('view-lessons').style.display = 'none';
+  document.getElementById('page-title').textContent = 'Courses';
+}
+
+function renderCourseCards() {
+  const grid = document.getElementById('course-cards-grid');
   if (!courses.length) {
-    body.innerHTML = '<div class="empty-state"><div class="empty-title">No Courses</div><div class="empty-sub">Create your first course to get started.</div></div>';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-title">No Courses Found</div><div class="empty-sub">Run the Supabase migration to seed the 3 official courses.</div></div>';
     return;
   }
-
-  body.innerHTML = courses.map((c, idx) => {
-    const color = COLORS[idx % COLORS.length];
-    const mods  = modulesMap[c.id] || [];
-    const totalLessons = mods.reduce((s, m) => s + (m.lessons?.length || 0), 0);
-
+  grid.innerHTML = courses.map((c, i) => {
+    const mods = moduleMap[c.id] || [];
+    const totalRecs = mods.reduce((s, m) => s + (recordingMap[m.id]?.length || 0), 0);
+    const totalTests = mods.reduce((s, m) => s + (testMap[m.id]?.length || 0), 0);
     return `
-      <div class="course-row">
-        <div class="course-dot" style="background:${color}"></div>
-        <div class="course-info">
-          <div class="course-title-row">${escHtml(c.title)} <span class="badge ${c.is_active ? 'badge-success' : 'badge-danger'}" style="font-size:.65rem">${c.is_active ? 'Active' : 'Hidden'}</span></div>
-          <div class="course-sub">${escHtml(c.subject || '')} · ${mods.length} module${mods.length!==1?'s':''} · ${totalLessons} lesson${totalLessons!==1?'s':''}</div>
+      <div class="course-card">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="card-dot" style="background:${COLORS[i]}"></div>
+          <div class="card-subject">${escHtml(c.subject || '')}</div>
         </div>
-        <div class="course-actions">
-          <button class="btn btn-ghost btn-sm" onclick="toggleCourseDetails('${c.id}')">Manage</button>
-          <button class="btn btn-ghost btn-sm" onclick="editCourse('${c.id}')">Edit</button>
-          <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="toggleCourseActive('${c.id}', ${c.is_active})">${c.is_active ? 'Hide' : 'Show'}</button>
+        <div class="card-title">${escHtml(c.title)}</div>
+        <div class="card-stats">
+          <div class="card-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>${totalRecs} recording${totalRecs!==1?'s':''}</div>
+          <div class="card-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>${totalTests} test${totalTests!==1?'s':''}</div>
         </div>
-      </div>
-      <div id="details-${c.id}" style="display:none;padding:0 0 16px 26px">
-        ${mods.map(m => `
-          <div class="module-block">
-            <div class="module-header" onclick="toggleMod('mod-${m.id}')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--muted)"><polyline points="9 18 15 12 9 6"/></svg>
-              <div class="module-title-text">${escHtml(m.title)}</div>
-              <span style="font-size:.72rem;color:var(--muted)">${(m.lessons||[]).length} lessons</span>
-            </div>
-            <div id="mod-${m.id}" style="display:none">
-              <div class="module-lessons">
-                ${(m.lessons||[]).sort((a,b)=>a.order_index-b.order_index).map(l => `
-                  <div class="lesson-row-admin">
-                    <div class="lesson-title-admin">${escHtml(l.title)}</div>
-                    ${l.youtube_id ? `<span class="badge badge-success" style="font-size:.62rem">Video</span>` : `<span class="badge" style="font-size:.62rem">No video</span>`}
-                    <button class="btn btn-ghost btn-sm" style="color:#dc2626;padding:2px 6px" onclick="deleteLesson('${l.id}','${c.id}')">✕</button>
-                  </div>`).join('')}
-                <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="openLessonModal('${m.id}')">+ Add Lesson</button>
-              </div>
-            </div>
-          </div>`).join('')}
-        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="openModuleModal('${c.id}')">+ Add Module</button>
+        <button class="btn btn-primary btn-sm" onclick="showLessonsView('${c.id}')">Manage Lessons →</button>
       </div>`;
   }).join('');
 }
 
-function toggleCourseDetails(id) {
-  const el = document.getElementById('details-' + id);
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+// ── Lesson Management View ─────────────────────────────────────────
+function showLessonsView(courseId) {
+  activeCourseId = courseId;
+  const course = courses.find(c => c.id === courseId);
+  document.getElementById('view-courses').style.display = 'none';
+  document.getElementById('view-lessons').style.display = '';
+  document.getElementById('page-title').textContent = 'Lessons';
+  document.getElementById('lessons-subject-label').textContent = course?.subject || '';
+  document.getElementById('lessons-course-name').textContent   = course?.title || '';
+  renderModules();
 }
 
-function toggleMod(id) {
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-function openCourseModal() {
-  document.getElementById('course-modal-id').value = '';
-  document.getElementById('course-modal-title').textContent = 'New Course';
-  document.getElementById('course-title').value = '';
-  document.getElementById('course-subject').value = '';
-  document.getElementById('course-desc').value = '';
-  document.getElementById('course-modal').classList.add('show');
-}
-
-function editCourse(id) {
-  const c = courses.find(x => x.id === id);
-  if (!c) return;
-  document.getElementById('course-modal-id').value   = c.id;
-  document.getElementById('course-modal-title').textContent = 'Edit Course';
-  document.getElementById('course-title').value   = c.title;
-  document.getElementById('course-subject').value = c.subject || '';
-  document.getElementById('course-desc').value    = c.description || '';
-  document.getElementById('course-modal').classList.add('show');
-}
-
-function closeCourseModal() { document.getElementById('course-modal').classList.remove('show'); }
-
-async function saveCourse() {
-  const title = document.getElementById('course-title').value.trim();
-  if (!title) { showToast('Title is required.', 'warning'); return; }
-  const payload = { title, subject: document.getElementById('course-subject').value.trim() || null, description: document.getElementById('course-desc').value.trim() || null };
-  const id = document.getElementById('course-modal-id').value;
-
-  let error;
-  if (id) {
-    ({ error } = await sb.from('courses').update(payload).eq('id', id));
-  } else {
-    ({ error } = await sb.from('courses').insert({ ...payload, is_active: true }));
+function renderModules() {
+  const list = document.getElementById('modules-list');
+  const mods = (moduleMap[activeCourseId] || []).slice().sort((a, b) => a.order_index - b.order_index);
+  if (!mods.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-title">No Lessons Found</div><div class="empty-sub">Run migration v3 to seed 16 lesson modules per course.</div></div>';
+    return;
   }
 
+  list.innerHTML = mods.map((m, idx) => {
+    const recs    = recordingMap[m.id]  || [];
+    const tests   = testMap[m.id]       || [];
+    const assigns = assignMap[m.id]     || [];
+    const pdfs    = pdfMap[m.id]        || [];
+    const expanded = expandedMods.has(m.id);
+
+    return `
+      <div class="module-row${expanded?' expanded':''}" id="mod-row-${m.id}">
+        <div class="module-header" onclick="toggleExpand('${m.id}')">
+          <div class="mod-num${m.is_active?'':' inactive'}">${m.order_index}</div>
+          <div class="mod-title">${escHtml(m.title)}</div>
+          <div class="mod-badges">
+            <span class="mod-badge${recs.length?' has':''}">${recs.length} rec</span>
+            <span class="mod-badge${pdfs.length?' has':''}">${pdfs.length} pdf</span>
+            <span class="mod-badge${tests.length?' has':''}">${tests.length} test${tests.length!==1?'s':''}</span>
+            <span class="mod-badge${assigns.length?' has':''}">${assigns.length} assign</span>
+          </div>
+          <div class="mod-actions" onclick="event.stopPropagation()">
+            <button class="icon-btn" title="Edit title" onclick="openEditModModal('${m.id}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="icon-btn" title="Move up" onclick="moveModule('${m.id}','up')" ${idx===0?'disabled style="opacity:.3"':''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <button class="icon-btn" title="Move down" onclick="moveModule('${m.id}','down')" ${idx===mods.length-1?'disabled style="opacity:.3"':''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <label class="toggle-pill" title="${m.is_active?'Hide from students':'Show to students'}">
+              <input type="checkbox" ${m.is_active?'checked':''} onchange="toggleModuleActive('${m.id}',${m.is_active})">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:var(--muted)"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        ${expanded ? renderModuleDetail(m) : ''}
+      </div>`;
+  }).join('');
+}
+
+function renderModuleDetail(m) {
+  const recs    = (recordingMap[m.id]  || []).slice().sort((a,b)=>a.order_index-b.order_index);
+  const tests   = testMap[m.id]        || [];
+  const assigns = assignMap[m.id]      || [];
+  const pdfs    = pdfMap[m.id]         || [];
+
+  const recsHtml = `
+    ${recs.map(r => `
+      <div class="recording-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#dc2626;flex-shrink:0"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <div class="recording-title-txt">${escHtml(r.title)}</div>
+        <div class="recording-yt" style="color:var(--muted)">${r.youtube_id ? 'yt: ' + escHtml(r.youtube_id) : 'No video'}</div>
+        ${r.duration_min ? `<span style="font-size:.7rem;color:var(--muted)">${r.duration_min}m</span>` : ''}
+        <button class="icon-btn" style="color:#dc2626" onclick="deleteRecording('${r.id}','${m.id}')" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>`).join('')}
+    <button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="openAddRecordingModal('${m.id}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Recording
+    </button>`;
+
+  const pdfsHtml = `
+    ${pdfs.map(p => `
+      <div class="pdf-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;color:#dc2626;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="pdf-row-title">${escHtml(p.title)}</div>
+        <a href="${escHtml(p.file_url)}" target="_blank" class="btn btn-ghost btn-sm" style="padding:2px 8px">Open</a>
+        <button class="icon-btn" style="color:#dc2626" onclick="deletePdf('${p.id}','${m.id}')" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>`).join('')}
+    <button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="openAddPdfModal('${m.id}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add PDF
+    </button>`;
+
+  const testsHtml = `
+    ${tests.map(t => `
+      <div class="test-row">
+        <div style="flex:1">
+          <div class="test-row-title">${escHtml(t.title)} ${t.is_mock ? '<span class="badge badge-warning" style="font-size:.6rem">Mock</span>' : ''} ${!t.is_active ? '<span class="badge badge-danger" style="font-size:.6rem">Hidden</span>' : ''}</div>
+          <div class="test-row-meta">${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openEditTestModal('${t.id}','${m.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleTestActive('${t.id}','${m.id}',${t.is_active})">${t.is_active ? 'Hide' : 'Show'}</button>
+        <button class="icon-btn" style="color:#dc2626" onclick="deleteTest('${t.id}','${m.id}')" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>`).join('')}
+    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="openPdfTestModal('${m.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Create from PDF
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="openManualTestModal('${m.id}')">+ Manual Test</button>
+    </div>`;
+
+  const assignsHtml = `
+    ${assigns.map(a => `
+      <div class="assign-row">
+        <div style="flex:1">
+          <div class="assign-row-title">${escHtml(a.title)}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${a.due_at ? 'Due ' + fmtDate(a.due_at) : 'No deadline'} · Max: ${a.max_score||100}</div>
+        </div>
+        <button class="icon-btn" style="color:#dc2626" onclick="deleteAssignment('${a.id}','${m.id}')" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>`).join('')}
+    <button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="openAssignModal('${m.id}')">+ Create Assignment</button>`;
+
+  return `
+    <div class="module-detail">
+      <div class="detail-section">
+        <div class="detail-section-title">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Recordings</span>
+          <span style="font-weight:400;font-size:.7rem">${recs.length} session${recs.length!==1?'s':''}</span>
+        </div>
+        ${recsHtml}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDFs</span>
+          <span style="font-weight:400;font-size:.7rem">${pdfs.length} file${pdfs.length!==1?'s':''}</span>
+        </div>
+        ${pdfsHtml}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Tests &amp; Quizzes</span>
+          <span style="font-weight:400;font-size:.7rem">${tests.length} test${tests.length!==1?'s':''}</span>
+        </div>
+        ${testsHtml}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</span>
+          <span style="font-weight:400;font-size:.7rem">${assigns.length} assignment${assigns.length!==1?'s':''}</span>
+        </div>
+        ${assignsHtml}
+      </div>
+    </div>`;
+}
+
+function toggleExpand(moduleId) {
+  if (expandedMods.has(moduleId)) expandedMods.delete(moduleId);
+  else expandedMods.add(moduleId);
+  renderModules();
+}
+
+// ── Module actions ─────────────────────────────────────────────────
+async function moveModule(moduleId, dir) {
+  const mods = (moduleMap[activeCourseId] || []).slice().sort((a,b)=>a.order_index-b.order_index);
+  const idx  = mods.findIndex(m => m.id === moduleId);
+  const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= mods.length) return;
+  const a = mods[idx], b = mods[swapIdx];
+  const [{ error: e1 }, { error: e2 }] = await Promise.all([
+    sb.from('modules').update({ order_index: b.order_index }).eq('id', a.id),
+    sb.from('modules').update({ order_index: a.order_index }).eq('id', b.id),
+  ]);
+  if (e1 || e2) { showToast('Error reordering: ' + (e1||e2).message, 'error'); return; }
+  const ai = moduleMap[activeCourseId].find(m => m.id === a.id);
+  const bi = moduleMap[activeCourseId].find(m => m.id === b.id);
+  [ai.order_index, bi.order_index] = [b.order_index, a.order_index];
+  renderModules();
+}
+
+async function toggleModuleActive(moduleId, current) {
+  const { error } = await sb.from('modules').update({ is_active: !current }).eq('id', moduleId);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
-  closeCourseModal();
-  await loadCourses();
-  showToast(id ? 'Course updated.' : 'Course created!', 'success');
+  const m = moduleMap[activeCourseId]?.find(x => x.id === moduleId);
+  if (m) m.is_active = !current;
+  renderModules();
 }
 
-async function toggleCourseActive(id, current) {
-  const { error } = await sb.from('courses').update({ is_active: !current }).eq('id', id);
-  if (error) { showToast('Error: ' + error.message, 'error'); return; }
-  await loadCourses();
+function openEditModModal(moduleId) {
+  const m = (moduleMap[activeCourseId] || []).find(x => x.id === moduleId);
+  if (!m) return;
+  document.getElementById('edit-mod-id').value    = moduleId;
+  document.getElementById('edit-mod-title').value = m.title;
+  document.getElementById('edit-mod-desc').value  = m.description || '';
+  document.getElementById('edit-mod-modal').classList.add('show');
 }
+function closeEditModModal() { document.getElementById('edit-mod-modal').classList.remove('show'); }
 
-function openModuleModal(courseId) {
-  document.getElementById('module-course-id').value = courseId;
-  document.getElementById('module-title').value = '';
-  document.getElementById('module-modal').classList.add('show');
-}
-
-function closeModuleModal() { document.getElementById('module-modal').classList.remove('show'); }
-
-async function saveModule() {
-  const title    = document.getElementById('module-title').value.trim();
-  const courseId = document.getElementById('module-course-id').value;
+async function saveModuleTitle() {
+  const id    = document.getElementById('edit-mod-id').value;
+  const title = document.getElementById('edit-mod-title').value.trim();
+  const desc  = document.getElementById('edit-mod-desc').value.trim() || null;
   if (!title) { showToast('Title is required.', 'warning'); return; }
-  const existingMods = modulesMap[courseId] || [];
-  const { error } = await sb.from('modules').insert({ course_id: courseId, title, order_index: existingMods.length });
+  const { error } = await sb.from('modules').update({ title, description: desc }).eq('id', id);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
-  closeModuleModal();
-  await loadCourses();
-  showToast('Module added!', 'success');
-  document.getElementById('details-' + courseId).style.display = 'block';
+  const m = (moduleMap[activeCourseId] || []).find(x => x.id === id);
+  if (m) { m.title = title; m.description = desc; }
+  closeEditModModal();
+  renderModules();
+  showToast('Lesson title updated.', 'success');
 }
 
-function openLessonModal(moduleId) {
-  document.getElementById('lesson-module-id').value = moduleId;
-  document.getElementById('lesson-title').value = '';
-  document.getElementById('lesson-yt').value = '';
-  document.getElementById('lesson-dur').value = '';
-  document.getElementById('lesson-modal').classList.add('show');
+// ── Recordings ─────────────────────────────────────────────────────
+function openAddRecordingModal(moduleId) {
+  activeModuleId = moduleId;
+  document.getElementById('rec-title').value = '';
+  document.getElementById('rec-yt').value    = '';
+  document.getElementById('rec-dur').value   = '';
+  document.getElementById('add-recording-modal').classList.add('show');
 }
+function closeAddRecordingModal() { document.getElementById('add-recording-modal').classList.remove('show'); }
 
-function closeLessonModal() { document.getElementById('lesson-modal').classList.remove('show'); }
-
-async function saveLesson() {
-  const title    = document.getElementById('lesson-title').value.trim();
-  const moduleId = document.getElementById('lesson-module-id').value;
-  const ytId     = document.getElementById('lesson-yt').value.trim() || null;
-  const dur      = parseInt(document.getElementById('lesson-dur').value) || null;
+async function saveRecording() {
+  const title = document.getElementById('rec-title').value.trim();
+  const yt    = document.getElementById('rec-yt').value.trim() || null;
+  const dur   = parseInt(document.getElementById('rec-dur').value) || null;
   if (!title) { showToast('Title is required.', 'warning'); return; }
-
-  const courseId = Object.entries(modulesMap).find(([, mods]) => mods.some(m => m.id === moduleId))?.[0];
-  const mods = modulesMap[courseId] || [];
-  const mod  = mods.find(m => m.id === moduleId);
-  const lessonCount = mod?.lessons?.length || 0;
-
-  const { error } = await sb.from('lessons').insert({ module_id: moduleId, title, youtube_id: ytId, duration_min: dur, order_index: lessonCount });
+  const existing = recordingMap[activeModuleId] || [];
+  const { data, error } = await sb.from('lessons')
+    .insert({ module_id: activeModuleId, title, youtube_id: yt, duration_min: dur, order_index: existing.length })
+    .select().single();
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
-  closeLessonModal();
-  await loadCourses();
-  showToast('Lesson added!', 'success');
-  if (courseId) document.getElementById('details-' + courseId).style.display = 'block';
-  document.getElementById('mod-' + moduleId).style.display = 'block';
+  (recordingMap[activeModuleId] ||= []).push(data);
+  closeAddRecordingModal();
+  renderModules();
+  showToast('Recording added!', 'success');
 }
 
-async function deleteLesson(lessonId, courseId) {
-  if (!confirm('Delete this lesson?')) return;
+async function deleteRecording(lessonId, moduleId) {
+  if (!confirm('Delete this recording?')) return;
   const { error } = await sb.from('lessons').delete().eq('id', lessonId);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
-  await loadCourses();
-  document.getElementById('details-' + courseId).style.display = 'block';
+  recordingMap[moduleId] = (recordingMap[moduleId] || []).filter(r => r.id !== lessonId);
+  renderModules();
+  showToast('Recording deleted.', 'success');
+}
+
+// ── PDFs ───────────────────────────────────────────────────────────
+function openAddPdfModal(moduleId) {
+  activeModuleId = moduleId;
+  document.getElementById('pdf-title-input').value = '';
+  document.getElementById('pdf-url-input').value   = '';
+  document.getElementById('add-pdf-modal').classList.add('show');
+}
+function closeAddPdfModal() { document.getElementById('add-pdf-modal').classList.remove('show'); }
+
+async function savePdf() {
+  const title = document.getElementById('pdf-title-input').value.trim();
+  const url   = document.getElementById('pdf-url-input').value.trim();
+  if (!title || !url) { showToast('Title and URL are required.', 'warning'); return; }
+  const { data, error } = await sb.from('module_pdfs')
+    .insert({ module_id: activeModuleId, title, file_url: url })
+    .select().single();
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  (pdfMap[activeModuleId] ||= []).unshift(data);
+  closeAddPdfModal();
+  renderModules();
+  showToast('PDF added!', 'success');
+}
+
+async function deletePdf(pdfId, moduleId) {
+  if (!confirm('Remove this PDF?')) return;
+  const { error } = await sb.from('module_pdfs').delete().eq('id', pdfId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  pdfMap[moduleId] = (pdfMap[moduleId] || []).filter(p => p.id !== pdfId);
+  renderModules();
+  showToast('PDF removed.', 'success');
+}
+
+// ── Tests — PDF creation ───────────────────────────────────────────
+function openPdfTestModal(moduleId) {
+  pdfTestModuleId = moduleId;
+  pdfTestCourseId = activeCourseId;
+  const m = (moduleMap[activeCourseId]||[]).find(x=>x.id===moduleId);
+  document.getElementById('pdf-modal-lesson-name').textContent = m ? 'Lesson: ' + m.title : '';
+  document.getElementById('pt-title').value = m ? m.title + ' Quiz' : '';
+  document.getElementById('pt-time').value  = '';
+  document.getElementById('pt-type').value  = '';
+  document.getElementById('pt-file').value  = '';
+  document.getElementById('pdf-step-1').style.display = '';
+  document.getElementById('pdf-step-2').style.display = 'none';
+  document.getElementById('pdf-modal-loading').style.display = 'none';
+  pendingQuestions = [];
+  document.getElementById('pdf-test-modal').classList.add('show');
+}
+function closePdfTestModal() {
+  document.getElementById('pdf-test-modal').classList.remove('show');
+  pendingQuestions = [];
+}
+
+async function extractFromPdf() {
+  const title = document.getElementById('pt-title').value.trim();
+  const file  = document.getElementById('pt-file').files[0];
+  if (!title) { showToast('Please enter a test title.', 'warning'); return; }
+  if (!file)  { showToast('Please select a PDF file.', 'warning'); return; }
+  if (file.size > 4 * 1024 * 1024) { showToast('PDF must be under 4 MB.', 'warning'); return; }
+
+  document.getElementById('pdf-modal-loading').style.display = 'flex';
+  document.getElementById('extract-btn').disabled = true;
+
+  try {
+    const b64 = await fileToBase64(file);
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp = await fetch('/api/extract-quiz-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ pdf_base64: b64 }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Extraction failed');
+
+    pendingQuestions = data.questions.map((q, i) => ({ ...q, _id: 'new-' + i }));
+    document.getElementById('pdf-step-1').style.display = 'none';
+    document.getElementById('pdf-step-2').style.display = '';
+    document.getElementById('review-q-count').textContent = `${pendingQuestions.length} question${pendingQuestions.length!==1?'s':''} extracted — review and edit before publishing`;
+    renderReviewQuestions();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    document.getElementById('pdf-modal-loading').style.display = 'none';
+    document.getElementById('extract-btn').disabled = false;
+  }
+}
+
+function backToStep1() {
+  document.getElementById('pdf-step-1').style.display = '';
+  document.getElementById('pdf-step-2').style.display = 'none';
+}
+
+function renderReviewQuestions() {
+  const container = document.getElementById('questions-review');
+  container.innerHTML = pendingQuestions.map((q, i) => buildQuestionCard(i, q, 'review')).join('');
+}
+
+function addBlankQuestion() {
+  pendingQuestions.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', _id: 'new-' + Date.now() });
+  renderReviewQuestions();
+  setTimeout(() => {
+    const cards = document.querySelectorAll('#questions-review .q-review');
+    cards[cards.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function deleteReviewQuestion(i) {
+  pendingQuestions.splice(i, 1);
+  renderReviewQuestions();
+}
+
+function setReviewCorrect(qIdx, optIdx) {
+  // Highlight correct option inputs
+  document.querySelectorAll(`#review-q-${qIdx} .q-opt-input`).forEach((el, j) => {
+    el.classList.toggle('correct-opt', j === optIdx);
+  });
+}
+
+function collectReviewQuestions() {
+  return pendingQuestions.map((_, i) => {
+    const qText = document.getElementById(`rq-text-${i}`)?.value.trim() || '';
+    const opts  = [0,1,2,3].map(j => document.getElementById(`rq-opt-${i}-${j}`)?.value.trim()).filter(v => v !== undefined && v !== '');
+    const correctRadio = document.querySelector(`input[name="rq-correct-${i}"]:checked`);
+    const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
+    const expl = document.getElementById(`rq-expl-${i}`)?.value.trim() || '';
+    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl };
+  });
+}
+
+async function publishTest() {
+  const questions = collectReviewQuestions();
+  const valid = questions.filter(q => q.question_text && q.options.filter(Boolean).length >= 2);
+  if (valid.length === 0) { showToast('Please add at least one complete question.', 'warning'); return; }
+
+  const title       = document.getElementById('pt-title').value.trim();
+  const isMock      = document.getElementById('pt-type').value === 'mock';
+  const timeLimitMin = parseInt(document.getElementById('pt-time').value) || null;
+
+  document.getElementById('publish-btn').disabled = true;
+  document.getElementById('publish-btn').textContent = 'Publishing…';
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp  = await fetch('/api/save-quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ title, course_id: pdfTestCourseId, module_id: pdfTestModuleId, is_mock: isMock, time_limit_min: timeLimitMin, questions: valid }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Save failed');
+
+    // Add to local state
+    const newTest = { id: data.test_id, title, is_mock: isMock, is_active: true, time_limit_min: timeLimitMin, module_id: pdfTestModuleId, course_id: pdfTestCourseId };
+    (testMap[pdfTestModuleId] ||= []).unshift(newTest);
+    closePdfTestModal();
+    renderModules();
+    showToast(`Test published! ${data.questions_saved} questions.`, 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    document.getElementById('publish-btn').disabled = false;
+    document.getElementById('publish-btn').textContent = 'Publish Test';
+  }
+}
+
+// ── Tests — Manual creation ────────────────────────────────────────
+function openManualTestModal(moduleId) {
+  manualModuleId = moduleId;
+  manualCourseId = activeCourseId;
+  manualQs = [{ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '' }];
+  document.getElementById('mt-title').value = '';
+  document.getElementById('mt-time').value  = '';
+  document.getElementById('mt-type').value  = '';
+  renderManualQuestions();
+  document.getElementById('manual-test-modal').classList.add('show');
+}
+function closeManualTestModal() { document.getElementById('manual-test-modal').classList.remove('show'); }
+
+function renderManualQuestions() {
+  document.getElementById('manual-questions-list').innerHTML =
+    manualQs.map((q, i) => buildQuestionCard(i, q, 'manual')).join('');
+}
+
+function addManualQuestion() {
+  manualQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '' });
+  renderManualQuestions();
+}
+
+function deleteManualQuestion(i) {
+  if (manualQs.length <= 1) { showToast('A test needs at least one question.', 'warning'); return; }
+  manualQs.splice(i, 1);
+  renderManualQuestions();
+}
+
+function setManualCorrect(qIdx, optIdx) {
+  document.querySelectorAll(`#manual-q-${qIdx} .q-opt-input`).forEach((el, j) => {
+    el.classList.toggle('correct-opt', j === optIdx);
+  });
+}
+
+function collectManualQuestions() {
+  return manualQs.map((_, i) => {
+    const qText = document.getElementById(`mq-text-${i}`)?.value.trim() || '';
+    const opts  = [0,1,2,3].map(j => document.getElementById(`mq-opt-${i}-${j}`)?.value.trim()).filter(v => v !== undefined && v !== '');
+    const correctRadio = document.querySelector(`input[name="mq-correct-${i}"]:checked`);
+    const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
+    const expl = document.getElementById(`mq-expl-${i}`)?.value.trim() || '';
+    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl };
+  });
+}
+
+async function saveManualTest() {
+  const questions = collectManualQuestions();
+  const valid = questions.filter(q => q.question_text && q.options.filter(Boolean).length >= 2);
+  if (!valid.length) { showToast('Add at least one complete question.', 'warning'); return; }
+  const title = document.getElementById('mt-title').value.trim();
+  if (!title) { showToast('Test title is required.', 'warning'); return; }
+
+  const isMock = document.getElementById('mt-type').value === 'mock';
+  const timeLimitMin = parseInt(document.getElementById('mt-time').value) || null;
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp  = await fetch('/api/save-quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ title, course_id: manualCourseId, module_id: manualModuleId, is_mock: isMock, time_limit_min: timeLimitMin, questions: valid }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Save failed');
+    const newTest = { id: data.test_id, title, is_mock: isMock, is_active: true, time_limit_min: timeLimitMin, module_id: manualModuleId, course_id: manualCourseId };
+    (testMap[manualModuleId] ||= []).unshift(newTest);
+    closeManualTestModal();
+    renderModules();
+    showToast(`Test created! ${data.questions_saved} questions.`, 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ── Tests — Edit existing ──────────────────────────────────────────
+async function openEditTestModal(testId, moduleId) {
+  editTestId = testId;
+  editTestModuleId = moduleId;
+  const t = (testMap[moduleId]||[]).find(x=>x.id===testId);
+  if (!t) return;
+
+  document.getElementById('edit-test-modal-title').textContent = 'Edit: ' + t.title;
+  document.getElementById('et-title').value = t.title;
+  document.getElementById('et-time').value  = t.time_limit_min || '';
+
+  // Load questions
+  const { data: qs } = await sb.from('test_questions').select('id, question_text, options, correct_index, explanation, order_index').eq('test_id', testId).order('order_index');
+  editTestQs = (qs || []).map(q => ({ ...q, _id: q.id }));
+  document.getElementById('edit-test-q-count').textContent = editTestQs.length + ' question' + (editTestQs.length!==1?'s':'');
+  renderEditQuestions();
+  document.getElementById('edit-test-modal').classList.add('show');
+}
+function closeEditTestModal() { document.getElementById('edit-test-modal').classList.remove('show'); }
+
+function renderEditQuestions() {
+  document.getElementById('edit-test-questions').innerHTML =
+    editTestQs.map((q, i) => buildQuestionCard(i, q, 'edit')).join('');
+}
+
+function addEditQuestion() {
+  editTestQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', _id: null });
+  renderEditQuestions();
+}
+
+function deleteEditQuestion(i) {
+  if (editTestQs.length <= 1) { showToast('A test needs at least one question.', 'warning'); return; }
+  editTestQs.splice(i, 1);
+  renderEditQuestions();
+}
+
+function setEditCorrect(qIdx, optIdx) {
+  document.querySelectorAll(`#edit-q-${qIdx} .q-opt-input`).forEach((el, j) => {
+    el.classList.toggle('correct-opt', j === optIdx);
+  });
+}
+
+function collectEditQuestions() {
+  return editTestQs.map((_, i) => {
+    const qText = document.getElementById(`eq-text-${i}`)?.value.trim() || '';
+    const opts  = [0,1,2,3].map(j => document.getElementById(`eq-opt-${i}-${j}`)?.value.trim()).filter(v => v !== undefined && v !== '');
+    const correctRadio = document.querySelector(`input[name="eq-correct-${i}"]:checked`);
+    const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
+    const expl = document.getElementById(`eq-expl-${i}`)?.value.trim() || '';
+    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl };
+  });
+}
+
+async function saveEditTest() {
+  const questions = collectEditQuestions();
+  const valid = questions.filter(q => q.question_text && q.options.filter(Boolean).length >= 2);
+  if (!valid.length) { showToast('Add at least one complete question.', 'warning'); return; }
+  const title = document.getElementById('et-title').value.trim();
+  if (!title) { showToast('Title is required.', 'warning'); return; }
+  const timeLimitMin = parseInt(document.getElementById('et-time').value) || null;
+
+  try {
+    const t = (testMap[editTestModuleId]||[]).find(x=>x.id===editTestId);
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp  = await fetch('/api/save-quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ test_id: editTestId, title, course_id: t?.course_id || activeCourseId, module_id: editTestModuleId, is_mock: t?.is_mock || false, time_limit_min: timeLimitMin, questions: valid }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Save failed');
+    // Update local
+    if (t) { t.title = title; t.time_limit_min = timeLimitMin; }
+    closeEditTestModal();
+    renderModules();
+    showToast('Test updated! ' + data.questions_saved + ' questions.', 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function toggleTestActive(testId, moduleId, current) {
+  const { error } = await sb.from('practice_tests').update({ is_active: !current }).eq('id', testId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  const t = (testMap[moduleId]||[]).find(x=>x.id===testId);
+  if (t) t.is_active = !current;
+  renderModules();
+}
+
+async function deleteTest(testId, moduleId) {
+  if (!confirm('Delete this test and all student attempts?')) return;
+  const { error } = await sb.from('practice_tests').delete().eq('id', testId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  testMap[moduleId] = (testMap[moduleId]||[]).filter(t=>t.id!==testId);
+  renderModules();
+  showToast('Test deleted.', 'success');
+}
+
+// ── Assignments ────────────────────────────────────────────────────
+function openAssignModal(moduleId) {
+  activeModuleId = moduleId;
+  document.getElementById('asgn-title').value = '';
+  document.getElementById('asgn-desc').value  = '';
+  document.getElementById('asgn-due').value   = '';
+  document.getElementById('asgn-score').value = '';
+  document.getElementById('create-assign-modal').classList.add('show');
+}
+function closeAssignModal() { document.getElementById('create-assign-modal').classList.remove('show'); }
+
+async function saveAssignment() {
+  const title = document.getElementById('asgn-title').value.trim();
+  if (!title) { showToast('Title is required.', 'warning'); return; }
+  const payload = {
+    title,
+    description: document.getElementById('asgn-desc').value.trim() || null,
+    course_id: activeCourseId,
+    module_id: activeModuleId,
+    due_at: document.getElementById('asgn-due').value || null,
+    max_score: parseInt(document.getElementById('asgn-score').value) || 100,
+    is_active: true,
+  };
+  const { data, error } = await sb.from('assignments').insert(payload).select().single();
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  (assignMap[activeModuleId] ||= []).unshift(data);
+  closeAssignModal();
+  renderModules();
+  showToast('Assignment created!', 'success');
+}
+
+async function deleteAssignment(assignId, moduleId) {
+  if (!confirm('Delete this assignment?')) return;
+  await sb.from('assignment_submissions').delete().eq('assignment_id', assignId);
+  const { error } = await sb.from('assignments').delete().eq('id', assignId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  assignMap[moduleId] = (assignMap[moduleId]||[]).filter(a=>a.id!==assignId);
+  renderModules();
+  showToast('Assignment deleted.', 'success');
+}
+
+// ── Shared: question card builder ──────────────────────────────────
+// prefix: 'review', 'manual', 'edit' → determines ID prefix and callbacks
+function buildQuestionCard(i, q, prefix) {
+  const pre = prefix === 'review' ? 'rq' : prefix === 'manual' ? 'mq' : 'eq';
+  const delFn = prefix === 'review' ? 'deleteReviewQuestion' : prefix === 'manual' ? 'deleteManualQuestion' : 'deleteEditQuestion';
+  const setCorrectFn = prefix === 'review' ? 'setReviewCorrect' : prefix === 'manual' ? 'setManualCorrect' : 'setEditCorrect';
+  const containerId = `${prefix}-q-${i}`;
+
+  const optionsHtml = [0,1,2,3].map(j => {
+    const val = (q.options && q.options[j]) || '';
+    const checked = q.correct_index === j ? 'checked' : '';
+    return `
+      <input type="radio" class="q-opt-radio" name="${pre}-correct-${i}" value="${j}" ${checked} onchange="${setCorrectFn}(${i},${j})">
+      <input type="text" class="q-opt-input${q.correct_index===j?' correct-opt':''}" id="${pre}-opt-${i}-${j}" placeholder="Option ${String.fromCharCode(65+j)}" value="${escHtml(val)}">`;
+  }).join('');
+
+  return `
+    <div class="q-review" id="${containerId}">
+      <div class="q-review-header">
+        <div class="q-idx-badge">${i+1}</div>
+        <div style="flex:1;font-size:.78rem;font-weight:600;color:var(--muted)">Question ${i+1}</div>
+        <button class="icon-btn" style="color:#dc2626" onclick="${delFn}(${i})" title="Delete question">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>
+      <textarea class="q-text-area" id="${pre}-text-${i}" placeholder="Enter question text…">${escHtml(q.question_text||'')}</textarea>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:8px;margin-bottom:2px">Options — select the correct answer (radio button)</div>
+      <div class="q-options-grid">${optionsHtml}</div>
+      <input type="text" class="expl-input" id="${pre}-expl-${i}" placeholder="Explanation (optional — shown after student answers)" value="${escHtml(q.explanation||'')}">
+    </div>`;
+}
+
+// ── Utilities ──────────────────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function showToast(msg, type='info') {

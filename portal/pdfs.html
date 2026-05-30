@@ -95,16 +95,38 @@ let activeFilter = 'all';
     return;
   }
 
-  // Fetch PDFs via lessons → modules → courses
-  const { data: pdfs } = await sb
+  // Fetch module-level PDFs (primary source)
+  const { data: mPdfs } = await sb
+    .from('module_pdfs')
+    .select('id, title, file_url, created_at, modules(id, course_id, title, courses(title))')
+    .order('created_at', { ascending: false });
+
+  // Also fetch legacy lesson-level PDFs
+  const { data: lPdfs } = await sb
     .from('lesson_pdfs')
     .select('id, title, file_url, created_at, lessons(title, modules(course_id, title, courses(title)))')
     .order('created_at', { ascending: false });
 
-  allPdfs = (pdfs || []).filter(p => {
-    const cid = p.lessons?.modules?.course_id;
-    return courseIds.includes(cid);
-  });
+  // Normalize both into a unified list
+  const normalizedM = (mPdfs || [])
+    .filter(p => courseIds.includes(p.modules?.course_id))
+    .map(p => ({
+      id: p.id, title: p.title, file_url: p.file_url, created_at: p.created_at,
+      course_id: p.modules?.course_id,
+      course_title: p.modules?.courses?.title || '',
+      lesson_title: p.modules?.title || '',
+    }));
+
+  const normalizedL = (lPdfs || [])
+    .filter(p => courseIds.includes(p.lessons?.modules?.course_id))
+    .map(p => ({
+      id: p.id, title: p.title, file_url: p.file_url, created_at: p.created_at,
+      course_id: p.lessons?.modules?.course_id,
+      course_title: p.lessons?.modules?.courses?.title || '',
+      lesson_title: p.lessons?.title || '',
+    }));
+
+  allPdfs = [...normalizedM, ...normalizedL].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   // Build filter chips
   const chipsEl = document.getElementById('filter-chips');
@@ -128,8 +150,8 @@ let activeFilter = 'all';
   renderPdfs();
 })();
 
-function setFilter(id, chip) {
-  activeFilter = id;
+function setFilter(filterId, chip) {
+  activeFilter = filterId;
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   chip.classList.add('active');
   renderPdfs();
@@ -139,7 +161,7 @@ function renderPdfs() {
   const grid = document.getElementById('pdf-grid');
   const filtered = activeFilter === 'all'
     ? allPdfs
-    : allPdfs.filter(p => p.lessons?.modules?.course_id === activeFilter);
+    : allPdfs.filter(p => p.course_id === activeFilter);
 
   if (filtered.length === 0) {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="empty-title">No PDFs Yet</div><div class="empty-sub">PDF resources will appear here once uploaded.</div></div>';
@@ -153,7 +175,7 @@ function renderPdfs() {
       </div>
       <div>
         <div class="pdf-name">${escHtml(p.title)}</div>
-        <div class="pdf-meta">${escHtml(p.lessons?.modules?.courses?.title || '')} · ${escHtml(p.lessons?.title || '')}</div>
+        <div class="pdf-meta">${escHtml(p.course_title)} · ${escHtml(p.lesson_title)}</div>
       </div>
       <a class="pdf-dl" href="${escHtml(p.file_url)}" target="_blank" download>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

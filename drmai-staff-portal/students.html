@@ -182,6 +182,23 @@
   </div>
 </div>
 
+<!-- Delete Student Modal -->
+<div class="modal-overlay" id="delete-modal-overlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">Delete Student</div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body" id="delete-body">
+      <p style="font-size:.85rem;color:var(--muted)">This permanently deletes the student account, their login, and all their progress, attempts, and submissions. This cannot be undone.</p>
+    </div>
+    <div class="modal-footer" id="delete-footer">
+      <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="delete-btn" onclick="doDelete()">Delete Permanently</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -191,6 +208,7 @@ let adminProfile = null;
 let allStudents  = [];
 let courses      = [];
 let resetTarget  = null;
+let deleteTarget = null;
 let lastCreated  = null;
 
 (async () => {
@@ -237,6 +255,7 @@ function renderTable(students) {
       <td>
         <button class="btn btn-ghost btn-sm" onclick="openEditModal('${s.id}')">Edit</button>
         <button class="btn btn-ghost btn-sm" onclick="openResetModal('${s.id}', '${escHtml(s.full_name)}')">Reset PW</button>
+        <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="openDeleteModal('${s.id}', '${escHtml(s.full_name)}')">Delete</button>
       </td>
     </tr>`).join('');
 }
@@ -393,6 +412,42 @@ async function doReset() {
   document.getElementById('reset-footer').innerHTML = `
     <button class="btn btn-outline" onclick="navigator.clipboard.writeText('${escHtml(data.password)}');showToast('Copied!','success')">Copy</button>
     <button class="btn btn-primary" onclick="closeResetModal()">Done</button>`;
+}
+
+function openDeleteModal(studentId, name) {
+  deleteTarget = studentId;
+  document.getElementById('delete-body').innerHTML = `<p style="font-size:.85rem;color:var(--muted)">This permanently deletes <strong>${escHtml(name)}</strong>'s account, login, and all their progress, attempts, and submissions. This cannot be undone.</p>`;
+  document.getElementById('delete-footer').innerHTML = `<button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button><button class="btn btn-danger" id="delete-btn" onclick="doDelete()">Delete Permanently</button>`;
+  document.getElementById('delete-modal-overlay').classList.add('show');
+}
+
+function closeDeleteModal() { document.getElementById('delete-modal-overlay').classList.remove('show'); deleteTarget = null; }
+
+async function doDelete() {
+  if (!deleteTarget) return;
+  const btn = document.getElementById('delete-btn');
+  btn.textContent = 'Deleting…';
+  btn.disabled = true;
+
+  const session = await getSession();
+  const resp = await fetch('/api/delete-student', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ student_id: deleteTarget })
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) {
+    showToast('Error: ' + (data.error || 'Could not delete student.'), 'error');
+    btn.textContent = 'Delete Permanently';
+    btn.disabled = false;
+    return;
+  }
+
+  allStudents = allStudents.filter(s => s.id !== deleteTarget);
+  renderTable(allStudents);
+  closeDeleteModal();
+  showToast('Student deleted.', 'success');
 }
 
 function showToast(msg, type='info') {

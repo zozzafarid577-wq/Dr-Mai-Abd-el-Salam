@@ -107,15 +107,18 @@
 .term-pool-list { display:flex;flex-direction:column;gap:6px;margin-top:6px; }
 .term-pool-row { display:flex;gap:8px;align-items:center; }
 .term-pool-row .q-input { flex:1; }
+.term-letter-badge { width:26px;height:26px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:var(--muted);flex-shrink:0; }
 .stmt-list { display:flex;flex-direction:column;gap:8px;margin-top:6px; }
 .stmt-row { border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--bg); }
 .stmt-top { display:flex;align-items:flex-start;gap:8px; }
 .stmt-num { font-size:.7rem;font-weight:800;color:var(--muted);padding-top:9px;min-width:18px; }
 .stmt-top .q-textarea { flex:1;min-height:52px; }
-.stmt-answer-row { display:flex;align-items:center;gap:6px;margin-top:7px; }
+.stmt-answer-row { display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap; }
 .stmt-answer-label { font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap; }
-.stmt-correct-select { font-size:.8rem;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);outline:none;flex:1; }
-.stmt-correct-select:focus { border-color:var(--primary);background:#f8faff; }
+.stmt-letters { display:flex;gap:5px;flex-wrap:wrap; }
+.stmt-letter-btn { min-width:30px;padding:4px 9px;border:2px solid var(--border);border-radius:7px;background:var(--surface);font-size:.76rem;font-weight:800;cursor:pointer;color:var(--muted);transition:all .12s;font-family:inherit; }
+.stmt-letter-btn:hover { border-color:var(--primary);color:var(--primary); }
+.stmt-letter-btn.selected { border-color:var(--primary);background:var(--primary);color:#fff; }
 
 @media (max-width:600px) {
   .type-bar { grid-template-columns:1fr 1fr; }
@@ -591,7 +594,7 @@ function loadQIntoForm(q) {
     const sList = document.getElementById('stmt-list');
     sList.innerHTML = '';
     addStatementRow(q.question_text || '', q.correct_index ?? 0);
-    rebuildCorrectDropdowns();
+    rebuildLetterButtons();
     document.getElementById('add-stmt-btn').style.display = 'none';
     document.getElementById('stmt-label-note').textContent = '— editing single statement';
   } else if (q.question_type === 'true_false') {
@@ -632,6 +635,8 @@ function selectTF(val) {
   document.getElementById('tf-false').className = 'tf-opt' + (val === 'false' ? ' selected-false' : '');
 }
 
+const TM_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 // ── Terms pool management ────────────────────────────────────────
 
 function resetTermsForm() {
@@ -648,20 +653,40 @@ function resetTermsForm() {
 function addTerm() { addTermWithValue(''); }
 
 function addTermWithValue(val) {
-  const list = document.getElementById('term-pool-list');
-  const row  = document.createElement('div');
+  const list   = document.getElementById('term-pool-list');
+  const letter = TM_LETTERS[list.children.length] || '?';
+  const row    = document.createElement('div');
   row.className = 'term-pool-row';
-  row.innerHTML = `<input type="text" class="q-input" placeholder="Term" value="${escHtml(val)}" oninput="rebuildCorrectDropdowns()">
+  row.innerHTML = `<div class="term-letter-badge">${letter}</div>
+    <input type="text" class="q-input" placeholder="Term ${letter}" value="${escHtml(val)}" oninput="rebuildLetterButtons()">
     <button type="button" class="icon-btn del" onclick="removeTerm(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   list.appendChild(row);
-  rebuildCorrectDropdowns();
+  rebuildLetterButtons();
 }
 
 function removeTerm(btn) {
   const list = document.getElementById('term-pool-list');
   if (list.children.length <= 2) { showToast('Need at least 2 terms.', 'warning'); return; }
+  const removedIdx = Array.from(list.children).indexOf(btn.closest('.term-pool-row'));
   btn.closest('.term-pool-row').remove();
-  rebuildCorrectDropdowns();
+  renumberTerms();
+  // Shift statement selections
+  document.querySelectorAll('.stmt-letters').forEach(container => {
+    let sel = parseInt(container.dataset.selected) || 0;
+    if (sel === removedIdx) sel = 0;
+    else if (sel > removedIdx) sel--;
+    container.dataset.selected = sel;
+  });
+  rebuildLetterButtons();
+}
+
+function renumberTerms() {
+  document.querySelectorAll('#term-pool-list .term-pool-row').forEach((row, i) => {
+    const badge = row.querySelector('.term-letter-badge');
+    const inp   = row.querySelector('input');
+    if (badge) badge.textContent = TM_LETTERS[i] || '?';
+    if (inp)   inp.placeholder   = `Term ${TM_LETTERS[i] || '?'}`;
+  });
 }
 
 function getTerms() {
@@ -669,15 +694,21 @@ function getTerms() {
     .map(i => i.value.trim()).filter(Boolean);
 }
 
-function rebuildCorrectDropdowns() {
-  const terms = Array.from(document.getElementById('term-pool-list').querySelectorAll('input'))
-    .map(i => i.value.trim());
-  document.querySelectorAll('.stmt-correct-select').forEach(sel => {
-    const prev = parseInt(sel.value) || 0;
-    sel.innerHTML = terms.map((t, i) =>
-      `<option value="${i}"${i === prev ? ' selected' : ''}>${escHtml(t || `Term ${i + 1}`)}</option>`
+function rebuildLetterButtons() {
+  const count = document.getElementById('term-pool-list').querySelectorAll('input').length;
+  document.querySelectorAll('.stmt-letters').forEach(container => {
+    const prev = parseInt(container.dataset.selected) || 0;
+    const sel  = Math.min(prev, count - 1);
+    container.dataset.selected = sel;
+    container.innerHTML = Array.from({length: count}, (_, i) =>
+      `<button type="button" class="stmt-letter-btn${i === sel ? ' selected' : ''}" onclick="selectStmtAnswer(this.parentElement,${i})">${TM_LETTERS[i]}</button>`
     ).join('');
   });
+}
+
+function selectStmtAnswer(container, idx) {
+  container.dataset.selected = idx;
+  container.querySelectorAll('.stmt-letter-btn').forEach((b, i) => b.classList.toggle('selected', i === idx));
 }
 
 // ── Statement management ─────────────────────────────────────────
@@ -687,10 +718,12 @@ function addStatement() { addStatementRow('', 0); }
 function addStatementRow(text, correctIdx) {
   const list  = document.getElementById('stmt-list');
   const num   = list.children.length + 1;
-  const terms = Array.from(document.getElementById('term-pool-list').querySelectorAll('input'))
-    .map(i => i.value.trim());
-  const row = document.createElement('div');
+  const count = document.getElementById('term-pool-list').querySelectorAll('input').length;
+  const row   = document.createElement('div');
   row.className = 'stmt-row';
+  const letterBtns = Array.from({length: count}, (_, i) =>
+    `<button type="button" class="stmt-letter-btn${i === correctIdx ? ' selected' : ''}" onclick="selectStmtAnswer(this.parentElement,${i})">${TM_LETTERS[i]}</button>`
+  ).join('');
   row.innerHTML = `
     <div class="stmt-top">
       <span class="stmt-num">${num}.</span>
@@ -699,9 +732,7 @@ function addStatementRow(text, correctIdx) {
     </div>
     <div class="stmt-answer-row">
       <span class="stmt-answer-label">Answer:</span>
-      <select class="stmt-correct-select">
-        ${terms.map((t, i) => `<option value="${i}"${i === correctIdx ? ' selected' : ''}>${escHtml(t || `Term ${i + 1}`)}</option>`).join('')}
-      </select>
+      <div class="stmt-letters" data-selected="${correctIdx}">${letterBtns}</div>
     </div>`;
   list.appendChild(row);
 }
@@ -720,7 +751,7 @@ function renumberStatements() {
 function getStatements() {
   return Array.from(document.getElementById('stmt-list').querySelectorAll('.stmt-row')).map(row => ({
     text: row.querySelector('textarea').value.trim(),
-    correctIdx: parseInt(row.querySelector('.stmt-correct-select').value) || 0,
+    correctIdx: parseInt(row.querySelector('.stmt-letters')?.dataset.selected) || 0,
   }));
 }
 

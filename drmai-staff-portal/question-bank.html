@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Question Bank | Admin</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+/* ── Filter bar ── */
+.filter-bar { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center; }
+.filter-bar select,.filter-bar input { padding:7px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.82rem;background:var(--surface);color:var(--text);outline:none; }
+.filter-bar select:focus,.filter-bar input:focus { border-color:var(--primary); }
+.filter-bar input { flex:1;min-width:160px; }
+.filter-count { font-size:.78rem;color:var(--muted);margin-left:auto;white-space:nowrap; }
+
+/* ── Question cards ── */
+.qb-list { display:flex;flex-direction:column;gap:10px; }
+.qb-card { background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:0;display:flex;overflow:hidden;transition:border-color .15s,box-shadow .15s; }
+.qb-card:hover { border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.06); }
+.qb-card-stripe { width:4px;flex-shrink:0; }
+.qb-card-body { flex:1;padding:14px 16px;min-width:0; }
+.qb-card-top { display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap; }
+.qb-type-badge { padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase; }
+.type-mcq      { background:#eff6ff;color:#1d4ed8; }
+.type-terms    { background:#f0fdf4;color:#166534; }
+.type-tf       { background:#fef9c3;color:#854d0e; }
+.type-fill     { background:#fdf4ff;color:#7e22ce; }
+.diff-badge { padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:700; }
+.diff-easy   { background:#f0fdf4;color:#16a34a; }
+.diff-medium { background:#fefce8;color:#ca8a04; }
+.diff-hard   { background:#fef2f2;color:#dc2626; }
+.qb-module-label { font-size:.72rem;color:var(--muted);margin-left:auto; }
+.qb-card-text { font-size:.88rem;font-weight:600;color:var(--text);line-height:1.45;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.qb-card-answer { font-size:.76rem;color:var(--muted);margin-bottom:6px; }
+.qb-card-answer span { color:var(--primary);font-weight:600; }
+.qb-card-tags { display:flex;gap:4px;flex-wrap:wrap; }
+.qb-tag { padding:1px 7px;border-radius:10px;font-size:.62rem;font-weight:600;background:var(--bg);border:1px solid var(--border);color:var(--muted); }
+.qb-card-actions { display:flex;gap:4px;flex-direction:column;justify-content:center;padding:12px 10px; }
+.icon-btn { width:30px;height:30px;border:none;background:transparent;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .12s,color .12s; }
+.icon-btn:hover { background:var(--bg);color:var(--text); }
+.icon-btn svg { width:14px;height:14px; }
+.icon-btn.del:hover { background:#fef2f2;color:#dc2626; }
+
+/* ── Type selector ── */
+.type-bar { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px; }
+.type-btn { display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:2px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;transition:all .15s;text-align:center; }
+.type-btn:hover { border-color:var(--primary);background:#f8faff; }
+.type-btn.active { border-color:var(--primary);background:#eff6ff; }
+.type-btn-icon { font-size:1.1rem;font-weight:900;color:var(--muted); }
+.type-btn.active .type-btn-icon { color:var(--primary); }
+.type-btn-label { font-size:.72rem;font-weight:700;color:var(--muted); }
+.type-btn.active .type-btn-label { color:var(--primary); }
+.type-btn-sub { font-size:.62rem;color:var(--muted);line-height:1.3; }
+@media (max-width:520px) {
+  .type-bar { grid-template-columns:1fr 1fr; }
+}
+
+/* ── Form sections ── */
+.form-section { display:none; }
+.form-section.show { display:block; }
+.form-divider { height:1px;background:var(--border);margin:14px 0; }
+.opts-list { display:flex;flex-direction:column;gap:6px; }
+.opt-row { display:flex;align-items:center;gap:8px; }
+.opt-letter-circle { width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:var(--muted);flex-shrink:0; }
+.opt-letter-circle.correct { border-color:var(--primary);background:var(--primary);color:#fff; }
+.opt-input { flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.82rem; }
+.opt-input:focus { outline:none;border-color:var(--primary); }
+.opt-input.correct-opt { border-color:#16a34a;background:#f0fdf4; }
+.correct-radio { accent-color:var(--primary); }
+.tf-choice { display:flex;gap:12px;margin-top:6px; }
+.tf-opt { display:flex;align-items:center;gap:8px;padding:10px 18px;border:2px solid var(--border);border-radius:9px;cursor:pointer;font-size:.88rem;font-weight:600;transition:all .15s;flex:1;justify-content:center; }
+.tf-opt:hover { border-color:var(--primary);background:#f8faff; }
+.tf-opt.selected-true { border-color:#16a34a;background:#f0fdf4;color:#16a34a; }
+.tf-opt.selected-false { border-color:#dc2626;background:#fef2f2;color:#dc2626; }
+.field-label { font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:5px;margin-top:12px; }
+.q-textarea { width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.88rem;resize:vertical;min-height:72px;box-sizing:border-box;line-height:1.5; }
+.q-textarea:focus { outline:none;border-color:var(--primary); }
+.q-input { width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.86rem;box-sizing:border-box; }
+.q-input:focus { outline:none;border-color:var(--primary); }
+.hint-text { font-size:.72rem;color:var(--muted);margin-top:4px; }
+
+/* ── Empty state ── */
+.empty-bank { text-align:center;padding:64px 20px;color:var(--muted); }
+.empty-bank svg { width:52px;height:52px;margin-bottom:16px;opacity:.4; }
+.empty-bank-title { font-size:1rem;font-weight:700;margin-bottom:6px;color:var(--text-2); }
+.empty-bank-sub { font-size:.82rem; }
+
+/* ── Stats bar ── */
+.stats-row { display:flex;gap:20px;margin-bottom:18px;flex-wrap:wrap; }
+.stat-pill { background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:.78rem; }
+.stat-pill strong { font-size:1.1rem;display:block;color:var(--primary); }
+
+/* ── Stripe colors by type ── */
+.stripe-mcq    { background:#3b82f6; }
+.stripe-terms  { background:#22c55e; }
+.stripe-tf     { background:#eab308; }
+.stripe-fill   { background:#a855f7; }
+
+/* ── Distractor rows ── */
+.distractor-list { display:flex;flex-direction:column;gap:6px;margin-top:6px; }
+.distractor-row { display:flex;gap:8px;align-items:center; }
+.distractor-row .q-input { flex:1; }
+.add-distractor-btn { font-size:.76rem;color:var(--primary);background:none;border:none;cursor:pointer;padding:4px;font-family:inherit; }
+.add-distractor-btn:hover { text-decoration:underline; }
+
+@media (max-width:600px) {
+  .type-bar { grid-template-columns:1fr 1fr; }
+  .stats-row { display:none; }
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Admin</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Overview</div>
+    <a href="/drmai-staff-portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <div class="nav-section">Management</div>
+    <a href="/drmai-staff-portal/students.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</a>
+    <a href="/drmai-staff-portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
+    <a href="/drmai-staff-portal/question-bank.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
+    <a href="/drmai-staff-portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/drmai-staff-portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <a href="/drmai-staff-portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">…</div>
+      <div class="user-info"><div class="user-name" id="u-name">Loading…</div><div class="user-role">Admin</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Question Bank</span>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openQModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Question
+    </button>
+  </header>
+
+  <main class="content">
+    <div class="stats-row" id="stats-row">
+      <div class="stat-pill"><strong id="stat-total">—</strong>Total</div>
+      <div class="stat-pill"><strong id="stat-mcq">—</strong>MCQ</div>
+      <div class="stat-pill"><strong id="stat-terms">—</strong>Choose Term</div>
+      <div class="stat-pill"><strong id="stat-tf">—</strong>True/False</div>
+      <div class="stat-pill"><strong id="stat-fill">—</strong>Fill in Blank</div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <select id="f-course" onchange="onCourseFilter()">
+        <option value="">All Courses</option>
+      </select>
+      <select id="f-module" onchange="applyFilters()">
+        <option value="">All Modules</option>
+      </select>
+      <select id="f-type" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option value="mcq">Multiple Choice</option>
+        <option value="terms">Choose Term</option>
+        <option value="true_false">True / False</option>
+        <option value="fill_blank">Fill in Blank</option>
+      </select>
+      <select id="f-diff" onchange="applyFilters()">
+        <option value="">All Difficulties</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <input type="text" id="f-search" placeholder="Search questions…" oninput="applyFilters()">
+      <div class="filter-count" id="filter-count"></div>
+    </div>
+
+    <div class="qb-list" id="qb-list">
+      <div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- ═══════════════════════════════════════════
+     New / Edit Question Modal
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="qb-modal">
+  <div class="modal" style="max-width:700px;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title" id="qb-modal-title">New Question</div>
+      <button class="modal-close" onclick="closeQModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;flex:1;padding:20px">
+
+      <!-- Type selector -->
+      <div class="field-label" style="margin-top:0">Question Type</div>
+      <div class="type-bar">
+        <button class="type-btn active" id="tbtn-mcq" onclick="setType('mcq')">
+          <div class="type-btn-icon">MCQ</div>
+          <div class="type-btn-label">Multiple Choice</div>
+          <div class="type-btn-sub">4 options, pick correct</div>
+        </button>
+        <button class="type-btn" id="tbtn-terms" onclick="setType('terms')">
+          <div class="type-btn-icon">≡</div>
+          <div class="type-btn-label">Choose Term</div>
+          <div class="type-btn-sub">Match definition to term</div>
+        </button>
+        <button class="type-btn" id="tbtn-true_false" onclick="setType('true_false')">
+          <div class="type-btn-icon">T/F</div>
+          <div class="type-btn-label">True / False</div>
+          <div class="type-btn-sub">Statement is true or false</div>
+        </button>
+        <button class="type-btn" id="tbtn-fill_blank" onclick="setType('fill_blank')">
+          <div class="type-btn-icon">___</div>
+          <div class="type-btn-label">Fill in Blank</div>
+          <div class="type-btn-sub">Complete the sentence</div>
+        </button>
+      </div>
+
+      <!-- Assignment row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div>
+          <div class="field-label">Course</div>
+          <select class="q-input" id="q-course" style="padding:8px 10px" onchange="updateModuleDropdown()">
+            <option value="">— None —</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">Module / Lesson</div>
+          <select class="q-input" id="q-module" style="padding:8px 10px">
+            <option value="">— None —</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">Difficulty</div>
+          <select class="q-input" id="q-diff" style="padding:8px 10px">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- ── MCQ ── -->
+      <div class="form-section show" id="form-mcq">
+        <div class="field-label">Question *</div>
+        <textarea class="q-textarea" id="mcq-question" placeholder="Enter the question text here…"></textarea>
+        <div class="field-label">Options — click the radio button to mark the correct answer</div>
+        <div class="opts-list">
+          <div class="opt-row"><input type="radio" class="correct-radio" name="mcq-correct" value="0" checked onchange="highlightCorrect('mcq')"><div class="opt-letter-circle correct" id="mcq-letter-0">A</div><input type="text" class="opt-input correct-opt" id="mcq-opt-0" placeholder="Option A"></div>
+          <div class="opt-row"><input type="radio" class="correct-radio" name="mcq-correct" value="1"       onchange="highlightCorrect('mcq')"><div class="opt-letter-circle" id="mcq-letter-1">B</div><input type="text" class="opt-input" id="mcq-opt-1" placeholder="Option B"></div>
+          <div class="opt-row"><input type="radio" class="correct-radio" name="mcq-correct" value="2"       onchange="highlightCorrect('mcq')"><div class="opt-letter-circle" id="mcq-letter-2">C</div><input type="text" class="opt-input" id="mcq-opt-2" placeholder="Option C"></div>
+          <div class="opt-row"><input type="radio" class="correct-radio" name="mcq-correct" value="3"       onchange="highlightCorrect('mcq')"><div class="opt-letter-circle" id="mcq-letter-3">D</div><input type="text" class="opt-input" id="mcq-opt-3" placeholder="Option D"></div>
+        </div>
+      </div>
+
+      <!-- ── Choose Term ── -->
+      <div class="form-section" id="form-terms">
+        <div class="field-label">Statement / Definition *</div>
+        <textarea class="q-textarea" id="terms-question" placeholder="e.g. Movement of particles from high to low concentration."></textarea>
+        <div class="field-label">Correct Term *</div>
+        <input type="text" class="q-input" id="terms-correct" placeholder="e.g. Diffusion">
+        <div class="field-label">Distractor Terms <span style="font-weight:400;text-transform:none;letter-spacing:0">(wrong options students will see)</span></div>
+        <div class="distractor-list" id="distractor-list">
+          <div class="distractor-row"><input type="text" class="q-input" placeholder="Distractor 1"><button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+          <div class="distractor-row"><input type="text" class="q-input" placeholder="Distractor 2"><button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+          <div class="distractor-row"><input type="text" class="q-input" placeholder="Distractor 3"><button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+        </div>
+        <button type="button" class="add-distractor-btn" onclick="addDistractor()">+ Add another distractor</button>
+      </div>
+
+      <!-- ── True / False ── -->
+      <div class="form-section" id="form-true_false">
+        <div class="field-label">Statement *</div>
+        <textarea class="q-textarea" id="tf-question" placeholder="e.g. Active transport requires energy."></textarea>
+        <div class="field-label">Correct Answer</div>
+        <div class="tf-choice">
+          <div class="tf-opt selected-true" id="tf-true" onclick="selectTF('true')">✓ True</div>
+          <div class="tf-opt" id="tf-false" onclick="selectTF('false')">✗ False</div>
+        </div>
+        <input type="hidden" id="tf-answer" value="true">
+      </div>
+
+      <!-- ── Fill in Blank ── -->
+      <div class="form-section" id="form-fill_blank">
+        <div class="field-label">Question — use ___ for the blank *</div>
+        <textarea class="q-textarea" id="fill-question" placeholder="e.g. The movement of water molecules across a partially permeable membrane is called ___."></textarea>
+        <div class="hint-text">Use three underscores (___) to show where the blank is.</div>
+        <div class="field-label">Correct Answer *</div>
+        <input type="text" class="q-input" id="fill-answer" placeholder="e.g. Osmosis">
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- Shared fields -->
+      <div class="field-label">Explanation <span style="font-weight:400;text-transform:none;letter-spacing:0">(shown to students after they answer)</span></div>
+      <textarea class="q-textarea" id="q-explanation" placeholder="Explain why the correct answer is right and why the others are wrong…" style="min-height:80px"></textarea>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <div class="field-label">Image URL <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <input type="text" class="q-input" id="q-image" placeholder="https://… or /assets/…">
+        </div>
+        <div>
+          <div class="field-label">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma-separated)</span></div>
+          <input type="text" class="q-input" id="q-tags" placeholder="e.g. Osmosis, Cell Membrane">
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+        <div class="field-label" style="margin:0">Status</div>
+        <select class="q-input" id="q-status" style="width:auto;padding:6px 10px">
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer" style="flex-shrink:0;gap:8px">
+      <button class="btn btn-outline" onclick="closeQModal()">Cancel</button>
+      <button class="btn btn-outline" id="save-another-btn" onclick="saveQ(true)">Save &amp; Add Another</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveQ(false)">Save Question</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile   = null;
+let allQs     = [];   // full loaded list
+let visibleQs = [];   // after filter
+let courses   = [];
+let modulesAll = [];
+let editingId  = null;
+let currentType = 'mcq';
+
+const TYPE_LABELS = { mcq:'Multiple Choice', terms:'Choose Term', true_false:'True/False', fill_blank:'Fill in Blank' };
+const TYPE_CLS    = { mcq:'type-mcq', terms:'type-terms', true_false:'type-tf', fill_blank:'type-fill' };
+const TYPE_STRIPE = { mcq:'stripe-mcq', terms:'stripe-terms', true_false:'stripe-tf', fill_blank:'stripe-fill' };
+const DIFF_CLS    = { easy:'diff-easy', medium:'diff-medium', hard:'diff-hard' };
+const LETTERS     = ['A','B','C','D','E'];
+
+(async () => {
+  profile = await requireAuth('admin');
+  if (!profile) return;
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+  await loadData();
+})();
+
+async function loadData() {
+  const [{ data: cData }, { data: mData }, { data: qData }] = await Promise.all([
+    sb.from('courses').select('id, title').order('title'),
+    sb.from('modules').select('id, title, course_id').order('order_index'),
+    sb.from('question_bank').select('*').order('created_at', { ascending: false }),
+  ]);
+
+  courses    = cData || [];
+  modulesAll = mData || [];
+  allQs      = qData || [];
+
+  populateCourseDropdowns();
+  updateStats();
+  applyFilters();
+}
+
+function populateCourseDropdowns() {
+  const fCourse = document.getElementById('f-course');
+  const qCourse = document.getElementById('q-course');
+  const existing = fCourse.value;
+
+  fCourse.innerHTML = '<option value="">All Courses</option>';
+  qCourse.innerHTML = '<option value="">— None —</option>';
+  courses.forEach(c => {
+    fCourse.innerHTML += `<option value="${c.id}">${escHtml(c.title)}</option>`;
+    qCourse.innerHTML += `<option value="${c.id}">${escHtml(c.title)}</option>`;
+  });
+  if (existing) fCourse.value = existing;
+  updateModuleFilter();
+  updateModuleDropdown();
+}
+
+function updateModuleFilter() {
+  const courseId = document.getElementById('f-course').value;
+  const sel = document.getElementById('f-module');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Modules</option>';
+  const mods = courseId ? modulesAll.filter(m => m.course_id === courseId) : modulesAll;
+  mods.forEach(m => { sel.innerHTML += `<option value="${m.id}">${escHtml(m.title)}</option>`; });
+  if (cur) sel.value = cur;
+}
+
+function onCourseFilter() { updateModuleFilter(); applyFilters(); }
+
+function updateModuleDropdown() {
+  const courseId = document.getElementById('q-course').value;
+  const sel = document.getElementById('q-module');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— None —</option>';
+  const mods = courseId ? modulesAll.filter(m => m.course_id === courseId) : [];
+  mods.forEach(m => { sel.innerHTML += `<option value="${m.id}">${escHtml(m.title)}</option>`; });
+  if (cur) sel.value = cur;
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = allQs.length;
+  document.getElementById('stat-mcq').textContent   = allQs.filter(q => q.question_type === 'mcq').length;
+  document.getElementById('stat-terms').textContent = allQs.filter(q => q.question_type === 'terms').length;
+  document.getElementById('stat-tf').textContent    = allQs.filter(q => q.question_type === 'true_false').length;
+  document.getElementById('stat-fill').textContent  = allQs.filter(q => q.question_type === 'fill_blank').length;
+}
+
+function applyFilters() {
+  const fCourse = document.getElementById('f-course').value;
+  const fModule = document.getElementById('f-module').value;
+  const fType   = document.getElementById('f-type').value;
+  const fDiff   = document.getElementById('f-diff').value;
+  const fSearch = document.getElementById('f-search').value.toLowerCase().trim();
+
+  visibleQs = allQs.filter(q => {
+    if (fCourse && q.course_id !== fCourse) return false;
+    if (fModule && q.module_id !== fModule) return false;
+    if (fType   && q.question_type !== fType) return false;
+    if (fDiff   && q.difficulty !== fDiff) return false;
+    if (fSearch && !q.question_text.toLowerCase().includes(fSearch) &&
+        !(q.explanation||'').toLowerCase().includes(fSearch) &&
+        !(q.tags||[]).join(' ').toLowerCase().includes(fSearch)) return false;
+    return true;
+  });
+
+  document.getElementById('filter-count').textContent =
+    `${visibleQs.length} of ${allQs.length} question${allQs.length !== 1 ? 's' : ''}`;
+  renderList();
+}
+
+function renderList() {
+  const el = document.getElementById('qb-list');
+  if (!visibleQs.length) {
+    el.innerHTML = `<div class="empty-bank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      <div class="empty-bank-title">${allQs.length ? 'No questions match your filters' : 'No questions yet'}</div>
+      <div class="empty-bank-sub">${allQs.length ? 'Try adjusting your filters.' : 'Click "New Question" to add your first question.'}</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = visibleQs.map(q => renderCard(q)).join('');
+}
+
+function renderCard(q) {
+  const mod  = modulesAll.find(m => m.id === q.module_id);
+  const typeLabel = TYPE_LABELS[q.question_type] || q.question_type;
+  const typeCls   = TYPE_CLS[q.question_type] || 'type-mcq';
+  const stripeCls = TYPE_STRIPE[q.question_type] || 'stripe-mcq';
+  const diffCls   = DIFF_CLS[q.difficulty] || 'diff-medium';
+  const correctPreview = getCorrectPreview(q);
+  const tagsHtml = (q.tags||[]).map(t => `<span class="qb-tag">${escHtml(t)}</span>`).join('');
+
+  return `
+  <div class="qb-card">
+    <div class="qb-card-stripe ${stripeCls}"></div>
+    <div class="qb-card-body">
+      <div class="qb-card-top">
+        <span class="qb-type-badge ${typeCls}">${typeLabel}</span>
+        <span class="diff-badge ${diffCls}">${(q.difficulty||'medium').charAt(0).toUpperCase()+q.difficulty.slice(1)}</span>
+        ${mod ? `<span class="qb-module-label">${escHtml(mod.title)}</span>` : ''}
+      </div>
+      <div class="qb-card-text">${escHtml(q.question_text)}</div>
+      ${correctPreview ? `<div class="qb-card-answer">Answer: <span>${escHtml(correctPreview)}</span></div>` : ''}
+      ${tagsHtml ? `<div class="qb-card-tags">${tagsHtml}</div>` : ''}
+    </div>
+    <div class="qb-card-actions">
+      <button class="icon-btn" onclick="openQModal('${q.id}')" title="Edit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="icon-btn" onclick="duplicateQ('${q.id}')" title="Duplicate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <button class="icon-btn del" onclick="deleteQ('${q.id}')" title="Delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+function getCorrectPreview(q) {
+  if (q.question_type === 'fill_blank') return q.correct_answer || '';
+  if (q.question_type === 'true_false') return q.correct_answer || '';
+  if (q.question_type === 'terms' && q.options && q.correct_index != null) return q.options[q.correct_index] || '';
+  if (q.question_type === 'mcq' && q.options && q.correct_index != null)
+    return `${LETTERS[q.correct_index]}) ${q.options[q.correct_index] || ''}`;
+  return '';
+}
+
+// ── Modal open/close ──────────────────────────────────────────────
+
+function openQModal(id) {
+  editingId = id || null;
+  document.getElementById('qb-modal-title').textContent = id ? 'Edit Question' : 'New Question';
+
+  if (id) {
+    const q = allQs.find(x => x.id === id);
+    if (!q) return;
+    populateCourseDropdowns();
+    loadQIntoForm(q);
+  } else {
+    resetForm();
+  }
+  document.getElementById('qb-modal').classList.add('show');
+}
+
+function closeQModal() {
+  document.getElementById('qb-modal').classList.remove('show');
+}
+
+function resetForm() {
+  setType('mcq');
+  document.getElementById('q-course').value = '';
+  updateModuleDropdown();
+  document.getElementById('q-module').value = '';
+  document.getElementById('q-diff').value   = 'medium';
+  document.getElementById('q-explanation').value = '';
+  document.getElementById('q-image').value  = '';
+  document.getElementById('q-tags').value   = '';
+  document.getElementById('q-status').value = 'published';
+  // MCQ
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`mcq-opt-${i}`).value = '';
+    document.getElementById(`mcq-opt-${i}`).classList.remove('correct-opt');
+    document.getElementById(`mcq-letter-${i}`).classList.remove('correct');
+  }
+  document.querySelector('input[name="mcq-correct"][value="0"]').checked = true;
+  document.getElementById('mcq-opt-0').classList.add('correct-opt');
+  document.getElementById('mcq-letter-0').classList.add('correct');
+  document.getElementById('mcq-question').value = '';
+  // Terms
+  document.getElementById('terms-question').value = '';
+  document.getElementById('terms-correct').value  = '';
+  resetDistractors();
+  // T/F
+  document.getElementById('tf-question').value = '';
+  selectTF('true');
+  // Fill
+  document.getElementById('fill-question').value = '';
+  document.getElementById('fill-answer').value   = '';
+}
+
+function loadQIntoForm(q) {
+  setType(q.question_type || 'mcq');
+  document.getElementById('q-course').value = q.course_id || '';
+  updateModuleDropdown();
+  document.getElementById('q-module').value = q.module_id || '';
+  document.getElementById('q-diff').value   = q.difficulty || 'medium';
+  document.getElementById('q-explanation').value = q.explanation || '';
+  document.getElementById('q-image').value  = q.image_url || '';
+  document.getElementById('q-tags').value   = (q.tags || []).join(', ');
+  document.getElementById('q-status').value = q.status || 'published';
+
+  if (q.question_type === 'mcq') {
+    document.getElementById('mcq-question').value = q.question_text || '';
+    (q.options || []).forEach((opt, i) => {
+      if (i < 4) document.getElementById(`mcq-opt-${i}`).value = opt;
+    });
+    const rad = document.querySelector(`input[name="mcq-correct"][value="${q.correct_index ?? 0}"]`);
+    if (rad) { rad.checked = true; highlightCorrect('mcq'); }
+  } else if (q.question_type === 'terms') {
+    document.getElementById('terms-question').value = q.question_text || '';
+    const opts = q.options || [];
+    document.getElementById('terms-correct').value = opts[q.correct_index ?? 0] || '';
+    resetDistractors();
+    const distractors = opts.filter((_, i) => i !== (q.correct_index ?? 0));
+    const list = document.getElementById('distractor-list');
+    list.innerHTML = '';
+    distractors.forEach(d => addDistractorWithValue(d));
+    if (!distractors.length) addDistractorWithValue('');
+  } else if (q.question_type === 'true_false') {
+    document.getElementById('tf-question').value = q.question_text || '';
+    selectTF(q.correct_answer || 'true');
+  } else if (q.question_type === 'fill_blank') {
+    document.getElementById('fill-question').value = q.question_text || '';
+    document.getElementById('fill-answer').value   = q.correct_answer || '';
+  }
+}
+
+// ── Type switching ────────────────────────────────────────────────
+
+function setType(type) {
+  currentType = type;
+  ['mcq','terms','true_false','fill_blank'].forEach(t => {
+    document.getElementById(`form-${t}`).classList.toggle('show', t === type);
+    document.getElementById(`tbtn-${t}`).classList.toggle('active', t === type);
+  });
+}
+
+// ── MCQ helpers ──────────────────────────────────────────────────
+
+function highlightCorrect(prefix) {
+  const val = document.querySelector(`input[name="${prefix}-correct"]:checked`)?.value;
+  for (let i = 0; i < 4; i++) {
+    const isC = String(i) === val;
+    document.getElementById(`${prefix}-opt-${i}`)?.classList.toggle('correct-opt', isC);
+    document.getElementById(`${prefix}-letter-${i}`)?.classList.toggle('correct', isC);
+  }
+}
+
+// ── True/False ───────────────────────────────────────────────────
+
+function selectTF(val) {
+  document.getElementById('tf-answer').value = val;
+  document.getElementById('tf-true').className  = 'tf-opt' + (val === 'true'  ? ' selected-true'  : '');
+  document.getElementById('tf-false').className = 'tf-opt' + (val === 'false' ? ' selected-false' : '');
+}
+
+// ── Distractor management ────────────────────────────────────────
+
+function resetDistractors() {
+  const list = document.getElementById('distractor-list');
+  list.innerHTML = '';
+  addDistractorWithValue('');
+  addDistractorWithValue('');
+  addDistractorWithValue('');
+}
+
+function addDistractor() { addDistractorWithValue(''); }
+
+function addDistractorWithValue(val) {
+  const list = document.getElementById('distractor-list');
+  const row  = document.createElement('div');
+  row.className = 'distractor-row';
+  row.innerHTML = `<input type="text" class="q-input" placeholder="Distractor" value="${escHtml(val)}">
+    <button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  list.appendChild(row);
+}
+
+function removeDistractor(btn) {
+  const list = document.getElementById('distractor-list');
+  if (list.children.length <= 1) { showToast('At least one distractor is required.', 'warning'); return; }
+  btn.closest('.distractor-row').remove();
+}
+
+// ── Build payload from form ───────────────────────────────────────
+
+function buildPayload() {
+  const type  = currentType;
+  const course = document.getElementById('q-course').value || null;
+  const module = document.getElementById('q-module').value || null;
+  const diff   = document.getElementById('q-diff').value;
+  const expl   = document.getElementById('q-explanation').value.trim() || null;
+  const img    = document.getElementById('q-image').value.trim() || null;
+  const tags   = document.getElementById('q-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const status = document.getElementById('q-status').value;
+
+  let question_text, options, correct_index, correct_answer;
+
+  if (type === 'mcq') {
+    question_text = document.getElementById('mcq-question').value.trim();
+    if (!question_text) { showToast('Please enter the question text.', 'warning'); return null; }
+    const correctVal = document.querySelector('input[name="mcq-correct"]:checked')?.value ?? '0';
+    correct_index = parseInt(correctVal);
+    options = [0,1,2,3].map(i => document.getElementById(`mcq-opt-${i}`).value.trim());
+    const filled = options.filter(Boolean);
+    if (filled.length < 2) { showToast('Please fill in at least 2 options.', 'warning'); return null; }
+    if (!options[correct_index]) { showToast('Please enter text for the correct option.', 'warning'); return null; }
+    correct_answer = options[correct_index] || null;
+
+  } else if (type === 'terms') {
+    question_text = document.getElementById('terms-question').value.trim();
+    if (!question_text) { showToast('Please enter the statement.', 'warning'); return null; }
+    const correctTerm = document.getElementById('terms-correct').value.trim();
+    if (!correctTerm) { showToast('Please enter the correct term.', 'warning'); return null; }
+    const distractors = Array.from(document.getElementById('distractor-list').querySelectorAll('input'))
+      .map(i => i.value.trim()).filter(Boolean);
+    // Build options: correct term first, then distractors
+    options       = [correctTerm, ...distractors];
+    correct_index = 0;
+    correct_answer = correctTerm;
+
+  } else if (type === 'true_false') {
+    question_text = document.getElementById('tf-question').value.trim();
+    if (!question_text) { showToast('Please enter the statement.', 'warning'); return null; }
+    correct_answer = document.getElementById('tf-answer').value;
+    options        = ['True', 'False'];
+    correct_index  = correct_answer === 'true' ? 0 : 1;
+
+  } else if (type === 'fill_blank') {
+    question_text = document.getElementById('fill-question').value.trim();
+    if (!question_text) { showToast('Please enter the question text.', 'warning'); return null; }
+    correct_answer = document.getElementById('fill-answer').value.trim();
+    if (!correct_answer) { showToast('Please enter the correct answer.', 'warning'); return null; }
+    options       = null;
+    correct_index = null;
+  }
+
+  return { id: editingId || undefined, course_id: course, module_id: module, question_type: type, difficulty: diff,
+    question_text, options, correct_index, correct_answer, explanation: expl, image_url: img,
+    tags: tags.length ? tags : null, status };
+}
+
+// ── Save ────────────────────────────────────────────────────────
+
+async function saveQ(addAnother) {
+  const payload = buildPayload();
+  if (!payload) return;
+
+  const btn  = document.getElementById('save-btn');
+  const btn2 = document.getElementById('save-another-btn');
+  btn.disabled = btn2.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp  = await fetch('/api/save-bank-question', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Save failed');
+
+    // Update local state
+    if (editingId) {
+      const idx = allQs.findIndex(q => q.id === editingId);
+      if (idx >= 0) allQs[idx] = data;
+    } else {
+      allQs.unshift(data);
+    }
+    updateStats();
+    applyFilters();
+    showToast(editingId ? 'Question updated.' : 'Question saved!', 'success');
+
+    if (addAnother) {
+      editingId = null;
+      document.getElementById('qb-modal-title').textContent = 'New Question';
+      resetForm();
+    } else {
+      closeQModal();
+    }
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = btn2.disabled = false;
+    btn.textContent = 'Save Question';
+  }
+}
+
+// ── Delete ──────────────────────────────────────────────────────
+
+async function deleteQ(id) {
+  const q = allQs.find(x => x.id === id);
+  if (!q) return;
+  if (!confirm(`Delete this question?\n\n"${q.question_text.slice(0, 80)}${q.question_text.length > 80 ? '…' : ''}"`)) return;
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp  = await fetch('/api/delete-bank-question', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ id }),
+    });
+    if (!resp.ok) { const d = await resp.json(); throw new Error(d.error || 'Delete failed'); }
+    allQs = allQs.filter(x => x.id !== id);
+    updateStats();
+    applyFilters();
+    showToast('Question deleted.', 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ── Duplicate ──────────────────────────────────────────────────
+
+async function duplicateQ(id) {
+  const q = allQs.find(x => x.id === id);
+  if (!q) return;
+  const payload = { ...q };
+  delete payload.id;
+  delete payload.created_at;
+  delete payload.updated_at;
+  payload.question_text = payload.question_text + ' (copy)';
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp  = await fetch('/api/save-bank-question', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Duplicate failed');
+    allQs.unshift(data);
+    updateStats();
+    applyFilters();
+    showToast('Question duplicated.', 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ── UI helpers ──────────────────────────────────────────────────
+
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>

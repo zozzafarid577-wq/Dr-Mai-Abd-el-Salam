@@ -154,6 +154,13 @@ const LETTERS = ['A','B','C','D','E'];
   });
 
   renderTests();
+
+  // Auto-open a specific test when linked from assignments (?id=...)
+  const targetId = new URLSearchParams(location.search).get('id');
+  if (targetId) {
+    const found = tests.find(t => t.id === targetId);
+    if (found) startTest(targetId);
+  }
 })();
 
 function renderTests() {

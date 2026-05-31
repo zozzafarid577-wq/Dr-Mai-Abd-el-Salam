@@ -57,6 +57,16 @@ async function requireAuth(role) {
     }
   }
 
+  // Single-session check for students
+  if (profile.role === 'student' && profile.session_token) {
+    const stored = localStorage.getItem('drmai_session_token');
+    if (stored && stored !== profile.session_token) {
+      await sb.auth.signOut();
+      location.replace('/login.html?e=session_expired');
+      return null;
+    }
+  }
+
   return profile;
 }
 
@@ -74,6 +84,22 @@ async function handlePostLogin() {
   const profile = await getProfile();
   if (!profile) { location.replace('/login.html'); return; }
   if (profile.role === 'admin') { location.replace('/drmai-staff-portal/'); return; }
+
+  // Register this session (kicks any other logged-in device for this student)
+  try {
+    const session = await getSession();
+    if (session && profile.role === 'student') {
+      const resp = await fetch('/api/register-session', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + session.access_token }
+      });
+      if (resp.ok) {
+        const { session_token } = await resp.json();
+        if (session_token) localStorage.setItem('drmai_session_token', session_token);
+      }
+    }
+  } catch (_) {}
+
   location.replace(profile.must_change_pw ? '/portal/settings.html?first=1' : '/portal/');
 }
 

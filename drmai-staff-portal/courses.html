@@ -267,6 +267,24 @@
           </select>
         </div>
       </div>
+      <!-- Shared Terms Panel -->
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);cursor:pointer" onclick="toggleMtSharedPanel()">
+          <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary)">+ Choose-From-Terms Section (optional)</div>
+          <span id="mt-shared-arrow" style="font-size:.7rem;color:var(--muted)">▼ expand</span>
+        </div>
+        <div id="mt-shared-panel" style="display:none;padding:14px;border-top:1px solid var(--border)">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px">Define shared answer terms once. Questions that use these will show them as their options.</div>
+          <input type="text" class="form-input" id="mt-shared-instruction" placeholder="Instruction text, e.g. Choose from the terms below to answer questions 1–8:" style="margin-bottom:8px;font-size:.82rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <input type="text" class="form-input" id="mt-shared-term-0" placeholder="Term A" style="font-size:.8rem">
+            <input type="text" class="form-input" id="mt-shared-term-1" placeholder="Term B" style="font-size:.8rem">
+            <input type="text" class="form-input" id="mt-shared-term-2" placeholder="Term C" style="font-size:.8rem">
+            <input type="text" class="form-input" id="mt-shared-term-3" placeholder="Term D" style="font-size:.8rem">
+            <input type="text" class="form-input" id="mt-shared-term-4" placeholder="Term E (optional)" style="font-size:.8rem">
+          </div>
+        </div>
+      </div>
       <div style="margin-top:4px;margin-bottom:10px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Questions</div>
       <div id="manual-questions-list"></div>
       <button class="btn btn-outline btn-sm" onclick="addManualQuestion()" style="margin-top:4px">
@@ -302,6 +320,24 @@
         <div class="form-group">
           <label class="form-label">Time Limit (min)</label>
           <input type="number" class="form-input" id="et-time" min="1">
+        </div>
+      </div>
+      <!-- Shared Terms Panel -->
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);cursor:pointer" onclick="toggleEtSharedPanel()">
+          <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary)">+ Choose-From-Terms Section (optional)</div>
+          <span id="et-shared-arrow" style="font-size:.7rem;color:var(--muted)">▼ expand</span>
+        </div>
+        <div id="et-shared-panel" style="display:none;padding:14px;border-top:1px solid var(--border)">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px">Define shared answer terms once. Questions that use these will show them as their options.</div>
+          <input type="text" class="form-input" id="et-shared-instruction" placeholder="Instruction text, e.g. Choose from the terms below:" style="margin-bottom:8px;font-size:.82rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <input type="text" class="form-input" id="et-shared-term-0" placeholder="Term A" style="font-size:.8rem">
+            <input type="text" class="form-input" id="et-shared-term-1" placeholder="Term B" style="font-size:.8rem">
+            <input type="text" class="form-input" id="et-shared-term-2" placeholder="Term C" style="font-size:.8rem">
+            <input type="text" class="form-input" id="et-shared-term-3" placeholder="Term D" style="font-size:.8rem">
+            <input type="text" class="form-input" id="et-shared-term-4" placeholder="Term E (optional)" style="font-size:.8rem">
+          </div>
         </div>
       </div>
       <div style="margin-bottom:10px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Questions</div>
@@ -965,7 +1001,7 @@ async function publishTest() {
 function openManualTestModal(moduleId) {
   manualModuleId = moduleId;
   manualCourseId = activeCourseId;
-  manualQs = [{ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '' }];
+  manualQs = [{ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', useShared: false }];
   document.getElementById('mt-title').value = '';
   document.getElementById('mt-time').value  = '';
   document.getElementById('mt-type').value  = '';
@@ -975,12 +1011,13 @@ function openManualTestModal(moduleId) {
 function closeManualTestModal() { document.getElementById('manual-test-modal').classList.remove('show'); }
 
 function renderManualQuestions() {
+  const terms = getManualSharedTerms();
   document.getElementById('manual-questions-list').innerHTML =
-    manualQs.map((q, i) => buildQuestionCard(i, q, 'manual')).join('');
+    manualQs.map((q, i) => buildQuestionCard(i, q, 'manual', terms.length >= 2 ? terms : null)).join('');
 }
 
 function addManualQuestion() {
-  manualQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '' });
+  manualQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', useShared: false });
   renderManualQuestions();
 }
 
@@ -997,14 +1034,20 @@ function setManualCorrect(qIdx, optIdx) {
 }
 
 function collectManualQuestions() {
+  const sharedTerms = getManualSharedTerms();
   return manualQs.map((_, i) => {
-    const qText = document.getElementById(`mq-text-${i}`)?.value.trim() || '';
-    const opts  = [0,1,2,3].map(j => document.getElementById(`mq-opt-${i}-${j}`)?.value.trim()).filter(v => v !== undefined && v !== '');
-    const correctRadio = document.querySelector(`input[name="mq-correct-${i}"]:checked`);
-    const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
-    const expl = document.getElementById(`mq-expl-${i}`)?.value.trim() || '';
-    const imageUrl = document.getElementById(`mq-img-${i}`)?.value.trim() || '';
-    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl, image_url: imageUrl };
+    const pre = 'mq';
+    const qText = document.getElementById(`${pre}-text-${i}`)?.value.trim() || '';
+    const expl  = document.getElementById(`${pre}-expl-${i}`)?.value.trim() || '';
+    const imgUrl = document.getElementById(`${pre}-img-${i}`)?.value.trim() || '';
+    const useShared = document.getElementById(`${pre}-use-shared-${i}`)?.checked || false;
+    if (useShared && sharedTerms.length >= 2) {
+      const sharedRadio = document.querySelector(`input[name="${pre}-shared-correct-${i}"]:checked`);
+      return { question_text: qText, options: sharedTerms, correct_index: sharedRadio ? parseInt(sharedRadio.value) : 0, explanation: expl, image_url: imgUrl };
+    }
+    const opts = [0,1,2,3].map(j => document.getElementById(`${pre}-opt-${i}-${j}`)?.value.trim()).filter(v => v !== undefined && v !== '');
+    const correctRadio = document.querySelector(`input[name="${pre}-correct-${i}"]:checked`);
+    return { question_text: qText, options: opts, correct_index: correctRadio ? parseInt(correctRadio.value) : 0, explanation: expl, image_url: imgUrl };
   });
 }
 
@@ -1058,12 +1101,13 @@ async function openEditTestModal(testId, moduleId) {
 function closeEditTestModal() { document.getElementById('edit-test-modal').classList.remove('show'); }
 
 function renderEditQuestions() {
+  const terms = getEditSharedTerms();
   document.getElementById('edit-test-questions').innerHTML =
-    editTestQs.map((q, i) => buildQuestionCard(i, q, 'edit')).join('');
+    editTestQs.map((q, i) => buildQuestionCard(i, q, 'edit', terms.length >= 2 ? terms : null)).join('');
 }
 
 function addEditQuestion() {
-  editTestQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', _id: null });
+  editTestQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', image_url: '', useShared: false, _id: null });
   renderEditQuestions();
 }
 
@@ -1080,14 +1124,20 @@ function setEditCorrect(qIdx, optIdx) {
 }
 
 function collectEditQuestions() {
+  const sharedTerms = getEditSharedTerms();
   return editTestQs.map((_, i) => {
-    const qText = document.getElementById(`eq-text-${i}`)?.value.trim() || '';
-    const opts  = [0,1,2,3].map(j => document.getElementById(`eq-opt-${i}-${j}`)?.value.trim()).filter(v => v !== undefined && v !== '');
-    const correctRadio = document.querySelector(`input[name="eq-correct-${i}"]:checked`);
-    const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
-    const expl = document.getElementById(`eq-expl-${i}`)?.value.trim() || '';
-    const imageUrl = document.getElementById(`eq-img-${i}`)?.value.trim() || '';
-    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl, image_url: imageUrl };
+    const pre = 'eq';
+    const qText = document.getElementById(`${pre}-text-${i}`)?.value.trim() || '';
+    const expl  = document.getElementById(`${pre}-expl-${i}`)?.value.trim() || '';
+    const imgUrl = document.getElementById(`${pre}-img-${i}`)?.value.trim() || '';
+    const useShared = document.getElementById(`${pre}-use-shared-${i}`)?.checked || false;
+    if (useShared && sharedTerms.length >= 2) {
+      const sharedRadio = document.querySelector(`input[name="${pre}-shared-correct-${i}"]:checked`);
+      return { question_text: qText, options: sharedTerms, correct_index: sharedRadio ? parseInt(sharedRadio.value) : 0, explanation: expl, image_url: imgUrl };
+    }
+    const opts = [0,1,2,3].map(j => document.getElementById(`${pre}-opt-${i}-${j}`)?.value.trim()).filter(v => v !== undefined && v !== '');
+    const correctRadio = document.querySelector(`input[name="${pre}-correct-${i}"]:checked`);
+    return { question_text: qText, options: opts, correct_index: correctRadio ? parseInt(correctRadio.value) : 0, explanation: expl, image_url: imgUrl };
   });
 }
 
@@ -1177,36 +1227,96 @@ async function deleteAssignment(assignId, moduleId) {
   showToast('Assignment deleted.', 'success');
 }
 
+// ── Shared terms helpers ────────────────────────────────────────────
+function getManualSharedTerms() {
+  return [0,1,2,3,4].map(j => document.getElementById(`mt-shared-term-${j}`)?.value.trim() || '').filter(Boolean);
+}
+function getEditSharedTerms() {
+  return [0,1,2,3,4].map(j => document.getElementById(`et-shared-term-${j}`)?.value.trim() || '').filter(Boolean);
+}
+
+function toggleMtSharedPanel() {
+  const p = document.getElementById('mt-shared-panel');
+  const a = document.getElementById('mt-shared-arrow');
+  const open = p.style.display === 'none';
+  p.style.display = open ? '' : 'none';
+  a.textContent = open ? '▲ collapse' : '▼ expand';
+  if (open) renderManualQuestions();
+}
+function toggleEtSharedPanel() {
+  const p = document.getElementById('et-shared-panel');
+  const a = document.getElementById('et-shared-arrow');
+  const open = p.style.display === 'none';
+  p.style.display = open ? '' : 'none';
+  a.textContent = open ? '▲ collapse' : '▼ expand';
+  if (open) renderEditQuestions();
+}
+
+function toggleSharedOpts(prefix, i) {
+  const pre = prefix === 'manual' ? 'mq' : 'eq';
+  const qs  = prefix === 'manual' ? manualQs : editTestQs;
+  const isChecked = document.getElementById(`${pre}-use-shared-${i}`)?.checked || false;
+  qs[i].useShared = isChecked;
+  document.getElementById(`${pre}-opts-grid-${i}`).style.display   = isChecked ? 'none' : '';
+  document.getElementById(`${pre}-shared-opts-${i}`).style.display = isChecked ? 'flex' : 'none';
+  const lbl = document.getElementById(`${pre}-opts-label-${i}`);
+  if (lbl) lbl.textContent = isChecked ? 'Correct shared term:' : 'Options — select the correct answer (radio button)';
+}
+
 // ── Shared: question card builder ──────────────────────────────────
 // prefix: 'review', 'manual', 'edit' → determines ID prefix and callbacks
-function buildQuestionCard(i, q, prefix) {
+function buildQuestionCard(i, q, prefix, sharedTerms) {
   const pre = prefix === 'review' ? 'rq' : prefix === 'manual' ? 'mq' : 'eq';
   const delFn = prefix === 'review' ? 'deleteReviewQuestion' : prefix === 'manual' ? 'deleteManualQuestion' : 'deleteEditQuestion';
   const setCorrectFn = prefix === 'review' ? 'setReviewCorrect' : prefix === 'manual' ? 'setManualCorrect' : 'setEditCorrect';
   const containerId = `${prefix}-q-${i}`;
+  const hasShared = sharedTerms && sharedTerms.length >= 2;
+  const useShared = hasShared && !!q.useShared;
 
   const optionsHtml = [0,1,2,3].map(j => {
     const val = (q.options && q.options[j]) || '';
-    const checked = q.correct_index === j ? 'checked' : '';
+    const checked = !useShared && q.correct_index === j ? 'checked' : '';
     return `
       <input type="radio" class="q-opt-radio" name="${pre}-correct-${i}" value="${j}" ${checked} onchange="${setCorrectFn}(${i},${j})">
-      <input type="text" class="q-opt-input${q.correct_index===j?' correct-opt':''}" id="${pre}-opt-${i}-${j}" placeholder="Option ${String.fromCharCode(65+j)}" value="${escHtml(val)}">`;
+      <input type="text" class="q-opt-input${!useShared && q.correct_index===j?' correct-opt':''}" id="${pre}-opt-${i}-${j}" placeholder="Option ${String.fromCharCode(65+j)}" value="${escHtml(val)}">`;
   }).join('');
+
+  const sharedRadios = hasShared ? sharedTerms.map((t, j) => `
+    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;border:1.5px solid ${useShared && q.correct_index===j?'var(--primary)':'var(--border)'};border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500;transition:border-color .12s">
+      <input type="radio" name="${pre}-shared-correct-${i}" value="${j}" ${useShared && q.correct_index===j?'checked':''} style="accent-color:var(--primary)">
+      <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">${['A','B','C','D','E'][j]}</span>
+      ${escHtml(t)}
+    </label>`).join('') : '';
 
   return `
     <div class="q-review" id="${containerId}">
       <div class="q-review-header">
         <div class="q-idx-badge">${i+1}</div>
         <div style="flex:1;font-size:.78rem;font-weight:600;color:var(--muted)">Question ${i+1}</div>
+        ${hasShared ? `
+        <label style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--primary);cursor:pointer;margin-right:8px;user-select:none">
+          <input type="checkbox" id="${pre}-use-shared-${i}" ${useShared?'checked':''} onchange="toggleSharedOpts('${prefix}',${i})" style="accent-color:var(--primary)">
+          Use shared terms
+        </label>` : ''}
         <button class="icon-btn" style="color:#dc2626" onclick="${delFn}(${i})" title="Delete question">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>
       </div>
       <textarea class="q-text-area" id="${pre}-text-${i}" placeholder="Enter question text…">${escHtml(q.question_text||'')}</textarea>
-      <div style="font-size:.68rem;color:var(--muted);margin-top:8px;margin-bottom:2px">Options — select the correct answer (radio button)</div>
-      <div class="q-options-grid">${optionsHtml}</div>
-      <input type="text" class="expl-input" id="${pre}-expl-${i}" placeholder="Explanation (optional — shown after student answers)" value="${escHtml(q.explanation||'')}">
-      <input type="text" class="expl-input" id="${pre}-img-${i}" placeholder="Image URL (optional — diagram or figure for this question)" value="${escHtml(q.image_url||'')}" style="margin-top:4px">
+      <div style="font-size:.68rem;color:var(--muted);margin-top:8px;margin-bottom:2px" id="${pre}-opts-label-${i}">${useShared ? 'Correct shared term:' : 'Options — select the correct answer (radio button)'}</div>
+      <div class="q-options-grid" id="${pre}-opts-grid-${i}" style="display:${useShared?'none':''}">
+        ${optionsHtml}
+      </div>
+      <div id="${pre}-shared-opts-${i}" style="display:${useShared?'flex':'none'};flex-direction:column;gap:6px;margin-top:2px">
+        ${sharedRadios}
+      </div>
+      <div style="margin-top:8px">
+        <input type="text" class="expl-input" id="${pre}-expl-${i}" placeholder="Explanation (optional — shown after student answers)" value="${escHtml(q.explanation||'')}">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;color:var(--muted);flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <input type="text" class="expl-input" id="${pre}-img-${i}" placeholder="Image URL (optional — paste a link to a diagram or figure)" value="${escHtml(q.image_url||'')}" style="flex:1">
+      </div>
     </div>`;
 }
 

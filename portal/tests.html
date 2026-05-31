@@ -188,7 +188,7 @@ async function startTest(testId) {
 
   const { data: qs } = await sb
     .from('test_questions')
-    .select('id, question_text, options, correct_index, order_index')
+    .select('id, question_text, options, correct_index, order_index, image_url')
     .eq('test_id', testId)
     .order('order_index');
 
@@ -242,6 +242,7 @@ function renderQuestion() {
     </div>
     <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>
     <div class="q-text">${escHtml(q.question_text)}</div>
+    ${q.image_url ? `<div class="q-img"><img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:10px 0"></div>` : ''}
     <div class="q-options">
       ${opts.map((opt, i) => `
         <div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})">

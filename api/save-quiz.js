@@ -69,6 +69,7 @@ export default async function handler(req, res) {
     options: Array.isArray(q.options) ? q.options.map(String) : [],
     correct_index: Number.isInteger(q.correct_index) ? q.correct_index : 0,
     explanation: q.explanation || null,
+    image_url: q.image_url || null,
     order_index: i,
     points: 1,
   }));

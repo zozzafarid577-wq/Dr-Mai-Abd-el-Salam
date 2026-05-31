@@ -195,7 +195,7 @@ function renderTests() {
 async function startTest(testId) {
   runnerTest = tests.find(t => t.id === testId);
   if (!runnerTest) return;
-  const { data: qs } = await sb.from('test_questions').select('id, question_text, options, correct_index, order_index').eq('test_id', testId).order('order_index');
+  const { data: qs } = await sb.from('test_questions').select('id, question_text, options, correct_index, order_index, image_url').eq('test_id', testId).order('order_index');
   questions = qs || [];
   if (!questions.length) { showToast('This mock test has no questions yet.', 'warning'); return; }
   answers = {}; currentQ = 0; finished = false;
@@ -236,6 +236,7 @@ function renderQuestion() {
     </div>
     <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>
     <div class="q-text">${escHtml(q.question_text)}</div>
+    ${q.image_url ? `<div class="q-img"><img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:10px 0"></div>` : ''}
     <div class="q-options">
       ${opts.map((opt, i) => `<div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})"><div class="opt-letter">${LETTERS[i]}</div><span>${escHtml(opt)}</span></div>`).join('')}
     </div>`;

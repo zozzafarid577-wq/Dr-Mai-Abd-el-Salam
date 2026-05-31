@@ -920,7 +920,8 @@ function collectReviewQuestions() {
     const correctRadio = document.querySelector(`input[name="rq-correct-${i}"]:checked`);
     const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
     const expl = document.getElementById(`rq-expl-${i}`)?.value.trim() || '';
-    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl };
+    const imageUrl = document.getElementById(`rq-img-${i}`)?.value.trim() || '';
+    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl, image_url: imageUrl };
   });
 }
 
@@ -1002,7 +1003,8 @@ function collectManualQuestions() {
     const correctRadio = document.querySelector(`input[name="mq-correct-${i}"]:checked`);
     const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
     const expl = document.getElementById(`mq-expl-${i}`)?.value.trim() || '';
-    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl };
+    const imageUrl = document.getElementById(`mq-img-${i}`)?.value.trim() || '';
+    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl, image_url: imageUrl };
   });
 }
 
@@ -1047,7 +1049,7 @@ async function openEditTestModal(testId, moduleId) {
   document.getElementById('et-time').value  = t.time_limit_min || '';
 
   // Load questions
-  const { data: qs } = await sb.from('test_questions').select('id, question_text, options, correct_index, explanation, order_index').eq('test_id', testId).order('order_index');
+  const { data: qs } = await sb.from('test_questions').select('id, question_text, options, correct_index, explanation, order_index, image_url').eq('test_id', testId).order('order_index');
   editTestQs = (qs || []).map(q => ({ ...q, _id: q.id }));
   document.getElementById('edit-test-q-count').textContent = editTestQs.length + ' question' + (editTestQs.length!==1?'s':'');
   renderEditQuestions();
@@ -1084,7 +1086,8 @@ function collectEditQuestions() {
     const correctRadio = document.querySelector(`input[name="eq-correct-${i}"]:checked`);
     const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
     const expl = document.getElementById(`eq-expl-${i}`)?.value.trim() || '';
-    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl };
+    const imageUrl = document.getElementById(`eq-img-${i}`)?.value.trim() || '';
+    return { question_text: qText, options: opts, correct_index: correctIdx, explanation: expl, image_url: imageUrl };
   });
 }
 
@@ -1203,6 +1206,7 @@ function buildQuestionCard(i, q, prefix) {
       <div style="font-size:.68rem;color:var(--muted);margin-top:8px;margin-bottom:2px">Options — select the correct answer (radio button)</div>
       <div class="q-options-grid">${optionsHtml}</div>
       <input type="text" class="expl-input" id="${pre}-expl-${i}" placeholder="Explanation (optional — shown after student answers)" value="${escHtml(q.explanation||'')}">
+      <input type="text" class="expl-input" id="${pre}-img-${i}" placeholder="Image URL (optional — diagram or figure for this question)" value="${escHtml(q.image_url||'')}" style="margin-top:4px">
     </div>`;
 }
 

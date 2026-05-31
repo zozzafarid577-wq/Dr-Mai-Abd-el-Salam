@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Dashboard | Student Portal</title>
 <link rel="stylesheet" href="/css/portal.css">
+<style>
+.curr-card { background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden; }
+.curr-header { padding:16px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border); }
+.curr-icon { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0; }
+.curr-title { font-size:.95rem;font-weight:700; }
+.curr-prog { font-size:.72rem;color:var(--muted);margin-top:2px; }
+.curr-prog-bar { height:4px;background:var(--border);border-radius:2px;margin-top:6px;width:160px; }
+.curr-prog-fill { height:100%;border-radius:2px;background:var(--primary);transition:width .3s; }
+.curr-body { padding:10px 16px 14px; }
+.mod-label { font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:10px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border); }
+.lrow { display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .12s; }
+.lrow:hover:not(.lrow-soon) { background:var(--bg); }
+.lrow.lrow-done { background:#f0fdf4; }
+.lrow.lrow-soon { cursor:default;opacity:.55; }
+.lrow-num { width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.lrow.lrow-done .lrow-num { background:#16a34a; }
+.lrow.lrow-soon .lrow-num { background:var(--border);color:var(--muted); }
+.lrow-name { flex:1;font-size:.83rem;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.lrow-meta { font-size:.68rem;color:var(--muted); }
+.soon-badge { font-size:.58rem;padding:2px 6px;border:1px solid var(--border);border-radius:4px;color:var(--muted);flex-shrink:0; }
+</style>
 </head>
 <body>
 
@@ -132,52 +153,35 @@
       </div>
     </div>
 
-    <!-- Courses + Announcements -->
-    <div class="g2">
-      <!-- Courses -->
-      <div>
-        <div class="card mb24">
-          <div class="card-header">
-            <span class="card-title">My Courses</span>
-            <a href="/portal/courses.html" class="btn btn-ghost btn-xs">View all</a>
-          </div>
-          <div class="card-body" id="courses-list">
-            <div class="skel" style="height:90px;margin-bottom:10px"></div>
-            <div class="skel" style="height:90px;margin-bottom:10px"></div>
-            <div class="skel" style="height:90px"></div>
-          </div>
+    <!-- Curriculum -->
+    <div id="curriculum-list">
+      <div class="curr-card">
+        <div class="curr-header">
+          <div class="skel" style="width:42px;height:42px;border-radius:10px;flex-shrink:0"></div>
+          <div style="flex:1"><div class="skel" style="height:13px;width:55%;margin-bottom:8px"></div><div class="skel" style="height:9px;width:35%"></div></div>
         </div>
+        <div class="curr-body"><div class="skel" style="height:38px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:38px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:38px;border-radius:8px"></div></div>
       </div>
-
-      <!-- Announcements -->
-      <div>
-        <div class="card mb24">
-          <div class="card-header">
-            <span class="card-title">Announcements</span>
-            <a href="/portal/announcements.html" class="btn btn-ghost btn-xs">View all</a>
-          </div>
-          <div class="card-body">
-            <div class="ann-list" id="ann-list">
-              <div class="skel" style="height:60px;margin-bottom:10px"></div>
-              <div class="skel" style="height:60px;margin-bottom:10px"></div>
-              <div class="skel" style="height:60px"></div>
-            </div>
-          </div>
+      <div class="curr-card">
+        <div class="curr-header">
+          <div class="skel" style="width:42px;height:42px;border-radius:10px;flex-shrink:0"></div>
+          <div style="flex:1"><div class="skel" style="height:13px;width:55%;margin-bottom:8px"></div><div class="skel" style="height:9px;width:35%"></div></div>
         </div>
+        <div class="curr-body"><div class="skel" style="height:38px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:38px;border-radius:8px"></div></div>
       </div>
     </div>
 
-    <!-- Recent Lessons -->
+    <!-- Announcements -->
     <div class="card mb24">
       <div class="card-header">
-        <span class="card-title">Recent Lessons</span>
-        <a href="/portal/lessons.html" class="btn btn-ghost btn-xs">View all</a>
+        <span class="card-title">Announcements</span>
+        <a href="/portal/announcements.html" class="btn btn-ghost btn-xs">View all</a>
       </div>
-      <div class="card-body" id="recent-lessons-body">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
-          <div class="skel" style="height:80px;border-radius:10px"></div>
-          <div class="skel" style="height:80px;border-radius:10px"></div>
-          <div class="skel" style="height:80px;border-radius:10px"></div>
+      <div class="card-body">
+        <div class="ann-list" id="ann-list">
+          <div class="skel" style="height:60px;margin-bottom:10px"></div>
+          <div class="skel" style="height:60px;margin-bottom:10px"></div>
+          <div class="skel" style="height:60px"></div>
         </div>
       </div>
     </div>
@@ -196,7 +200,7 @@ let profile = null;
   profile = await requireAuth('student');
   if (!profile) return;
   setUser(profile);
-  await Promise.all([loadStats(), loadCourses(), loadAnnouncements(), loadRecentLessons()]);
+  await Promise.all([loadStats(), loadCourses(), loadAnnouncements()]);
 })();
 
 function setUser(p) {
@@ -233,33 +237,95 @@ async function loadStats() {
 async function loadCourses() {
   const { data: enrollments } = await sb
     .from('enrollments')
-    .select('course_id, enrolled_at, courses(id,title,subject)')
+    .select('course_id, courses(id,title,subject)')
     .eq('student_id', profile.id)
-    .order('enrolled_at', { ascending: false })
-    .limit(4);
+    .order('enrolled_at', { ascending: false });
 
-  const el = document.getElementById('courses-list');
+  const el = document.getElementById('curriculum-list');
 
   if (!enrollments?.length) {
-    el.innerHTML = `<div class="empty-state">
+    el.innerHTML = `<div class="curr-card"><div class="curr-body"><div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      <h3>No courses yet</h3><p>Your instructor will assign courses to you.</p></div>`;
+      <h3>No courses yet</h3><p>Your instructor will assign courses to you.</p>
+    </div></div></div>`;
     return;
   }
 
-  el.innerHTML = enrollments.map((e, i) => {
-    const c = e.courses;
-    return `<a href="/portal/courses.html" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit" ${i === enrollments.length - 1 ? 'style="border-bottom:none;padding-bottom:0"' : ''}>
-      <div style="width:44px;height:44px;border-radius:10px;flex-shrink:0;background:${courseGradient(i)};display:flex;align-items:center;justify-content:center">
-        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" style="width:20px;height:20px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.83rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(c.title)}</div>
-        <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${escHtml(c.subject || 'Biology')}</div>
-      </div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>`;
-  }).join('');
+  const courseIds = enrollments.map(e => e.course_id).filter(Boolean);
+
+  const [{ data: modules }, { data: comps }] = await Promise.all([
+    sb.from('modules')
+      .select('id, title, order_index, course_id, lessons(id, title, youtube_id, order_index, duration_min)')
+      .in('course_id', courseIds)
+      .order('order_index'),
+    sb.from('lesson_completions')
+      .select('lesson_id')
+      .eq('student_id', profile.id),
+  ]);
+
+  const completedSet = new Set((comps || []).map(c => c.lesson_id));
+
+  const modsByCourse = {};
+  (modules || []).forEach(m => {
+    if (!modsByCourse[m.course_id]) modsByCourse[m.course_id] = [];
+    modsByCourse[m.course_id].push(m);
+  });
+
+  el.innerHTML = '';
+
+  enrollments.forEach((enr, idx) => {
+    const c = enr.courses;
+    if (!c) return;
+    const courseMods = (modsByCourse[c.id] || []).sort((a, b) => a.order_index - b.order_index);
+    const allLessons = courseMods.flatMap(m => m.lessons || []);
+    const total = allLessons.length;
+    const done = allLessons.filter(l => completedSet.has(l.id)).length;
+    const pct  = total > 0 ? Math.round((done / total) * 100) : 0;
+    const grad = courseGradient(idx);
+
+    let bodyHtml = '';
+    if (courseMods.length === 0) {
+      bodyHtml = '<div style="font-size:.78rem;color:var(--muted);padding:8px 10px">No lessons added yet.</div>';
+    } else {
+      let gIdx = 0;
+      courseMods.forEach(mod => {
+        const lessons = (mod.lessons || []).sort((a, b) => a.order_index - b.order_index);
+        if (courseMods.length > 1) {
+          bodyHtml += `<div class="mod-label">${escHtml(mod.title)}</div>`;
+        }
+        lessons.forEach(lesson => {
+          gIdx++;
+          const isDone = completedSet.has(lesson.id);
+          const isSoon = !lesson.youtube_id;
+          let cls = 'lrow';
+          if (isDone) cls += ' lrow-done';
+          else if (isSoon) cls += ' lrow-soon';
+          const onclickAttr = !isSoon ? `onclick="location.href='/portal/lessons.html?course=${c.id}'"` : '';
+          bodyHtml += `<div class="${cls}" ${onclickAttr}>
+            <div class="lrow-num">${gIdx}</div>
+            <div class="lrow-name">${escHtml(lesson.title)}</div>
+            ${isDone ? `<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+            ${isSoon ? `<span class="soon-badge">Coming Soon</span>` : ''}
+            ${lesson.duration_min && !isSoon && !isDone ? `<span class="lrow-meta">${lesson.duration_min}m</span>` : ''}
+          </div>`;
+        });
+      });
+    }
+
+    el.innerHTML += `
+      <div class="curr-card">
+        <div class="curr-header" style="cursor:pointer" onclick="location.href='/portal/lessons.html?course=${c.id}'">
+          <div class="curr-icon" style="background:${grad}">${escHtml((c.subject || c.title)[0])}</div>
+          <div style="flex:1;min-width:0">
+            <div class="curr-title">${escHtml(c.title)}</div>
+            <div class="curr-prog">${done} / ${total} lessons completed</div>
+            <div class="curr-prog-bar"><div class="curr-prog-fill" style="width:${pct}%"></div></div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:16px;height:16px;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="curr-body">${bodyHtml}</div>
+      </div>`;
+  });
 }
 
 async function loadAnnouncements() {
@@ -284,68 +350,6 @@ async function loadAnnouncements() {
         <div class="ann-meta">${timeAgo(a.created_at)}</div>
       </div>
     </div>`).join('');
-}
-
-async function loadRecentLessons() {
-  const el = document.getElementById('recent-lessons-body');
-
-  const { data: enrollments } = await sb
-    .from('enrollments')
-    .select('course_id')
-    .eq('student_id', profile.id);
-
-  const courseIds = (enrollments || []).map(e => e.course_id);
-
-  if (!courseIds.length) {
-    el.innerHTML = '<div class="empty-state"><p>No lessons yet.</p></div>';
-    return;
-  }
-
-  const { data: modules } = await sb
-    .from('modules')
-    .select('id, title, course_id, courses(title)')
-    .in('course_id', courseIds);
-
-  const modIds = (modules || []).map(m => m.id);
-
-  if (!modIds.length) {
-    el.innerHTML = '<div class="empty-state"><p>No lessons yet.</p></div>';
-    return;
-  }
-
-  const { data: recentLessons } = await sb
-    .from('lessons')
-    .select('id, title, duration_min, youtube_id, module_id')
-    .in('module_id', modIds)
-    .order('created_at', { ascending: false })
-    .limit(6);
-
-  if (!recentLessons?.length) {
-    el.innerHTML = '<div class="empty-state"><p>No lessons yet.</p></div>';
-    return;
-  }
-
-  const modMap = {};
-  (modules || []).forEach(m => { modMap[m.id] = m; });
-
-  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
-    ${recentLessons.map(l => {
-      const mod = modMap[l.module_id];
-      const modName = mod?.title || '';
-      const courseName = mod?.courses?.title || '';
-      const subLabel = modName || courseName;
-      return `<a href="/portal/lessons.html" style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:inherit;background:var(--surface);transition:border-color .15s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:16px;height:16px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
-          ${subLabel ? `<div style="font-size:.7rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(subLabel)}</div>` : ''}
-          ${l.duration_min ? `<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${l.duration_min} min</div>` : ''}
-        </div>
-      </a>`;
-    }).join('')}
-  </div>`;
 }
 
 function toggleSidebar() {

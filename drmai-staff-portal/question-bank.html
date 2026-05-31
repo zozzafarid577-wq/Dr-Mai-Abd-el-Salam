@@ -103,6 +103,20 @@
 .add-distractor-btn { font-size:.76rem;color:var(--primary);background:none;border:none;cursor:pointer;padding:4px;font-family:inherit; }
 .add-distractor-btn:hover { text-decoration:underline; }
 
+/* ── Terms multi-statement ── */
+.term-pool-list { display:flex;flex-direction:column;gap:6px;margin-top:6px; }
+.term-pool-row { display:flex;gap:8px;align-items:center; }
+.term-pool-row .q-input { flex:1; }
+.stmt-list { display:flex;flex-direction:column;gap:8px;margin-top:6px; }
+.stmt-row { border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--bg); }
+.stmt-top { display:flex;align-items:flex-start;gap:8px; }
+.stmt-num { font-size:.7rem;font-weight:800;color:var(--muted);padding-top:9px;min-width:18px; }
+.stmt-top .q-textarea { flex:1;min-height:52px; }
+.stmt-answer-row { display:flex;align-items:center;gap:6px;margin-top:7px; }
+.stmt-answer-label { font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap; }
+.stmt-correct-select { font-size:.8rem;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);outline:none;flex:1; }
+.stmt-correct-select:focus { border-color:var(--primary);background:#f8faff; }
+
 @media (max-width:600px) {
   .type-bar { grid-template-columns:1fr 1fr; }
   .stats-row { display:none; }
@@ -265,17 +279,15 @@
 
       <!-- ── Choose Term ── -->
       <div class="form-section" id="form-terms">
-        <div class="field-label">Statement / Definition *</div>
-        <textarea class="q-textarea" id="terms-question" placeholder="e.g. Movement of particles from high to low concentration."></textarea>
-        <div class="field-label">Correct Term *</div>
-        <input type="text" class="q-input" id="terms-correct" placeholder="e.g. Diffusion">
-        <div class="field-label">Distractor Terms <span style="font-weight:400;text-transform:none;letter-spacing:0">(wrong options students will see)</span></div>
-        <div class="distractor-list" id="distractor-list">
-          <div class="distractor-row"><input type="text" class="q-input" placeholder="Distractor 1"><button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-          <div class="distractor-row"><input type="text" class="q-input" placeholder="Distractor 2"><button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-          <div class="distractor-row"><input type="text" class="q-input" placeholder="Distractor 3"><button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-        </div>
-        <button type="button" class="add-distractor-btn" onclick="addDistractor()">+ Add another distractor</button>
+        <div class="field-label">Terms Pool * <span style="font-weight:400;text-transform:none;letter-spacing:0">— all the options students will pick from</span></div>
+        <div class="term-pool-list" id="term-pool-list"></div>
+        <button type="button" class="add-distractor-btn" onclick="addTerm()">+ Add term</button>
+
+        <div class="form-divider"></div>
+
+        <div class="field-label">Statements * <span style="font-weight:400;text-transform:none;letter-spacing:0" id="stmt-label-note">— each saves as a separate question</span></div>
+        <div class="stmt-list" id="stmt-list"></div>
+        <button type="button" class="add-distractor-btn" id="add-stmt-btn" onclick="addStatement()">+ Add statement</button>
       </div>
 
       <!-- ── True / False ── -->
@@ -543,9 +555,7 @@ function resetForm() {
   document.getElementById('mcq-letter-0').classList.add('correct');
   document.getElementById('mcq-question').value = '';
   // Terms
-  document.getElementById('terms-question').value = '';
-  document.getElementById('terms-correct').value  = '';
-  resetDistractors();
+  resetTermsForm();
   // T/F
   document.getElementById('tf-question').value = '';
   selectTF('true');
@@ -573,15 +583,17 @@ function loadQIntoForm(q) {
     const rad = document.querySelector(`input[name="mcq-correct"][value="${q.correct_index ?? 0}"]`);
     if (rad) { rad.checked = true; highlightCorrect('mcq'); }
   } else if (q.question_type === 'terms') {
-    document.getElementById('terms-question').value = q.question_text || '';
     const opts = q.options || [];
-    document.getElementById('terms-correct').value = opts[q.correct_index ?? 0] || '';
-    resetDistractors();
-    const distractors = opts.filter((_, i) => i !== (q.correct_index ?? 0));
-    const list = document.getElementById('distractor-list');
-    list.innerHTML = '';
-    distractors.forEach(d => addDistractorWithValue(d));
-    if (!distractors.length) addDistractorWithValue('');
+    const tList = document.getElementById('term-pool-list');
+    tList.innerHTML = '';
+    opts.forEach(opt => addTermWithValue(opt));
+    if (opts.length < 2) { addTermWithValue(''); addTermWithValue(''); }
+    const sList = document.getElementById('stmt-list');
+    sList.innerHTML = '';
+    addStatementRow(q.question_text || '', q.correct_index ?? 0);
+    rebuildCorrectDropdowns();
+    document.getElementById('add-stmt-btn').style.display = 'none';
+    document.getElementById('stmt-label-note').textContent = '— editing single statement';
   } else if (q.question_type === 'true_false') {
     document.getElementById('tf-question').value = q.question_text || '';
     selectTF(q.correct_answer || 'true');
@@ -620,31 +632,96 @@ function selectTF(val) {
   document.getElementById('tf-false').className = 'tf-opt' + (val === 'false' ? ' selected-false' : '');
 }
 
-// ── Distractor management ────────────────────────────────────────
+// ── Terms pool management ────────────────────────────────────────
 
-function resetDistractors() {
-  const list = document.getElementById('distractor-list');
-  list.innerHTML = '';
-  addDistractorWithValue('');
-  addDistractorWithValue('');
-  addDistractorWithValue('');
+function resetTermsForm() {
+  const tList = document.getElementById('term-pool-list');
+  tList.innerHTML = '';
+  addTermWithValue(''); addTermWithValue(''); addTermWithValue(''); addTermWithValue('');
+  const sList = document.getElementById('stmt-list');
+  sList.innerHTML = '';
+  addStatementRow('', 0); addStatementRow('', 0); addStatementRow('', 0);
+  document.getElementById('add-stmt-btn').style.display = '';
+  document.getElementById('stmt-label-note').textContent = '— each saves as a separate question';
 }
 
-function addDistractor() { addDistractorWithValue(''); }
+function addTerm() { addTermWithValue(''); }
 
-function addDistractorWithValue(val) {
-  const list = document.getElementById('distractor-list');
+function addTermWithValue(val) {
+  const list = document.getElementById('term-pool-list');
   const row  = document.createElement('div');
-  row.className = 'distractor-row';
-  row.innerHTML = `<input type="text" class="q-input" placeholder="Distractor" value="${escHtml(val)}">
-    <button type="button" class="icon-btn del" onclick="removeDistractor(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  row.className = 'term-pool-row';
+  row.innerHTML = `<input type="text" class="q-input" placeholder="Term" value="${escHtml(val)}" oninput="rebuildCorrectDropdowns()">
+    <button type="button" class="icon-btn del" onclick="removeTerm(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  list.appendChild(row);
+  rebuildCorrectDropdowns();
+}
+
+function removeTerm(btn) {
+  const list = document.getElementById('term-pool-list');
+  if (list.children.length <= 2) { showToast('Need at least 2 terms.', 'warning'); return; }
+  btn.closest('.term-pool-row').remove();
+  rebuildCorrectDropdowns();
+}
+
+function getTerms() {
+  return Array.from(document.getElementById('term-pool-list').querySelectorAll('input'))
+    .map(i => i.value.trim()).filter(Boolean);
+}
+
+function rebuildCorrectDropdowns() {
+  const terms = Array.from(document.getElementById('term-pool-list').querySelectorAll('input'))
+    .map(i => i.value.trim());
+  document.querySelectorAll('.stmt-correct-select').forEach(sel => {
+    const prev = parseInt(sel.value) || 0;
+    sel.innerHTML = terms.map((t, i) =>
+      `<option value="${i}"${i === prev ? ' selected' : ''}>${escHtml(t || `Term ${i + 1}`)}</option>`
+    ).join('');
+  });
+}
+
+// ── Statement management ─────────────────────────────────────────
+
+function addStatement() { addStatementRow('', 0); }
+
+function addStatementRow(text, correctIdx) {
+  const list  = document.getElementById('stmt-list');
+  const num   = list.children.length + 1;
+  const terms = Array.from(document.getElementById('term-pool-list').querySelectorAll('input'))
+    .map(i => i.value.trim());
+  const row = document.createElement('div');
+  row.className = 'stmt-row';
+  row.innerHTML = `
+    <div class="stmt-top">
+      <span class="stmt-num">${num}.</span>
+      <textarea class="q-textarea" placeholder="Enter statement or definition…" style="min-height:52px">${escHtml(text)}</textarea>
+      <button type="button" class="icon-btn del" onclick="removeStatement(this)" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="stmt-answer-row">
+      <span class="stmt-answer-label">Answer:</span>
+      <select class="stmt-correct-select">
+        ${terms.map((t, i) => `<option value="${i}"${i === correctIdx ? ' selected' : ''}>${escHtml(t || `Term ${i + 1}`)}</option>`).join('')}
+      </select>
+    </div>`;
   list.appendChild(row);
 }
 
-function removeDistractor(btn) {
-  const list = document.getElementById('distractor-list');
-  if (list.children.length <= 1) { showToast('At least one distractor is required.', 'warning'); return; }
-  btn.closest('.distractor-row').remove();
+function removeStatement(btn) {
+  const list = document.getElementById('stmt-list');
+  if (list.children.length <= 1) { showToast('Need at least one statement.', 'warning'); return; }
+  btn.closest('.stmt-row').remove();
+  renumberStatements();
+}
+
+function renumberStatements() {
+  document.querySelectorAll('#stmt-list .stmt-num').forEach((el, i) => { el.textContent = `${i + 1}.`; });
+}
+
+function getStatements() {
+  return Array.from(document.getElementById('stmt-list').querySelectorAll('.stmt-row')).map(row => ({
+    text: row.querySelector('textarea').value.trim(),
+    correctIdx: parseInt(row.querySelector('.stmt-correct-select').value) || 0,
+  }));
 }
 
 // ── Build payload from form ───────────────────────────────────────
@@ -673,17 +750,23 @@ function buildPayload() {
     correct_answer = options[correct_index] || null;
 
   } else if (type === 'terms') {
-    question_text = document.getElementById('terms-question').value.trim();
-    if (!question_text) { showToast('Please enter the statement.', 'warning'); return null; }
-    const correctTerm = document.getElementById('terms-correct').value.trim();
-    if (!correctTerm) { showToast('Please enter the correct term.', 'warning'); return null; }
-    const distractors = Array.from(document.getElementById('distractor-list').querySelectorAll('input'))
-      .map(i => i.value.trim()).filter(Boolean);
-    // Build options: correct term first, then distractors
-    options       = [correctTerm, ...distractors];
-    correct_index = 0;
-    correct_answer = correctTerm;
-
+    const terms = getTerms();
+    if (terms.length < 2) { showToast('Please enter at least 2 terms in the pool.', 'warning'); return null; }
+    const stmts = getStatements();
+    if (!stmts.length) { showToast('Please add at least one statement.', 'warning'); return null; }
+    for (const s of stmts) {
+      if (!s.text) { showToast('Please fill in all statements.', 'warning'); return null; }
+    }
+    const shared = { course_id: course, module_id: module, question_type: 'terms', difficulty: diff,
+      options: terms, explanation: expl, image_url: img, tags: tags.length ? tags : null, status };
+    if (editingId) {
+      return { id: editingId, ...shared, question_text: stmts[0].text,
+        correct_index: stmts[0].correctIdx, correct_answer: terms[stmts[0].correctIdx] || null };
+    }
+    return stmts.map(s => ({
+      ...shared, question_text: s.text,
+      correct_index: s.correctIdx, correct_answer: terms[s.correctIdx] || null,
+    }));
   } else if (type === 'true_false') {
     question_text = document.getElementById('tf-question').value.trim();
     if (!question_text) { showToast('Please enter the statement.', 'warning'); return null; }
@@ -717,25 +800,31 @@ async function saveQ(addAnother) {
   btn.textContent = 'Saving…';
 
   try {
-    const token = (await sb.auth.getSession()).data.session?.access_token;
-    const resp  = await fetch('/api/save-bank-question', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify(payload),
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Save failed');
+    const token    = (await sb.auth.getSession()).data.session?.access_token;
+    const payloads = Array.isArray(payload) ? payload : [payload];
+    const results  = [];
+    for (const p of payloads) {
+      const resp = await fetch('/api/save-bank-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(p),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Save failed');
+      results.push(data);
+    }
 
     // Update local state
-    if (editingId) {
+    if (editingId && results.length === 1) {
       const idx = allQs.findIndex(q => q.id === editingId);
-      if (idx >= 0) allQs[idx] = data;
+      if (idx >= 0) allQs[idx] = results[0];
     } else {
-      allQs.unshift(data);
+      allQs.unshift(...[...results].reverse());
     }
     updateStats();
     applyFilters();
-    showToast(editingId ? 'Question updated.' : 'Question saved!', 'success');
+    const n = results.length;
+    showToast(editingId ? 'Question updated.' : `${n} question${n !== 1 ? 's' : ''} saved!`, 'success');
 
     if (addAnother) {
       editingId = null;

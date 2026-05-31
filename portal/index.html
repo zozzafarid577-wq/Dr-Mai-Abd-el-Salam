@@ -167,6 +167,21 @@
       </div>
     </div>
 
+    <!-- Recent Lessons -->
+    <div class="card mb24">
+      <div class="card-header">
+        <span class="card-title">Recent Lessons</span>
+        <a href="/portal/lessons.html" class="btn btn-ghost btn-xs">View all</a>
+      </div>
+      <div class="card-body" id="recent-lessons-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+          <div class="skel" style="height:80px;border-radius:10px"></div>
+          <div class="skel" style="height:80px;border-radius:10px"></div>
+          <div class="skel" style="height:80px;border-radius:10px"></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -181,7 +196,7 @@ let profile = null;
   profile = await requireAuth('student');
   if (!profile) return;
   setUser(profile);
-  await Promise.all([loadStats(), loadCourses(), loadAnnouncements()]);
+  await Promise.all([loadStats(), loadCourses(), loadAnnouncements(), loadRecentLessons()]);
 })();
 
 function setUser(p) {
@@ -269,6 +284,68 @@ async function loadAnnouncements() {
         <div class="ann-meta">${timeAgo(a.created_at)}</div>
       </div>
     </div>`).join('');
+}
+
+async function loadRecentLessons() {
+  const el = document.getElementById('recent-lessons-body');
+
+  const { data: enrollments } = await sb
+    .from('enrollments')
+    .select('course_id')
+    .eq('student_id', profile.id);
+
+  const courseIds = (enrollments || []).map(e => e.course_id);
+
+  if (!courseIds.length) {
+    el.innerHTML = '<div class="empty-state"><p>No lessons yet.</p></div>';
+    return;
+  }
+
+  const { data: modules } = await sb
+    .from('modules')
+    .select('id, title, course_id, courses(title)')
+    .in('course_id', courseIds);
+
+  const modIds = (modules || []).map(m => m.id);
+
+  if (!modIds.length) {
+    el.innerHTML = '<div class="empty-state"><p>No lessons yet.</p></div>';
+    return;
+  }
+
+  const { data: recentLessons } = await sb
+    .from('lessons')
+    .select('id, title, duration_min, youtube_id, module_id')
+    .in('module_id', modIds)
+    .order('created_at', { ascending: false })
+    .limit(6);
+
+  if (!recentLessons?.length) {
+    el.innerHTML = '<div class="empty-state"><p>No lessons yet.</p></div>';
+    return;
+  }
+
+  const modMap = {};
+  (modules || []).forEach(m => { modMap[m.id] = m; });
+
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+    ${recentLessons.map(l => {
+      const mod = modMap[l.module_id];
+      const modName = mod?.title || '';
+      const courseName = mod?.courses?.title || '';
+      const subLabel = modName || courseName;
+      return `<a href="/portal/lessons.html" style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:inherit;background:var(--surface);transition:border-color .15s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:16px;height:16px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div>
+          ${subLabel ? `<div style="font-size:.7rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(subLabel)}</div>` : ''}
+          ${l.duration_min ? `<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${l.duration_min} min</div>` : ''}
+        </div>
+      </a>`;
+    }).join('')}
+  </div>`;
 }
 
 function toggleSidebar() {

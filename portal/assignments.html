@@ -6,6 +6,19 @@
 <title>Assignments | Student Portal</title>
 <link rel="stylesheet" href="/css/portal.css">
 <style>
+.test-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;transition:border-color .15s; }
+.test-card:hover { border-color:var(--primary); }
+.test-icon { width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#1a56db,#0e38b1);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.test-icon.mock { background:linear-gradient(135deg,#7c3aed,#5b21b6); }
+.test-icon svg { width:22px;height:22px;color:#fff; }
+.test-info { flex:1;min-width:0; }
+.test-name { font-size:.92rem;font-weight:700;color:var(--text); }
+.test-course { font-size:.75rem;color:var(--muted);margin-top:2px; }
+.test-meta { font-size:.75rem;color:var(--muted);margin-top:4px; }
+.test-actions { display:flex;gap:8px;margin-top:12px;flex-wrap:wrap; }
+.attempt-row { font-size:.75rem;padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:inline-flex;align-items:center;gap:6px;color:var(--text-2); }
+.section-heading { font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:16px 2px 10px;margin-top:4px; }
+.section-heading:first-child { padding-top:0; }
 .assign-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px;transition:border-color .15s; }
 .assign-card.due-soon { border-color:#f59e0b; }
 .assign-card.overdue { border-color:#dc2626; }
@@ -37,7 +50,7 @@
     <a href="/portal/pdfs.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lesson PDFs</a>
     <div class="nav-section">Practice</div>
     <a href="/portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
-    <a href="/portal/mock-tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>/svg>Mock Tests</a>
+    <a href="/portal/mock-tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>Mock Tests</a>
     <a href="/portal/assignments.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
     <div class="nav-section">More</div>
     <a href="/portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
@@ -63,13 +76,13 @@
 
   <main class="content">
     <div id="assignments-body">
-      <div class="skeleton" style="height:120px;border-radius:12px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:120px;border-radius:12px"></div>
+      <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:100px;border-radius:12px"></div>
     </div>
   </main>
 </div>
 
-<!-- Submit Modal -->
 <div class="modal-overlay" id="submit-overlay">
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
@@ -113,26 +126,98 @@ let chosenFile = null;
   const { data: enrollments } = await sb.from('enrollments').select('course_id').eq('student_id', profile.id);
   const courseIds = (enrollments || []).map(e => e.course_id);
 
-  const [{ data: assignData }, { data: subData }] = await Promise.all([
+  if (!courseIds.length) {
+    renderPage([], {}, [], {});
+    return;
+  }
+
+  const [{ data: tests }, { data: attempts }, { data: assignData }, { data: subData }] = await Promise.all([
+    sb.from('practice_tests').select('id, title, course_id, time_limit_min, is_mock, courses(title)').in('course_id', courseIds).eq('is_active', true).order('created_at'),
+    sb.from('test_attempts').select('test_id, percentage, completed_at').eq('student_id', profile.id).order('completed_at', { ascending: false }),
     sb.from('assignments').select('id, title, description, due_at, max_score, course_id, courses(title)').in('course_id', courseIds).order('due_at', { ascending: true }),
     sb.from('assignment_submissions').select('id, assignment_id, file_url, score, feedback, submitted_at').eq('student_id', profile.id)
   ]);
+
+  const testIds = (tests || []).map(t => t.id);
+  let qCounts = [];
+  if (testIds.length) {
+    const { data: qData } = await sb.from('test_questions').select('test_id').in('test_id', testIds);
+    qCounts = qData || [];
+  }
 
   assignments = assignData || [];
   submissionsMap = {};
   (subData || []).forEach(s => { submissionsMap[s.assignment_id] = s; });
 
-  renderAssignments();
+  renderPage(tests || [], attempts || [], qCounts);
 })();
 
-function renderAssignments() {
+function renderPage(tests, attempts, qCounts) {
   const body = document.getElementById('assignments-body');
-  if (assignments.length === 0) {
-    body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg><div class="empty-title">No Assignments</div><div class="empty-sub">Assignments from your instructor will appear here.</div></div>';
-    return;
+  let html = '';
+
+  const practiceTests = tests.filter(t => !t.is_mock);
+  const mockTests = tests.filter(t => t.is_mock);
+
+  html += '<div class="section-heading">Practice Tests</div>';
+  if (practiceTests.length === 0) {
+    html += '<div class="empty-state" style="margin-bottom:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--muted)"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg><div class="empty-title">No Practice Tests</div><div class="empty-sub">Practice tests assigned to your courses will appear here.</div></div>';
+  } else {
+    html += practiceTests.map(t => renderTestCard(t, attempts, qCounts, false)).join('');
   }
 
-  body.innerHTML = assignments.map(a => {
+  html += '<div class="section-heading">Mock Exams</div>';
+  if (mockTests.length === 0) {
+    html += '<div class="empty-state" style="margin-bottom:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--muted)"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg><div class="empty-title">No Mock Exams</div><div class="empty-sub">Mock exams assigned to your courses will appear here.</div></div>';
+  } else {
+    html += mockTests.map(t => renderTestCard(t, attempts, qCounts, true)).join('');
+  }
+
+  html += '<div class="section-heading">Other Assignments</div>';
+  html += renderAssignments();
+
+  body.innerHTML = html;
+}
+
+function renderTestCard(t, attempts, qCounts, isMock) {
+  const latestAttempt = attempts.find(a => a.test_id === t.id);
+  const qCount = qCounts.filter(q => q.test_id === t.id).length;
+  const courseName = t.courses?.title || '';
+  const link = isMock ? '/portal/mock-tests.html' : '/portal/tests.html';
+  const btnLabel = latestAttempt ? 'Retake' : 'Start Test';
+
+  let attemptInfo = '';
+  if (latestAttempt) {
+    const pct = latestAttempt.percentage !== null && latestAttempt.percentage !== undefined ? latestAttempt.percentage + '%' : '—';
+    attemptInfo = `<span class="attempt-row"><span class="badge badge-success" style="font-size:.65rem">Latest</span> ${pct}</span>`;
+  }
+
+  return `
+    <div class="test-card">
+      <div class="test-icon${isMock ? ' mock' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      </div>
+      <div class="test-info">
+        <div class="test-name">${escHtml(t.title)}</div>
+        ${courseName ? `<div class="test-course">${escHtml(courseName)}</div>` : ''}
+        <div class="test-meta">${qCount} question${qCount !== 1 ? 's' : ''} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'}</div>
+        ${attemptInfo ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${attemptInfo}</div>` : ''}
+        <div class="test-actions">
+          <a class="btn btn-primary btn-sm" href="${link}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            ${btnLabel}
+          </a>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderAssignments() {
+  if (assignments.length === 0) {
+    return '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg><div class="empty-title">No Assignments</div><div class="empty-sub">Assignments from your instructor will appear here.</div></div>';
+  }
+
+  return assignments.map(a => {
     const sub = submissionsMap[a.id];
     const now = new Date();
     const due = a.due_at ? new Date(a.due_at) : null;
@@ -245,7 +330,18 @@ async function doSubmit() {
   submissionsMap[activeAssignment.id] = { file_url: publicUrl, score: null };
   showToast('Assignment submitted!', 'success');
   closeSubmit();
-  renderAssignments();
+  const assignSec = document.getElementById('assignments-body');
+  const lastHeading = assignSec.querySelectorAll('.section-heading');
+  const lastH = lastHeading[lastHeading.length - 1];
+  if (lastH) {
+    let node = lastH.nextSibling;
+    while (node) {
+      const next = node.nextSibling;
+      node.remove();
+      node = next;
+    }
+    lastH.insertAdjacentHTML('afterend', renderAssignments());
+  }
 }
 
 function showToast(msg, type='info') {

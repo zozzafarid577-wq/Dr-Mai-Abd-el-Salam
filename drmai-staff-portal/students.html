@@ -69,8 +69,9 @@
         <thead>
           <tr>
             <th>Name</th>
-            <th>Email</th>
             <th>Phone</th>
+            <th>Parent Email</th>
+            <th>Parent Phone</th>
             <th>Joined</th>
             <th>Status</th>
             <th>Actions</th>
@@ -105,6 +106,16 @@
         <div class="form-group">
           <label class="form-label">Phone (optional)</label>
           <input type="tel" class="form-input" id="add-phone" placeholder="+20 1xx xxx xxxx">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Parent Email</label>
+            <input type="email" class="form-input" id="add-parent-email" placeholder="parent@email.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Parent Phone</label>
+            <input type="tel" class="form-input" id="add-parent-phone" placeholder="+20 1xx xxx xxxx">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Course *</label>
@@ -150,6 +161,16 @@
       <div class="form-group">
         <label class="form-label">Phone</label>
         <input type="tel" class="form-input" id="edit-phone">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Parent Email</label>
+          <input type="email" class="form-input" id="edit-parent-email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parent Phone</label>
+          <input type="tel" class="form-input" id="edit-parent-phone">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Status</label>
@@ -220,7 +241,7 @@ let lastCreated  = null;
   document.getElementById('u-av').textContent   = initials(adminProfile.full_name);
 
   const [{ data: students }, { data: coursesData }] = await Promise.all([
-    sb.from('profiles').select('id, full_name, phone, is_active, created_at, must_change_pw').eq('role','student').order('created_at', { ascending: false }),
+    sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw').eq('role','student').order('created_at', { ascending: false }),
     sb.from('courses').select('id, title').eq('is_active', true).order('title')
   ]);
 
@@ -248,9 +269,10 @@ function renderTable(students) {
   }
   tbody.innerHTML = students.map(s => `
     <tr>
-      <td><strong>${escHtml(s.full_name)}</strong>${s.must_change_pw ? ' <span class="badge" style="font-size:.62rem">Temp PW</span>' : ''}</td>
-      <td>—</td>
+      <td><strong>${escHtml(s.full_name)}</strong>${s.must_change_pw ? ' <span class="badge" style="font-size:.62rem">Temp PW</span>' : ''}<div style="font-size:.72rem;color:var(--muted)">${escHtml(s.phone||'')}</div></td>
       <td>${escHtml(s.phone || '—')}</td>
+      <td>${s.parent_email ? `<span title="${escHtml(s.parent_email)}" style="font-size:.78rem">${escHtml(s.parent_email.length > 22 ? s.parent_email.substring(0,22)+'…' : s.parent_email)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${escHtml(s.parent_phone || '—')}</td>
       <td>${fmtDate(s.created_at)}</td>
       <td><span class="badge ${s.is_active ? 'badge-success' : 'badge-danger'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
       <td>
@@ -289,11 +311,13 @@ function closeAddModal() {
 }
 
 async function submitAddStudent() {
-  const name  = document.getElementById('add-name').value.trim();
-  const email = document.getElementById('add-email').value.trim();
-  const phone = document.getElementById('add-phone').value.trim();
-  const courseId = document.getElementById('course-select').value;
-  const courseIds = courseId ? [courseId] : [];
+  const name        = document.getElementById('add-name').value.trim();
+  const email       = document.getElementById('add-email').value.trim();
+  const phone       = document.getElementById('add-phone').value.trim();
+  const parentEmail = document.getElementById('add-parent-email').value.trim();
+  const parentPhone = document.getElementById('add-parent-phone').value.trim();
+  const courseId    = document.getElementById('course-select').value;
+  const courseIds   = courseId ? [courseId] : [];
 
   if (!name || !email) { showAddAlert('Name and email are required.', 'error'); return; }
   if (!courseId) { showAddAlert('Please select a course.', 'error'); return; }
@@ -306,7 +330,7 @@ async function submitAddStudent() {
   const resp = await fetch('/api/create-student', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-    body: JSON.stringify({ full_name: name, email, phone, course_ids: courseIds })
+    body: JSON.stringify({ full_name: name, email, phone, parent_email: parentEmail || null, parent_phone: parentPhone || null, course_ids: courseIds })
   });
 
   const data = await resp.json();
@@ -324,7 +348,7 @@ async function submitAddStudent() {
   document.getElementById('add-footer').style.display = 'none';
 
   // Refresh table
-  const { data: students } = await sb.from('profiles').select('id, full_name, phone, is_active, created_at, must_change_pw').eq('role','student').order('created_at', { ascending: false });
+  const { data: students } = await sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw').eq('role','student').order('created_at', { ascending: false });
   allStudents = students || [];
   renderTable(allStudents);
 }
@@ -352,26 +376,36 @@ function sendWhatsApp() {
 function openEditModal(studentId) {
   const s = allStudents.find(x => x.id === studentId);
   if (!s) return;
-  document.getElementById('edit-id').value     = s.id;
-  document.getElementById('edit-name').value   = s.full_name;
-  document.getElementById('edit-phone').value  = s.phone || '';
-  document.getElementById('edit-active').value = s.is_active ? 'true' : 'false';
+  document.getElementById('edit-id').value           = s.id;
+  document.getElementById('edit-name').value         = s.full_name;
+  document.getElementById('edit-phone').value        = s.phone || '';
+  document.getElementById('edit-parent-email').value = s.parent_email || '';
+  document.getElementById('edit-parent-phone').value = s.parent_phone || '';
+  document.getElementById('edit-active').value       = s.is_active ? 'true' : 'false';
   document.getElementById('edit-modal-overlay').classList.add('show');
 }
 
 function closeEditModal() { document.getElementById('edit-modal-overlay').classList.remove('show'); }
 
 async function saveEdit() {
-  const id    = document.getElementById('edit-id').value;
-  const name  = document.getElementById('edit-name').value.trim();
-  const phone = document.getElementById('edit-phone').value.trim();
-  const active = document.getElementById('edit-active').value === 'true';
+  const id          = document.getElementById('edit-id').value;
+  const name        = document.getElementById('edit-name').value.trim();
+  const phone       = document.getElementById('edit-phone').value.trim();
+  const parentEmail = document.getElementById('edit-parent-email').value.trim();
+  const parentPhone = document.getElementById('edit-parent-phone').value.trim();
+  const active      = document.getElementById('edit-active').value === 'true';
 
-  const { error } = await sb.from('profiles').update({ full_name: name, phone: phone || null, is_active: active }).eq('id', id);
+  const { error } = await sb.from('profiles').update({
+    full_name: name,
+    phone: phone || null,
+    parent_email: parentEmail || null,
+    parent_phone: parentPhone || null,
+    is_active: active,
+  }).eq('id', id);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
   const s = allStudents.find(x => x.id === id);
-  if (s) { s.full_name = name; s.phone = phone; s.is_active = active; }
+  if (s) { s.full_name = name; s.phone = phone; s.parent_email = parentEmail; s.parent_phone = parentPhone; s.is_active = active; }
   renderTable(allStudents);
   closeEditModal();
   showToast('Student updated.', 'success');

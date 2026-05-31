@@ -320,6 +320,24 @@ async function submitTest() {
 
   if (error) showToast('Could not save attempt: ' + error.message, 'error');
 
+  // Notify parent by email (fire-and-forget — no await)
+  if (profile.parent_email) {
+    fetch('/api/send-parent-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        parentEmail: profile.parent_email,
+        studentName: profile.full_name,
+        testTitle: runnerTest.title,
+        score: correct,
+        total: questions.length,
+        percentage: pct,
+        testType: 'practice',
+        passed,
+      }),
+    }).catch(() => {});
+  }
+
   // Update local attemptsMap
   if (!attemptsMap[runnerTest.id]) attemptsMap[runnerTest.id] = [];
   attemptsMap[runnerTest.id].unshift({ percentage: pct, passed });

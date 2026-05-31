@@ -24,6 +24,15 @@
 .lrow.lrow-soon .lrow-num { background:var(--border);color:var(--muted); }
 .lrow-name { flex:1;font-size:.83rem;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 .soon-badge { font-size:.57rem;padding:2px 6px;border:1px solid var(--border);border-radius:4px;color:var(--muted);flex-shrink:0; }
+.dash-grid { display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start; }
+@media(max-width:860px){.dash-grid{grid-template-columns:1fr;}}
+.mb16 { margin-bottom:16px; }
+.utest-row { display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border); }
+.utest-row:last-child { border-bottom:none; }
+.utest-icon { width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.utest-name { font-size:.83rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.utest-sub { font-size:.7rem;color:var(--muted);margin-top:1px; }
+.utest-badge { font-size:.6rem;padding:2px 7px;border-radius:4px;font-weight:700;flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -152,35 +161,48 @@
       </div>
     </div>
 
-    <!-- Curriculum -->
-    <div id="curriculum-list">
-      <div class="curr-card">
-        <div class="curr-header">
-          <div class="skel" style="width:42px;height:42px;border-radius:10px;flex-shrink:0"></div>
-          <div style="flex:1"><div class="skel" style="height:13px;width:55%;margin-bottom:8px"></div><div class="skel" style="height:9px;width:35%"></div></div>
+    <!-- Two-column layout: courses left, tests+announcements right -->
+    <div class="dash-grid">
+      <!-- Left: My Courses -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:.93rem;font-weight:800;letter-spacing:-.01em">My Courses</span>
+          <a href="/portal/courses.html" class="btn btn-ghost btn-xs">View all</a>
         </div>
-        <div class="curr-body"><div class="skel" style="height:38px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:38px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:38px;border-radius:8px"></div></div>
-      </div>
-      <div class="curr-card">
-        <div class="curr-header">
-          <div class="skel" style="width:42px;height:42px;border-radius:10px;flex-shrink:0"></div>
-          <div style="flex:1"><div class="skel" style="height:13px;width:55%;margin-bottom:8px"></div><div class="skel" style="height:9px;width:35%"></div></div>
+        <div id="curriculum-list">
+          <div class="curr-card"><div class="curr-header"><div class="skel" style="width:42px;height:42px;border-radius:10px;flex-shrink:0"></div><div style="flex:1"><div class="skel" style="height:13px;width:55%;margin-bottom:8px"></div><div class="skel" style="height:9px;width:35%"></div></div></div></div>
+          <div class="curr-card"><div class="curr-header"><div class="skel" style="width:42px;height:42px;border-radius:10px;flex-shrink:0"></div><div style="flex:1"><div class="skel" style="height:13px;width:55%;margin-bottom:8px"></div><div class="skel" style="height:9px;width:35%"></div></div></div></div>
         </div>
-        <div class="curr-body"><div class="skel" style="height:38px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:38px;border-radius:8px"></div></div>
       </div>
-    </div>
 
-    <!-- Announcements -->
-    <div class="card mb24">
-      <div class="card-header">
-        <span class="card-title">Announcements</span>
-        <a href="/portal/announcements.html" class="btn btn-ghost btn-xs">View all</a>
-      </div>
-      <div class="card-body">
-        <div class="ann-list" id="ann-list">
-          <div class="skel" style="height:60px;margin-bottom:10px"></div>
-          <div class="skel" style="height:60px;margin-bottom:10px"></div>
-          <div class="skel" style="height:60px"></div>
+      <!-- Right: Upcoming Tests + Announcements -->
+      <div>
+        <!-- Upcoming Tests -->
+        <div class="card mb16">
+          <div class="card-header">
+            <span class="card-title">Available Tests</span>
+            <a href="/portal/tests.html" class="btn btn-ghost btn-xs">View all</a>
+          </div>
+          <div class="card-body" id="upcoming-tests">
+            <div class="skel" style="height:56px;margin-bottom:8px;border-radius:8px"></div>
+            <div class="skel" style="height:56px;margin-bottom:8px;border-radius:8px"></div>
+            <div class="skel" style="height:56px;border-radius:8px"></div>
+          </div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="card mb16">
+          <div class="card-header">
+            <span class="card-title">Announcements</span>
+            <a href="/portal/announcements.html" class="btn btn-ghost btn-xs">View all</a>
+          </div>
+          <div class="card-body">
+            <div class="ann-list" id="ann-list">
+              <div class="skel" style="height:52px;margin-bottom:8px"></div>
+              <div class="skel" style="height:52px;margin-bottom:8px"></div>
+              <div class="skel" style="height:52px"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -199,7 +221,7 @@ let profile = null;
   profile = await requireAuth('student');
   if (!profile) return;
   setUser(profile);
-  await Promise.all([loadStats(), loadCourses(), loadAnnouncements()]);
+  await Promise.all([loadStats(), loadCourses(), loadAnnouncements(), loadUpcoming()]);
 })();
 
 function setUser(p) {
@@ -317,6 +339,51 @@ async function loadCourses() {
 
 function toggleCourse(card) {
   card.classList.toggle('expanded');
+}
+
+async function loadUpcoming() {
+  const el = document.getElementById('upcoming-tests');
+
+  const { data: enrollments } = await sb
+    .from('enrollments').select('course_id').eq('student_id', profile.id);
+  const courseIds = (enrollments || []).map(e => e.course_id);
+
+  if (!courseIds.length) {
+    el.innerHTML = '<div style="font-size:.8rem;color:var(--muted)">No tests available yet.</div>';
+    return;
+  }
+
+  const { data: tests } = await sb
+    .from('practice_tests')
+    .select('id, title, test_type, course_id, courses(title)')
+    .in('course_id', courseIds)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (!tests?.length) {
+    el.innerHTML = '<div style="font-size:.8rem;color:var(--muted)">No tests published yet.</div>';
+    return;
+  }
+
+  el.innerHTML = tests.map(t => {
+    const isMock = t.test_type === 'mock';
+    const bg = isMock ? 'linear-gradient(135deg,#7c3aed,#4c1d95)' : 'linear-gradient(135deg,#1a56db,#0e38b1)';
+    const badgeBg = isMock ? '#faf5ff' : '#eff6ff';
+    const badgeColor = isMock ? '#7c3aed' : '#1a56db';
+    const badgeLabel = isMock ? 'Mock' : 'Practice';
+    const href = isMock ? '/portal/mock-tests.html' : '/portal/tests.html';
+    return `<div class="utest-row" style="cursor:pointer" onclick="location.href='${href}'">
+      <div class="utest-icon" style="background:${bg}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:16px;height:16px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="utest-name">${escHtml(t.title)}</div>
+        <div class="utest-sub">${escHtml(t.courses?.title || '')}</div>
+      </div>
+      <span class="utest-badge" style="background:${badgeBg};color:${badgeColor}">${badgeLabel}</span>
+    </div>`;
+  }).join('');
 }
 
 async function loadAnnouncements() {

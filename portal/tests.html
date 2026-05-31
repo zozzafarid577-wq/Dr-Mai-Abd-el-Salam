@@ -311,14 +311,15 @@ async function submitTest() {
   const { error } = await sb.from('test_attempts').insert({
     test_id: runnerTest.id,
     student_id: profile.id,
-    answers: answers,
+    answers,
     score: correct,
-    total: questions.length,
+    max_score: questions.length,
     percentage: pct,
     passed,
+    completed_at: new Date().toISOString(),
   });
 
-  if (error) showToast('Could not save attempt: ' + error.message, 'error');
+  if (error) showToast('Could not save result: ' + error.message, 'error');
 
   // Notify parent by email (fire-and-forget — no await)
   if (profile.parent_email) {

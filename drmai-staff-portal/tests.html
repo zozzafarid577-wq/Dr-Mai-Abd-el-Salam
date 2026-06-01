@@ -431,7 +431,7 @@ async function openBankPicker(testId, courseId) {
   document.getElementById('bank-modal').classList.add('show');
 
   const { data } = await sb.from('question_bank')
-    .select('id, question_type, question_text, options, correct_index, correct_answer, difficulty')
+    .select('id, question_type, question_text, options, correct_index, correct_answer, difficulty, statements, image_url')
     .eq('course_id', courseId).eq('status', 'published')
     .order('created_at', { ascending: false });
   bpAllQs = data || [];
@@ -463,10 +463,14 @@ function renderBankList(qs) {
   list.innerHTML = qs.map(q => {
     const typeLabel = BP_TYPE_LABELS[q.question_type] || q.question_type;
     const checked   = bpSelectedIds.has(q.id) ? ' checked' : '';
+    const grouped   = Array.isArray(q.statements) && q.statements.length;
+    const preview   = grouped
+      ? `Choose Term — ${q.statements.length} statements, ${(q.options||[]).length} terms`
+      : `${escHtml(q.question_text.slice(0, 120))}${q.question_text.length > 120 ? '…' : ''}`;
     return `<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .12s" onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor=bpSelectedIds.has('${q.id}')?'var(--primary)':'var(--border)'" id="bp-row-${q.id}">
       <input type="checkbox" style="margin-top:3px;width:15px;height:15px;accent-color:var(--primary);flex-shrink:0"${checked} onchange="toggleBankQ('${q.id}',this)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:.82rem;font-weight:600;color:var(--text);line-height:1.4">${escHtml(q.question_text.slice(0, 120))}${q.question_text.length > 120 ? '…' : ''}</div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text);line-height:1.4">${preview}</div>
         <div style="font-size:.7rem;color:var(--muted);margin-top:3px">${typeLabel} · ${(q.difficulty || 'medium').charAt(0).toUpperCase() + (q.difficulty||'medium').slice(1)}</div>
       </div>
     </label>`;
@@ -499,6 +503,8 @@ async function importBankQuestions() {
     correct_index: q.correct_index ?? null,
     order_index:   existing.length + i,
     image_url:     q.image_url || null,
+    question_type: q.question_type || 'mcq',
+    statements:    Array.isArray(q.statements) && q.statements.length ? q.statements : null,
   }));
 
   const { error } = await sb.from('test_questions').insert(rows);

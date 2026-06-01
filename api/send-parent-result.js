@@ -35,7 +35,7 @@ export default async function handler(req, res) {
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY not configured in Vercel env vars' });
 
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@drmai.com';
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'gigiimofarid@gmail.com';
   const senderName  = process.env.BREVO_SENDER_NAME  || 'Dr Mai Portal';
   const passedColor = passed ? '#059669' : '#dc2626';
   const passedText  = passed ? 'Passed ✓' : 'Did Not Pass';

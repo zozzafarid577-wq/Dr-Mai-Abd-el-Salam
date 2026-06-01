@@ -280,6 +280,17 @@ async function submitTest() {
   const pct = Math.round((correct / questions.length) * 100);
   const passed = pct >= 60;
   await sb.from('test_attempts').insert({ test_id: runnerTest.id, student_id: profile.id, answers, score: correct, max_score: questions.length, percentage: pct, passed, completed_at: new Date().toISOString() });
+
+  // Notify parent (fire-and-forget)
+  try {
+    const tok = (await sb.auth.getSession()).data.session?.access_token;
+    if (tok) fetch('/api/send-parent-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ test_title: runnerTest.title, score: correct, max_score: questions.length, percentage: pct, passed }),
+    });
+  } catch (_) {}
+
   if (!attemptsMap[runnerTest.id]) attemptsMap[runnerTest.id] = [];
   attemptsMap[runnerTest.id].unshift({ percentage: pct, passed });
   document.getElementById('runner-timer').style.display = 'none';

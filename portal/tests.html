@@ -320,12 +320,23 @@ async function submitTest() {
     student_id: profile.id,
     answers: answers,
     score: correct,
-    total: questions.length,
+    max_score: questions.length,
     percentage: pct,
     passed,
+    completed_at: new Date().toISOString(),
   });
 
   if (error) showToast('Could not save attempt: ' + error.message, 'error');
+
+  // Notify parent (fire-and-forget)
+  try {
+    const tok = (await sb.auth.getSession()).data.session?.access_token;
+    if (tok) fetch('/api/send-parent-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ test_title: runnerTest.title, score: correct, max_score: questions.length, percentage: pct, passed }),
+    });
+  } catch (_) {}
 
   // Update local attemptsMap
   if (!attemptsMap[runnerTest.id]) attemptsMap[runnerTest.id] = [];

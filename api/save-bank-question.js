@@ -30,7 +30,7 @@ export default async function handler(req, res) {
   const {
     id, course_id, module_id, question_type, difficulty,
     question_text, options, correct_index, correct_answer,
-    explanation, image_url, tags, status,
+    explanation, image_url, tags, status, statements,
   } = req.body;
 
   if (!question_text?.trim()) return res.status(400).json({ error: 'question_text is required' });
@@ -49,6 +49,7 @@ export default async function handler(req, res) {
     image_url:      image_url      || null,
     tags:           Array.isArray(tags) && tags.length ? tags : null,
     status:         status         || 'published',
+    statements:     Array.isArray(statements) && statements.length ? statements : null,
     updated_at:     new Date().toISOString(),
   };
 

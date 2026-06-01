@@ -510,7 +510,11 @@ function renderCard(q) {
 function getCorrectPreview(q) {
   if (q.question_type === 'fill_blank') return q.correct_answer || '';
   if (q.question_type === 'true_false') return q.correct_answer || '';
-  if (q.question_type === 'terms' && q.options && q.correct_index != null) return q.options[q.correct_index] || '';
+  if (q.question_type === 'terms') {
+    if (q.statements?.length > 1) return `${q.statements.length} statements`;
+    if (q.options && q.correct_index != null) return q.options[q.correct_index] || '';
+    return '';
+  }
   if (q.question_type === 'mcq' && q.options && q.correct_index != null)
     return `${LETTERS[q.correct_index]}) ${q.options[q.correct_index] || ''}`;
   return '';
@@ -593,10 +597,11 @@ function loadQIntoForm(q) {
     if (opts.length < 2) { addTermWithValue(''); addTermWithValue(''); }
     const sList = document.getElementById('stmt-list');
     sList.innerHTML = '';
-    addStatementRow(q.question_text || '', q.correct_index ?? 0);
+    const loadedStmts = q.statements || [{ text: q.question_text || '', correct_index: q.correct_index ?? 0 }];
+    loadedStmts.forEach(s => addStatementRow(s.text, s.correct_index ?? 0));
     rebuildLetterButtons();
-    document.getElementById('add-stmt-btn').style.display = 'none';
-    document.getElementById('stmt-label-note').textContent = '— editing single statement';
+    document.getElementById('add-stmt-btn').style.display = '';
+    document.getElementById('stmt-label-note').textContent = '';
   } else if (q.question_type === 'true_false') {
     document.getElementById('tf-question').value = q.question_text || '';
     selectTF(q.correct_answer || 'true');
@@ -647,7 +652,7 @@ function resetTermsForm() {
   sList.innerHTML = '';
   addStatementRow('', 0); addStatementRow('', 0); addStatementRow('', 0);
   document.getElementById('add-stmt-btn').style.display = '';
-  document.getElementById('stmt-label-note').textContent = '— each saves as a separate question';
+  document.getElementById('stmt-label-note').textContent = '— all saved together as one grouped question';
 }
 
 function addTerm() { addTermWithValue(''); }
@@ -788,16 +793,16 @@ function buildPayload() {
     for (const s of stmts) {
       if (!s.text) { showToast('Please fill in all statements.', 'warning'); return null; }
     }
-    const shared = { course_id: course, module_id: module, question_type: 'terms', difficulty: diff,
-      options: terms, explanation: expl, image_url: img, tags: tags.length ? tags : null, status };
-    if (editingId) {
-      return { id: editingId, ...shared, question_text: stmts[0].text,
-        correct_index: stmts[0].correctIdx, correct_answer: terms[stmts[0].correctIdx] || null };
-    }
-    return stmts.map(s => ({
-      ...shared, question_text: s.text,
-      correct_index: s.correctIdx, correct_answer: terms[s.correctIdx] || null,
-    }));
+    const statements = stmts.map(s => ({ text: s.text, correct_index: s.correctIdx }));
+    return {
+      id: editingId || undefined,
+      course_id: course, module_id: module, question_type: 'terms', difficulty: diff,
+      options: terms, explanation: expl, image_url: img, tags: tags.length ? tags : null, status,
+      question_text: stmts[0].text,
+      statements,
+      correct_index: null,
+      correct_answer: null,
+    };
   } else if (type === 'true_false') {
     question_text = document.getElementById('tf-question').value.trim();
     if (!question_text) { showToast('Please enter the statement.', 'warning'); return null; }

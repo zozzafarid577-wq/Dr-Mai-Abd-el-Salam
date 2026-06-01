@@ -217,7 +217,7 @@ async function submitTest() {
       const data = await resp.json().catch(() => ({}));
       if (resp.ok && data.sent)       emailStatus = '✓ A copy of these results was emailed to your parent.';
       else if (resp.ok && data.skipped) emailStatus = 'No parent email is on file, so no notification was sent.';
-      else                            emailStatus = 'Parent notification could not be sent.';
+      else                            emailStatus = 'Parent notification could not be sent — ' + (data.error || ('HTTP ' + resp.status));
     }
   } catch (_) { emailStatus = 'Parent notification could not be sent.'; }
   const noteEl = document.getElementById('email-note');

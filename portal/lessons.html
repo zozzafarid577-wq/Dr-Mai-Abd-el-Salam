@@ -19,6 +19,9 @@
 .lesson-play { width:32px;height:32px;border-radius:50%;border:none;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s; }
 .lesson-play:hover { background:#1648c0; }
 .check-icon { width:20px;height:20px;color:#16a34a;flex-shrink:0; }
+.lesson-row.soon { opacity:.55;cursor:default; }
+.lesson-row.soon:hover { border-color:var(--border);box-shadow:none; }
+.soon-tag { font-size:.6rem;padding:3px 7px;border:1px solid var(--border);border-radius:4px;color:var(--muted);flex-shrink:0;font-weight:600;letter-spacing:.03em; }
 .player-modal .modal-body { padding:0;background:#000;border-radius:0 0 14px 14px; }
 .player-modal .modal-header { border-radius:14px 14px 0 0; }
 .player-wrap { position:relative;padding-top:56.25%;background:#000;border-radius:0 0 12px 12px;overflow:hidden; }
@@ -169,7 +172,7 @@ function renderLessons() {
   const container = document.getElementById('lessons-body');
   const mods = allData.filter(m => m.course_id === activeCourse);
   if (mods.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-title">No Recordings Yet</div><div class="empty-sub">Lesson recordings will appear here once uploaded.</div></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-title">No Lessons Yet</div><div class="empty-sub">Lessons will appear here once your instructor adds them.</div></div>';
     return;
   }
   let html = '';
@@ -180,8 +183,11 @@ function renderLessons() {
     lessons.forEach(lesson => {
       globalIdx++;
       const done = completedSet.has(lesson.id);
+      const isSoon = !lesson.youtube_id;
+      const rowClass = `lesson-row${done?' done':''}${isSoon?' soon':''}`;
+      const onclickAttr = !isSoon ? `onclick="openPlayer('${lesson.id}','${escHtml(lesson.title)}','${lesson.youtube_id}')"` : '';
       html += `
-        <div class="lesson-row${done?' done':''}" onclick="openPlayer('${lesson.id}','${escHtml(lesson.title)}','${lesson.youtube_id||''}')">
+        <div class="${rowClass}" ${onclickAttr}>
           <div class="lesson-num">${globalIdx}</div>
           <div class="lesson-info">
             <div class="lesson-name">${escHtml(lesson.title)}</div>
@@ -189,7 +195,9 @@ function renderLessons() {
           </div>
           ${done
             ? `<svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
-            : `<button class="lesson-play" title="Watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>`}
+            : isSoon
+              ? `<span class="soon-tag">Coming Soon</span>`
+              : `<button class="lesson-play" title="Watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>`}
         </div>`;
     });
     html += '</div>';

@@ -110,6 +110,7 @@
     <div class="nav-section">Management</div>
     <a href="/drmai-staff-portal/students.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</a>
     <a href="/drmai-staff-portal/courses.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
+    <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
     <a href="/drmai-staff-portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
     <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
     <a href="/drmai-staff-portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
@@ -288,10 +289,16 @@
       </div>
       <div style="margin-top:4px;margin-bottom:10px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Questions</div>
       <div id="manual-questions-list"></div>
-      <button class="btn btn-outline btn-sm" onclick="addManualQuestion()" style="margin-top:4px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Question
-      </button>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="addManualMcqQuestion()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Multiple Choice
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="addManualSharedQuestion()" style="color:var(--primary);border-color:var(--primary)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Choose from Terms
+        </button>
+      </div>
     </div>
     <div class="modal-footer" style="flex-shrink:0">
       <button class="btn btn-outline" onclick="closeManualTestModal()">Cancel</button>
@@ -343,7 +350,10 @@
       </div>
       <div style="margin-bottom:10px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Questions</div>
       <div id="edit-test-questions"></div>
-      <button class="btn btn-outline btn-sm" onclick="addEditQuestion()" style="margin-top:4px">+ Add Question</button>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="addEditMcqQuestion()">+ Multiple Choice</button>
+        <button class="btn btn-outline btn-sm" onclick="addEditSharedQuestion()" style="color:var(--primary);border-color:var(--primary)">+ Choose from Terms</button>
+      </div>
     </div>
     <div class="modal-footer" style="flex-shrink:0">
       <button class="btn btn-outline" onclick="closeEditTestModal()">Cancel</button>
@@ -1017,8 +1027,24 @@ function renderManualQuestions() {
     manualQs.map((q, i) => buildQuestionCard(i, q, 'manual', terms.length >= 2 ? terms : null)).join('');
 }
 
-function addManualQuestion() {
+function addManualMcqQuestion() {
   manualQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', useShared: false });
+  renderManualQuestions();
+}
+
+function addManualSharedQuestion() {
+  const terms = getManualSharedTerms();
+  if (terms.length < 2) {
+    // Auto-open the terms panel and hint the user
+    const p = document.getElementById('mt-shared-panel');
+    const a = document.getElementById('mt-shared-arrow');
+    p.style.display = '';
+    a.textContent = '▲ collapse';
+    showToast('Define your shared terms in the panel above first, then click "Choose from Terms" again.', 'warning');
+    document.getElementById('mt-shared-term-0').focus();
+    return;
+  }
+  manualQs.push({ question_text: '', options: terms, correct_index: 0, explanation: '', useShared: true });
   renderManualQuestions();
 }
 
@@ -1107,8 +1133,23 @@ function renderEditQuestions() {
     editTestQs.map((q, i) => buildQuestionCard(i, q, 'edit', terms.length >= 2 ? terms : null)).join('');
 }
 
-function addEditQuestion() {
+function addEditMcqQuestion() {
   editTestQs.push({ question_text: '', options: ['', '', '', ''], correct_index: 0, explanation: '', image_url: '', useShared: false, _id: null });
+  renderEditQuestions();
+}
+
+function addEditSharedQuestion() {
+  const terms = getEditSharedTerms();
+  if (terms.length < 2) {
+    const p = document.getElementById('et-shared-panel');
+    const a = document.getElementById('et-shared-arrow');
+    p.style.display = '';
+    a.textContent = '▲ collapse';
+    showToast('Define your shared terms in the panel above first, then click "Choose from Terms" again.', 'warning');
+    document.getElementById('et-shared-term-0').focus();
+    return;
+  }
+  editTestQs.push({ question_text: '', options: terms, correct_index: 0, explanation: '', image_url: '', useShared: true, _id: null });
   renderEditQuestions();
 }
 
@@ -1292,8 +1333,11 @@ function buildQuestionCard(i, q, prefix, sharedTerms) {
   return `
     <div class="q-review" id="${containerId}">
       <div class="q-review-header">
-        <div class="q-idx-badge">${i+1}</div>
-        <div style="flex:1;font-size:.78rem;font-weight:600;color:var(--muted)">Question ${i+1}</div>
+        <div class="q-idx-badge" style="${useShared?'background:var(--primary)':''}">${i+1}</div>
+        <div style="flex:1;font-size:.78rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px">
+          Question ${i+1}
+          ${useShared ? `<span style="font-size:.6rem;padding:2px 6px;background:rgba(26,86,219,.12);color:var(--primary);border-radius:4px;font-weight:700;letter-spacing:.04em">TERMS</span>` : ''}
+        </div>
         ${hasShared ? `
         <label style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--primary);cursor:pointer;margin-right:8px;user-select:none">
           <input type="checkbox" id="${pre}-use-shared-${i}" ${useShared?'checked':''} onchange="toggleSharedOpts('${prefix}',${i})" style="accent-color:var(--primary)">

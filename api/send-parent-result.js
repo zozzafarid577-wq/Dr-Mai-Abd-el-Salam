@@ -35,6 +35,7 @@ export default async function handler(req, res) {
   // Accept common naming variants so a slightly-off env var name still works
   const BREVO_API_KEY = (
     process.env.BREVO_API_KEY ||
+    process.env.BREVO_API_KEYY ||
     process.env.BREVO_KEY ||
     process.env.BREVO_APIKEY ||
     process.env.BREVO_API ||

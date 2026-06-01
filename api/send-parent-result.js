@@ -32,23 +32,9 @@ export default async function handler(req, res) {
   if (profErr) return res.status(500).json({ error: 'Could not load profile: ' + profErr.message });
   if (!prof?.parent_email) return res.status(200).json({ skipped: true });
 
-  // Accept common naming variants so a slightly-off env var name still works
-  const BREVO_API_KEY = (
-    process.env.BREVO_API_KEY ||
-    process.env.BREVO_API_KEYY ||
-    process.env.BREVO_KEY ||
-    process.env.BREVO_APIKEY ||
-    process.env.BREVO_API ||
-    process.env.BREVO_SMTP_KEY ||
-    process.env.SENDINBLUE_API_KEY ||
-    ''
-  ).trim();
+  const BREVO_API_KEY = (process.env.BREVO_API_KEY || '').trim();
   if (!BREVO_API_KEY) {
-    const seen = Object.keys(process.env).filter(k => /BREVO|SENDINBLUE/i.test(k));
-    return res.status(500).json({
-      error: 'BREVO_API_KEY not found. Add it in Vercel (Production scope) then redeploy. '
-        + (seen.length ? 'Found these related vars: ' + seen.join(', ') : 'No BREVO_* vars are visible to this deployment.')
-    });
+    return res.status(500).json({ error: 'BREVO_API_KEY not configured in Vercel (Production scope), then redeploy.' });
   }
 
   const senderEmail = process.env.BREVO_SENDER_EMAIL || 'gihanfarid23@gmail.com';

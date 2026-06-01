@@ -93,19 +93,6 @@
   </main>
 </div>
 
-<!-- Test Runner Modal -->
-<div class="modal-overlay" id="runner-overlay">
-  <div class="modal runner-modal">
-    <div class="modal-header">
-      <div class="modal-title" id="runner-title">Mock Test</div>
-      <div class="runner-timer" id="runner-timer" style="display:none"></div>
-      <button class="modal-close" onclick="confirmClose()">✕</button>
-    </div>
-    <div class="modal-body" id="runner-body"></div>
-    <div class="modal-footer" id="runner-footer"></div>
-  </div>
-</div>
-
 <div class="toast-wrap" id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -159,11 +146,10 @@ const LETTERS = ['A','B','C','D','E'];
 
   renderTests();
 
-  // Auto-open a specific test when linked from assignments (?id=...)
+  // Deep link from assignments (?id=...) → go straight to the test page
   const targetId = new URLSearchParams(location.search).get('id');
-  if (targetId) {
-    const found = tests.find(t => t.id === targetId);
-    if (found) startTest(targetId);
+  if (targetId && tests.find(t => t.id === targetId)) {
+    startTest(targetId);
   }
 })();
 
@@ -199,125 +185,9 @@ function renderTests() {
   }).join('');
 }
 
-async function startTest(testId) {
-  runnerTest = tests.find(t => t.id === testId);
-  if (!runnerTest) return;
-  const { data: qs } = await sb.from('test_questions').select('id, question_text, options, correct_index, order_index, image_url').eq('test_id', testId).order('order_index');
-  questions = qs || [];
-  if (!questions.length) { showToast('This mock test has no questions yet.', 'warning'); return; }
-  answers = {}; currentQ = 0; finished = false;
-  document.getElementById('runner-title').textContent = runnerTest.title;
-  document.getElementById('runner-overlay').classList.add('show');
-  if (runnerTest.time_limit_min) {
-    secondsLeft = runnerTest.time_limit_min * 60;
-    document.getElementById('runner-timer').style.display = '';
-    timerInterval = setInterval(tickTimer, 1000);
-    updateTimerDisplay();
-  } else {
-    document.getElementById('runner-timer').style.display = 'none';
-  }
-  renderQuestion();
-}
-
-function tickTimer() {
-  secondsLeft--;
-  updateTimerDisplay();
-  if (secondsLeft <= 0) { clearInterval(timerInterval); submitTest(); }
-}
-
-function updateTimerDisplay() {
-  const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
-  const s = String(secondsLeft % 60).padStart(2, '0');
-  const el = document.getElementById('runner-timer');
-  el.textContent = `${m}:${s}`;
-  el.style.color = secondsLeft < 120 ? '#dc2626' : 'var(--primary)';
-}
-
-function renderQuestion() {
-  const q = questions[currentQ];
-  const opts = q.options || [];
-  const sel = answers[q.id];
-  document.getElementById('runner-body').innerHTML = `
-    <div class="progress-dots" style="margin-bottom:20px">
-      ${questions.map((qq, i) => `<div class="dot${i===currentQ?' current':answers[qq.id]!==undefined?' answered':''}"></div>`).join('')}
-    </div>
-    <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>
-    <div class="q-text">${escHtml(q.question_text)}</div>
-    ${q.image_url ? `<div class="q-img"><img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:10px 0"></div>` : ''}
-    <div class="q-options">
-      ${opts.map((opt, i) => `<div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})"><div class="opt-letter">${LETTERS[i]}</div><span>${escHtml(opt)}</span></div>`).join('')}
-    </div>`;
-  document.getElementById('runner-footer').innerHTML = `
-    <div style="display:flex;gap:8px;justify-content:space-between;width:100%">
-      <button class="btn btn-outline btn-sm" onclick="goQ(${currentQ-1})" ${currentQ===0?'disabled':''}>← Prev</button>
-      ${currentQ < questions.length - 1
-        ? `<button class="btn btn-primary btn-sm" onclick="goQ(${currentQ+1})" style="background:linear-gradient(135deg,#7c3aed,#4c1d95)">Next →</button>`
-        : `<button class="btn btn-success btn-sm" onclick="submitTest()">Submit Mock</button>`}
-    </div>`;
-}
-
-function selectOpt(idx) { if (finished) return; answers[questions[currentQ].id] = idx; renderQuestion(); }
-function goQ(idx) { if (idx < 0 || idx >= questions.length) return; currentQ = idx; renderQuestion(); }
-
-function confirmClose() {
-  if (!finished && Object.keys(answers).length > 0) {
-    if (!confirm('Are you sure you want to exit? Your progress will be lost.')) return;
-  }
-  closeRunner();
-}
-
-function closeRunner() {
-  if (timerInterval) clearInterval(timerInterval);
-  document.getElementById('runner-overlay').classList.remove('show');
-  document.getElementById('runner-iframe') && (document.getElementById('runner-iframe').src = '');
-}
-
-async function submitTest() {
-  if (timerInterval) clearInterval(timerInterval);
-  finished = true;
-  let correct = 0;
-  questions.forEach(q => { if (answers[q.id] === q.correct_index) correct++; });
-  const pct = Math.round((correct / questions.length) * 100);
-  const passed = pct >= 60;
-  await sb.from('test_attempts').insert({ test_id: runnerTest.id, student_id: profile.id, answers, score: correct, max_score: questions.length, percentage: pct, passed, completed_at: new Date().toISOString() });
-
-  // Notify parent (fire-and-forget)
-  try {
-    const tok = (await sb.auth.getSession()).data.session?.access_token;
-    if (tok) fetch('/api/send-parent-result', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-      body: JSON.stringify({ test_title: runnerTest.title, score: correct, max_score: questions.length, percentage: pct, passed }),
-    });
-  } catch (_) {}
-
-  if (!attemptsMap[runnerTest.id]) attemptsMap[runnerTest.id] = [];
-  attemptsMap[runnerTest.id].unshift({ percentage: pct, passed });
-  document.getElementById('runner-timer').style.display = 'none';
-  document.getElementById('runner-body').innerHTML = `
-    <div class="result-block">
-      <div class="result-score">${pct}%</div>
-      <div class="result-label">${correct} / ${questions.length} correct</div>
-      <div class="result-badge badge ${passed?'badge-success':'badge-danger'}" style="font-size:.88rem;margin-top:12px">${passed ? 'Passed ✓' : 'Not Passed'}</div>
-    </div>
-    <div style="margin-top:24px">
-      ${questions.map((q, i) => {
-        const chosen = answers[q.id];
-        return `<div style="margin-bottom:16px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:6px">Q${i+1}</div>
-          <div style="font-size:.88rem;font-weight:600;margin-bottom:10px">${escHtml(q.question_text)}</div>
-          ${(q.options||[]).map((opt, oi) => {
-            let cls = '';
-            if (oi === q.correct_index) cls = 'correct';
-            else if (oi === chosen && chosen !== q.correct_index) cls = 'wrong';
-            return `<div class="q-opt ${cls}" style="cursor:default;margin-bottom:4px"><div class="opt-letter">${LETTERS[oi]}</div><span>${escHtml(opt)}</span></div>`;
-          }).join('')}
-        </div>`;
-      }).join('')}
-    </div>`;
-  document.getElementById('runner-footer').innerHTML = `
-    <button class="btn btn-outline btn-sm" onclick="closeRunner();renderTests()">Close</button>
-    <button class="btn btn-sm" onclick="startTest('${runnerTest.id}')" style="background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff">Retake</button>`;
+function startTest(testId) {
+  // Take the mock on a dedicated full page (shows score + review + emails parent)
+  location.href = '/portal/take-test.html?id=' + encodeURIComponent(testId);
 }
 
 function showToast(msg, type='info') {

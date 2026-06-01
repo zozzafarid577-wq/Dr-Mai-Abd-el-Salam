@@ -34,7 +34,12 @@ export default async function handler(req, res) {
 
   const BREVO_API_KEY = (process.env.BREVO_API_KEY || '').trim();
   if (!BREVO_API_KEY) {
-    return res.status(500).json({ error: 'BREVO_API_KEY not configured in Vercel (Production scope), then redeploy.' });
+    const seen = Object.keys(process.env).filter(k => /BREVO|SENDINBLUE/i.test(k));
+    return res.status(500).json({
+      error: 'BREVO_API_KEY not set on this deployment. '
+        + (seen.length ? 'Vars visible to it: ' + seen.join(', ') : 'NO brevo-related vars are visible — it is not on the Production environment.')
+        + ' [build ' + (process.env.VERCEL_GIT_COMMIT_SHA || 'local').slice(0, 7) + ']'
+    });
   }
 
   const senderEmail = process.env.BREVO_SENDER_EMAIL || 'gihanfarid23@gmail.com';

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Test | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+body { background:var(--bg); }
+.exam-wrap { max-width:760px;margin:0 auto;padding:24px 20px 60px; }
+.exam-top { display:flex;align-items:center;gap:14px;margin-bottom:24px; }
+.exam-title { font-size:1.15rem;font-weight:800;color:var(--text);flex:1;min-width:0; }
+.exam-timer { font-size:1.05rem;font-weight:800;color:var(--primary);background:var(--surface);border:1px solid var(--border);padding:6px 14px;border-radius:10px; }
+.exam-card { background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px; }
+.progress-dots { display:flex;gap:5px;flex-wrap:wrap;margin-bottom:22px; }
+.dot { width:11px;height:11px;border-radius:50%;background:var(--border); }
+.dot.answered { background:var(--primary); }
+.dot.current { background:var(--primary);outline:2px solid rgba(26,86,219,.3);outline-offset:2px; }
+.q-num { font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px; }
+.q-text { font-size:1rem;font-weight:600;color:var(--text);margin-bottom:18px;line-height:1.55; }
+.q-options { display:flex;flex-direction:column;gap:10px; }
+.q-opt { display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;font-size:.92rem;font-weight:500; }
+.q-opt:hover { border-color:var(--primary);background:rgba(26,86,219,.04); }
+.q-opt.selected { border-color:var(--primary);background:rgba(26,86,219,.08); }
+.q-opt.correct { border-color:#16a34a;background:#f0fdf4;color:#166534; }
+.q-opt.wrong { border-color:#dc2626;background:#fef2f2;color:#991b1b; }
+.opt-letter { width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;flex-shrink:0; }
+.exam-nav { display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:26px; }
+/* Results */
+.result-block { text-align:center;padding:18px 0 6px; }
+.result-score { font-size:3.4rem;font-weight:900;color:var(--primary);line-height:1; }
+.result-label { font-size:.92rem;color:var(--muted);margin-top:6px; }
+.result-badge { display:inline-block;padding:5px 16px;border-radius:20px;font-size:.82rem;font-weight:700;margin-top:14px; }
+.review-q { margin-bottom:16px;padding:16px;background:var(--bg);border-radius:11px;border:1px solid var(--border); }
+.email-note { font-size:.8rem;color:var(--muted);text-align:center;margin-top:14px; }
+.loading-center { text-align:center;padding:80px 20px;color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="exam-wrap">
+  <div class="exam-top">
+    <button class="btn btn-outline btn-sm" onclick="goBack()">← Exit</button>
+    <div class="exam-title" id="exam-title">Loading…</div>
+    <div class="exam-timer" id="exam-timer" style="display:none"></div>
+  </div>
+  <div id="exam-body">
+    <div class="loading-center">
+      <div class="skeleton" style="height:260px;border-radius:14px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile = null;
+let test = null;
+let questions = [];
+let answers = {};
+let currentQ = 0;
+let timerInterval = null;
+let secondsLeft = 0;
+let startedAt = 0;
+let finished = false;
+let isMock = false;
+const LETTERS = ['A','B','C','D','E','F'];
+
+const params  = new URLSearchParams(location.search);
+const testId  = params.get('id');
+
+(async () => {
+  profile = await requireAuth('student');
+  if (!profile) return;
+
+  if (!testId) { fail('No test specified.'); return; }
+
+  const { data: t, error: tErr } = await sb
+    .from('practice_tests')
+    .select('id, title, time_limit_min, is_active, is_mock')
+    .eq('id', testId)
+    .single();
+
+  if (tErr || !t) { fail('Test not found.'); return; }
+  if (!t.is_active) { fail('This test is no longer available.'); return; }
+
+  test   = t;
+  isMock = !!t.is_mock;
+  document.getElementById('exam-title').textContent = t.title;
+
+  const { data: qs, error: qErr } = await sb
+    .from('test_questions')
+    .select('id, question_text, options, correct_index, order_index, image_url')
+    .eq('test_id', testId)
+    .order('order_index');
+
+  if (qErr) { fail('Could not load questions: ' + qErr.message); return; }
+  questions = qs || [];
+  if (!questions.length) { fail('This test has no questions yet.'); return; }
+
+  startedAt = Date.now();
+  if (t.time_limit_min) {
+    secondsLeft = t.time_limit_min * 60;
+    document.getElementById('exam-timer').style.display = '';
+    timerInterval = setInterval(tickTimer, 1000);
+    updateTimer();
+  }
+  renderQuestion();
+})();
+
+function fail(msg) {
+  document.getElementById('exam-body').innerHTML = `
+    <div class="exam-card" style="text-align:center;padding:50px 30px">
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Unable to start</div>
+      <div style="color:var(--muted);font-size:.9rem;margin-bottom:22px">${escHtml(msg)}</div>
+      <button class="btn btn-primary btn-sm" onclick="goBack()">Back to Tests</button>
+    </div>`;
+}
+
+function goBack() {
+  if (!finished && Object.keys(answers).length && !confirm('Exit test? Your progress will be lost.')) return;
+  location.href = isMock ? '/portal/mock-tests.html' : '/portal/tests.html';
+}
+
+function tickTimer() {
+  secondsLeft--;
+  updateTimer();
+  if (secondsLeft <= 0) { clearInterval(timerInterval); submitTest(); }
+}
+function updateTimer() {
+  const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+  const s = String(secondsLeft % 60).padStart(2, '0');
+  const el = document.getElementById('exam-timer');
+  el.textContent = `${m}:${s}`;
+  el.style.color = secondsLeft < 60 ? '#dc2626' : 'var(--primary)';
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const opts = q.options || [];
+  const sel  = answers[q.id];
+
+  document.getElementById('exam-body').innerHTML = `
+    <div class="exam-card">
+      <div class="progress-dots">
+        ${questions.map((qq, i) => `<div class="dot${i===currentQ?' current':answers[qq.id]!==undefined?' answered':''}"></div>`).join('')}
+      </div>
+      <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>
+      <div class="q-text">${escHtml(q.question_text)}</div>
+      ${q.image_url ? `<img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:0 0 16px">` : ''}
+      <div class="q-options">
+        ${opts.map((opt, i) => `
+          <div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})">
+            <div class="opt-letter">${LETTERS[i]}</div>
+            <span>${escHtml(opt)}</span>
+          </div>`).join('')}
+      </div>
+      <div class="exam-nav">
+        <button class="btn btn-outline btn-sm" onclick="goQ(${currentQ-1})" ${currentQ===0?'disabled':''}>← Prev</button>
+        ${currentQ < questions.length - 1
+          ? `<button class="btn btn-primary btn-sm" onclick="goQ(${currentQ+1})">Next →</button>`
+          : `<button class="btn btn-success btn-sm" onclick="submitTest()">Submit ${isMock?'Mock':'Test'}</button>`}
+      </div>
+    </div>`;
+}
+
+function selectOpt(idx) {
+  if (finished) return;
+  answers[questions[currentQ].id] = idx;
+  renderQuestion();
+}
+function goQ(idx) {
+  if (idx < 0 || idx >= questions.length) return;
+  currentQ = idx;
+  renderQuestion();
+}
+
+async function submitTest() {
+  if (finished) return;
+  finished = true;
+  if (timerInterval) clearInterval(timerInterval);
+
+  let correct = 0;
+  questions.forEach(q => { if (answers[q.id] === q.correct_index) correct++; });
+  const pct    = Math.round((correct / questions.length) * 100);
+  const passed = pct >= 60;
+  const timeTaken = Math.round((Date.now() - startedAt) / 1000);
+
+  // Show result immediately (do not block on network)
+  renderResult(correct, pct, passed);
+
+  // Save attempt
+  const { error } = await sb.from('test_attempts').insert({
+    test_id: test.id,
+    student_id: profile.id,
+    answers,
+    score: correct,
+    max_score: questions.length,
+    percentage: pct,
+    passed,
+    time_taken_sec: timeTaken,
+    completed_at: new Date().toISOString(),
+  });
+  if (error) showToast('Note: result could not be saved (' + error.message + ')', 'warning');
+
+  // Notify parent
+  let emailStatus = '';
+  try {
+    const tok = (await sb.auth.getSession()).data.session?.access_token;
+    if (tok) {
+      const resp = await fetch('/api/send-parent-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+        body: JSON.stringify({ test_title: test.title, score: correct, max_score: questions.length, percentage: pct, passed }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (resp.ok && data.sent)       emailStatus = '✓ A copy of these results was emailed to your parent.';
+      else if (resp.ok && data.skipped) emailStatus = 'No parent email is on file, so no notification was sent.';
+      else                            emailStatus = 'Parent notification could not be sent.';
+    }
+  } catch (_) { emailStatus = 'Parent notification could not be sent.'; }
+  const noteEl = document.getElementById('email-note');
+  if (noteEl) noteEl.textContent = emailStatus;
+}
+
+function renderResult(correct, pct, passed) {
+  document.getElementById('exam-timer').style.display = 'none';
+  document.getElementById('exam-title').textContent = test.title + ' — Results';
+
+  const reviewHtml = questions.map((q, i) => {
+    const chosen = answers[q.id];
+    const opts   = q.options || [];
+    return `
+      <div class="review-q">
+        <div style="font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:6px">Question ${i+1}${chosen===undefined?' · Not answered':''}</div>
+        <div style="font-size:.92rem;font-weight:600;margin-bottom:12px">${escHtml(q.question_text)}</div>
+        ${opts.map((opt, oi) => {
+          let cls = '';
+          if (oi === q.correct_index) cls = 'correct';
+          else if (oi === chosen && chosen !== q.correct_index) cls = 'wrong';
+          return `<div class="q-opt ${cls}" style="cursor:default;margin-bottom:6px"><div class="opt-letter">${LETTERS[oi]}</div><span>${escHtml(opt)}</span></div>`;
+        }).join('')}
+        ${q.explanation ? `<div style="font-size:.82rem;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><strong>Explanation:</strong> ${escHtml(q.explanation)}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  document.getElementById('exam-body').innerHTML = `
+    <div class="exam-card">
+      <div class="result-block">
+        <div class="result-score">${pct}%</div>
+        <div class="result-label">${correct} / ${questions.length} correct</div>
+        <div class="result-badge badge ${passed?'badge-success':'badge-danger'}">${passed ? 'Passed ✓' : 'Not Passed'}</div>
+        <div class="email-note" id="email-note">Sending parent notification…</div>
+      </div>
+      <div style="margin-top:26px">
+        <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:14px">Review Answers</div>
+        ${reviewHtml}
+      </div>
+      <div class="exam-nav" style="justify-content:flex-end">
+        <button class="btn btn-outline btn-sm" onclick="goBack()">Back to Tests</button>
+        <button class="btn btn-primary btn-sm" onclick="location.reload()">Retake</button>
+      </div>
+    </div>`;
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+</script>
+</body>
+</html>

@@ -6,20 +6,24 @@
 <title>Assignments | Admin</title>
 <link rel="stylesheet" href="/css/portal.css">
 <style>
-.assign-admin-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px; }
-.assign-admin-header { display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px; }
-.assign-admin-title { font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
-.assign-admin-meta { font-size:.74rem;color:var(--muted);margin-bottom:10px; }
-.submissions-table { width:100%;border-collapse:collapse;margin-top:12px; }
-.submissions-table th, .submissions-table td { padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:.8rem; }
-.submissions-table th { font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);background:var(--bg); }
-.grade-input { width:60px;padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82rem;text-align:center; }
-.grade-input:focus { outline:none;border-color:var(--primary); }
-.seg-ctrl { display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden; }
-.seg-btn { flex:1;padding:7px 8px;border:none;background:none;font-size:.78rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;font-family:inherit;border-right:1px solid var(--border); }
-.seg-btn:last-child { border-right:none; }
-.seg-btn.active { background:var(--primary);color:#fff; }
-.type-pill { font-size:.61rem;padding:2px 7px;border-radius:4px;font-weight:700; }
+.assign-card { background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px; }
+.assign-header { display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px; }
+.assign-title { font-size:.92rem;font-weight:700;margin-bottom:4px; }
+.assign-meta { font-size:.74rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
+.type-pill { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;letter-spacing:.02em; }
+.type-practice { background:#eff6ff;color:#1d4ed8; }
+.type-mock     { background:#f5f3ff;color:#6d28d9; }
+.type-file     { background:#f0fdf4;color:#166534; }
+.type-auto     { background:#fff7ed;color:#c2410c; }
+
+.submissions-table { width:100%;border-collapse:collapse;margin-top:14px; }
+.submissions-table th,.submissions-table td { padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:.8rem; }
+.submissions-table th { font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--muted);background:var(--bg); }
+
+/* Segmented control */
+.seg-ctrl { display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px; }
+.seg-btn { flex:1;padding:8px 10px;border:none;background:transparent;border-radius:8px;font-size:.8rem;font-weight:600;font-family:inherit;cursor:pointer;color:var(--muted);transition:all .15s; }
+.seg-btn.active { background:#fff;color:var(--primary);box-shadow:var(--shadow-xs); }
 </style>
 </head>
 <body>
@@ -35,6 +39,7 @@
     <a href="/drmai-staff-portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
     <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
     <a href="/drmai-staff-portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
     <a href="/drmai-staff-portal/assignments.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
     <a href="/drmai-staff-portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
   </div>
@@ -61,52 +66,55 @@
   <main class="content">
     <div id="assign-body">
       <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:10px"></div>
+      <div class="skeleton" style="height:100px;border-radius:12px"></div>
     </div>
   </main>
 </div>
 
 <!-- New Assignment Modal -->
 <div class="modal-overlay" id="modal-overlay">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:540px">
     <div class="modal-header">
       <div class="modal-title">New Assignment</div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
+
       <!-- Type -->
       <div class="form-group">
-        <label class="form-label">Type *</label>
-        <div class="seg-ctrl" id="type-ctrl">
-          <button type="button" class="seg-btn active" onclick="setAssignType('practice_test',this)">Practice Test</button>
-          <button type="button" class="seg-btn" onclick="setAssignType('mock_test',this)">Mock Test</button>
-          <button type="button" class="seg-btn" onclick="setAssignType('file',this)">File Upload</button>
+        <label class="form-label">Assignment Type</label>
+        <div class="seg-ctrl">
+          <button class="seg-btn active" id="type-practice" onclick="setType('practice_test',this)">Practice Test</button>
+          <button class="seg-btn" id="type-mock" onclick="setType('mock_test',this)">Mock Test</button>
+          <button class="seg-btn" id="type-file" onclick="setType('file',this)">File Upload</button>
         </div>
       </div>
-      <!-- Course -->
-      <div class="form-group">
-        <label class="form-label">Course *</label>
-        <select class="form-input" id="a-course" onchange="filterTests()"><option value="">Select course…</option></select>
-      </div>
-      <!-- Test picker (hidden for file) -->
-      <div class="form-group" id="test-group">
+
+      <!-- Test picker (shown for practice/mock) -->
+      <div class="form-group" id="test-picker-group">
         <label class="form-label">Select Test *</label>
-        <select class="form-input" id="a-test" onchange="prefillFromTest()"><option value="">— choose a test —</option></select>
+        <select class="form-input" id="a-test"><option value="">— Choose a test —</option></select>
       </div>
+
       <!-- Title -->
       <div class="form-group">
         <label class="form-label">Title *</label>
         <input type="text" class="form-input" id="a-title" placeholder="Assignment title">
       </div>
-      <!-- Mode -->
+
+      <!-- Description -->
       <div class="form-group">
-        <label class="form-label">Mode</label>
-        <div class="seg-ctrl" id="mode-ctrl" style="max-width:260px">
-          <button type="button" class="seg-btn active" onclick="setMode(false,this)">Assigned</button>
-          <button type="button" class="seg-btn" onclick="setMode(true,this)">Automated</button>
-        </div>
-        <div id="mode-hint" style="font-size:.71rem;color:var(--muted);margin-top:5px">You manually share this with specific students.</div>
+        <label class="form-label">Description (optional)</label>
+        <textarea class="form-input" id="a-desc" rows="2" placeholder="Instructions for students…" style="resize:vertical"></textarea>
       </div>
-      <!-- Due + Score -->
+
+      <!-- Course -->
+      <div class="form-group">
+        <label class="form-label">Course *</label>
+        <select class="form-input" id="a-course" onchange="filterTests()"><option value="">Select course…</option></select>
+      </div>
+
+      <!-- Due + Max score -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
           <label class="form-label">Due Date</label>
@@ -117,11 +125,17 @@
           <input type="number" class="form-input" id="a-score" placeholder="100" min="1">
         </div>
       </div>
-      <!-- Description -->
+
+      <!-- Mode toggle -->
       <div class="form-group">
-        <label class="form-label">Description (optional)</label>
-        <textarea class="form-input" id="a-desc" rows="2" placeholder="Instructions for students…" style="resize:vertical"></textarea>
+        <label class="form-label">Mode</label>
+        <div class="seg-ctrl">
+          <button class="seg-btn active" id="mode-assigned" onclick="setMode(false,this)">Assigned</button>
+          <button class="seg-btn" id="mode-auto" onclick="setMode(true,this)">Automated</button>
+        </div>
+        <div class="form-hint" style="margin-top:6px">Automated: auto-assigned to all enrolled students.</div>
       </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
@@ -161,8 +175,8 @@
 <script src="/js/auth.js"></script>
 <script>
 let assignments = [];
-let subsMap = {};
-let allTests = [];
+let subsMap     = {};
+let allTests    = [];
 let currentType = 'practice_test';
 let isAutomated = false;
 
@@ -175,7 +189,7 @@ let isAutomated = false;
 
   const [{ data: courses }, { data: tests }] = await Promise.all([
     sb.from('courses').select('id, title').eq('is_active', true).order('title'),
-    sb.from('practice_tests').select('id, title, course_id, test_type').order('title'),
+    sb.from('practice_tests').select('id, title, course_id, is_mock').eq('is_active', true).order('title'),
   ]);
 
   allTests = tests || [];
@@ -191,86 +205,82 @@ let isAutomated = false;
   await loadAssignments();
 })();
 
-/* ── Type / Mode selectors ── */
-function setAssignType(type, btn) {
+function setType(type, btn) {
   currentType = type;
-  document.querySelectorAll('#type-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.seg-ctrl:first-of-type .seg-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const isTest = type !== 'file';
-  document.getElementById('test-group').style.display  = isTest ? '' : 'none';
-  document.getElementById('score-group').style.display = isTest ? 'none' : '';
+  const isFile = type === 'file';
+  document.getElementById('test-picker-group').style.display = isFile ? 'none' : '';
+  document.getElementById('score-group').style.display       = isFile ? '' : 'none';
   filterTests();
 }
 
-function setMode(automated, btn) {
-  isAutomated = automated;
-  document.querySelectorAll('#mode-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('mode-hint').textContent = automated
-    ? 'Automatically available to all students enrolled in the selected course.'
-    : 'You manually share this with specific students.';
+function setMode(auto, btn) {
+  isAutomated = auto;
+  document.getElementById('mode-assigned').classList.toggle('active', !auto);
+  document.getElementById('mode-auto').classList.toggle('active', auto);
 }
 
 function filterTests() {
   const courseId = document.getElementById('a-course').value;
-  const dbType = currentType === 'practice_test' ? 'practice' : currentType === 'mock_test' ? 'mock' : null;
-  const filtered = allTests.filter(t =>
-    (!courseId || t.course_id === courseId) &&
-    (!dbType || !t.test_type || t.test_type === dbType)
-  );
-  const sel = document.getElementById('a-test');
-  sel.innerHTML = '<option value="">— choose a test —</option>' +
-    filtered.map(t => `<option value="${t.id}">${escHtml(t.title)}</option>`).join('');
+  const isMock   = currentType === 'mock_test';
+  const sel      = document.getElementById('a-test');
+  const prev     = sel.value;
+
+  sel.innerHTML = '<option value="">— Choose a test —</option>';
+  allTests
+    .filter(t => (!courseId || t.course_id === courseId) && t.is_mock === isMock)
+    .forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.id; o.textContent = t.title;
+      if (t.id === prev) o.selected = true;
+      sel.appendChild(o);
+    });
 }
 
-function prefillFromTest() {
-  const testId = document.getElementById('a-test').value;
-  const test = allTests.find(t => t.id === testId);
-  if (!test) return;
-  if (!document.getElementById('a-title').value) document.getElementById('a-title').value = test.title;
-  if (!document.getElementById('a-course').value && test.course_id) {
-    document.getElementById('a-course').value = test.course_id;
-  }
-}
-
-/* ── Load & Render ── */
 async function loadAssignments() {
   const { data } = await sb.from('assignments')
     .select('id, title, description, due_at, max_score, course_id, assignment_type, test_id, is_automated, courses(title)')
     .order('created_at', { ascending: false });
   assignments = data || [];
 
-  const fileAssigns = assignments.filter(a => !a.assignment_type || a.assignment_type === 'file');
-  if (fileAssigns.length > 0) {
-    const { data: subs } = await sb.from('assignment_submissions')
-      .select('id, assignment_id, file_url, score, feedback, submitted_at, profiles(full_name)')
-      .in('assignment_id', fileAssigns.map(a => a.id))
-      .order('submitted_at', { ascending: false });
-    subsMap = {};
-    (subs || []).forEach(s => {
-      if (!subsMap[s.assignment_id]) subsMap[s.assignment_id] = [];
-      subsMap[s.assignment_id].push(s);
-    });
+  if (assignments.length > 0) {
+    const fileAssignIds = assignments.filter(a => !a.assignment_type || a.assignment_type === 'file').map(a => a.id);
+    if (fileAssignIds.length > 0) {
+      const { data: subs } = await sb.from('assignment_submissions')
+        .select('id, assignment_id, student_id, file_url, score, feedback, submitted_at, profiles(full_name)')
+        .in('assignment_id', fileAssignIds)
+        .order('submitted_at', { ascending: false });
+      subsMap = {};
+      (subs || []).forEach(s => {
+        if (!subsMap[s.assignment_id]) subsMap[s.assignment_id] = [];
+        subsMap[s.assignment_id].push(s);
+      });
+    }
   }
 
   renderAssignments();
 }
 
-const TYPE_META = {
-  practice_test: { label: 'Practice Test', bg: '#eff6ff', color: '#1a56db' },
-  mock_test:     { label: 'Mock Test',     bg: '#faf5ff', color: '#7c3aed' },
-  file:          { label: 'File Upload',   bg: '#f0fdf4', color: '#16a34a' },
-};
+function typePill(type, automated) {
+  let pill = '';
+  if (type === 'practice_test') pill = `<span class="type-pill type-practice">Practice Test</span>`;
+  else if (type === 'mock_test') pill = `<span class="type-pill type-mock">Mock Test</span>`;
+  else pill = `<span class="type-pill type-file">File Upload</span>`;
+  if (automated) pill += ` <span class="type-pill type-auto">Auto</span>`;
+  return pill;
+}
 
 function renderAssignments() {
   const body = document.getElementById('assign-body');
   if (!assignments.length) {
-    body.innerHTML = '<div class="empty-state"><div class="empty-title">No Assignments</div><div class="empty-sub">Create assignments for your students.</div></div>';
+    body.innerHTML = '<div class="empty-state"><div class="empty-title">No Assignments</div><div class="empty-sub">Create assignments to send to your students.</div></div>';
     return;
   }
 
   body.innerHTML = assignments.map(a => {
-    const subs = subsMap[a.id] || [];
+    const isFile = !a.assignment_type || a.assignment_type === 'file';
+    const subs   = isFile ? (subsMap[a.id] || []) : [];
     const pending = subs.filter(s => s.score === null).length;
     const tm = TYPE_META[a.assignment_type || 'file'];
     const isTest = a.assignment_type === 'practice_test' || a.assignment_type === 'mock_test';
@@ -280,53 +290,56 @@ function renderAssignments() {
     const pendPill = pending ? `<span class="badge badge-warning" style="font-size:.62rem">${pending} pending</span>` : '';
 
     return `
-      <div class="assign-admin-card">
-        <div class="assign-admin-header">
+      <div class="assign-card">
+        <div class="assign-header">
           <div>
-            <div class="assign-admin-title">${escHtml(a.title)} ${typePill} ${autoPill} ${pendPill}</div>
-            <div class="assign-admin-meta">
-              ${escHtml(a.courses?.title || '—')}
-              ${a.due_at ? ' · Due ' + fmtDate(a.due_at) : ''}
-              ${!isTest && a.max_score ? ' · Max: ' + a.max_score : ''}
-              ${isTest ? '' : ' · ' + subs.length + ' submission' + (subs.length !== 1 ? 's' : '')}
+            <div class="assign-title">${escHtml(a.title)}${pending ? ` <span class="badge badge-warning" style="font-size:.62rem">${pending} pending</span>` : ''}</div>
+            <div class="assign-meta">
+              ${typePill(a.assignment_type || 'file', a.is_automated)}
+              <span>${escHtml(a.courses?.title || '—')}</span>
+              ${a.due_at ? `<span>Due ${fmtDate(a.due_at)}</span>` : ''}
+              ${isFile && a.max_score ? `<span>Max: ${a.max_score}</span>` : ''}
+              ${isFile ? `<span>${subs.length} submission${subs.length!==1?'s':''}</span>` : ''}
             </div>
           </div>
-          <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteAssignment('${a.id}')">Delete</button>
+          <button class="btn btn-ghost btn-sm" style="color:#dc2626;flex-shrink:0" onclick="deleteAssignment('${a.id}')">Delete</button>
         </div>
 
-        ${isTest
-          ? `<div style="font-size:.8rem;color:var(--muted)">Students complete this test online — view attempt results in Practice Tests.</div>`
-          : subs.length > 0
-            ? `<div style="overflow-x:auto"><table class="submissions-table">
-                <thead><tr><th>Student</th><th>Submitted</th><th>File</th><th>Score</th><th></th></tr></thead>
-                <tbody>
-                  ${subs.map(s => `<tr>
-                    <td>${escHtml(s.profiles?.full_name || 'Unknown')}</td>
+        ${isFile && subs.length > 0 ? `
+          <div style="overflow-x:auto">
+            <table class="submissions-table">
+              <thead><tr><th>Student</th><th>Submitted</th><th>File</th><th>Score</th><th></th></tr></thead>
+              <tbody>
+                ${subs.map(s => `
+                  <tr>
+                    <td>${escHtml(s.profiles?.full_name || '—')}</td>
                     <td>${fmtDate(s.submitted_at)}</td>
                     <td><a href="${escHtml(s.file_url)}" target="_blank" class="btn btn-ghost btn-sm" style="padding:2px 8px">View</a></td>
                     <td>${s.score !== null ? s.score + '/' + (a.max_score || '?') : '<span style="color:var(--muted)">—</span>'}</td>
                     <td><button class="btn btn-outline btn-sm" onclick="openGradeModal('${s.id}',${s.score !== null ? s.score : 'null'},'${escHtml(s.feedback||'')}')">Grade</button></td>
                   </tr>`).join('')}
-                </tbody>
-              </table></div>`
-            : `<div style="font-size:.8rem;color:var(--muted)">No submissions yet.</div>`}
+              </tbody>
+            </table>
+          </div>
+        ` : isFile ? '<div style="font-size:.8rem;color:var(--muted);margin-top:6px">No submissions yet.</div>' : ''}
       </div>`;
   }).join('');
 }
 
-/* ── Modal open/close ── */
 function openModal() {
   currentType = 'practice_test';
   isAutomated = false;
-  ['a-title','a-desc','a-due','a-score'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('a-title').value = '';
+  document.getElementById('a-desc').value  = '';
+  document.getElementById('a-due').value   = '';
+  document.getElementById('a-score').value = '';
   document.getElementById('a-course').value = '';
-  document.getElementById('a-test').value   = '';
-  document.querySelectorAll('#type-ctrl .seg-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
-  document.querySelectorAll('#mode-ctrl .seg-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
-  document.getElementById('test-group').style.display  = '';
+  document.getElementById('a-test').innerHTML = '<option value="">— Choose a test —</option>';
+  document.querySelectorAll('#modal-overlay .seg-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('type-practice').classList.add('active');
+  document.getElementById('mode-assigned').classList.add('active');
+  document.getElementById('test-picker-group').style.display = '';
   document.getElementById('score-group').style.display = 'none';
-  document.getElementById('mode-hint').textContent = 'You manually share this with specific students.';
-  filterTests();
   document.getElementById('modal-overlay').classList.add('show');
 }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
@@ -334,9 +347,9 @@ function closeModal() { document.getElementById('modal-overlay').classList.remov
 async function saveAssignment() {
   const title    = document.getElementById('a-title').value.trim();
   const courseId = document.getElementById('a-course').value;
-  const testId   = currentType !== 'file' ? document.getElementById('a-test').value : null;
+  const testId   = document.getElementById('a-test').value || null;
 
-  if (!title)    { showToast('Please enter a title.', 'warning'); return; }
+  if (!title)    { showToast('Title is required.', 'warning'); return; }
   if (!courseId) { showToast('Please select a course.', 'warning'); return; }
   if (currentType !== 'file' && !testId) { showToast('Please select a test.', 'warning'); return; }
 
@@ -345,11 +358,10 @@ async function saveAssignment() {
     description:     document.getElementById('a-desc').value.trim() || null,
     course_id:       courseId,
     due_at:          document.getElementById('a-due').value || null,
-    max_score:       currentType === 'file' ? (parseInt(document.getElementById('a-score').value) || null) : null,
     assignment_type: currentType,
-    test_id:         testId || null,
+    test_id:         currentType !== 'file' ? testId : null,
     is_automated:    isAutomated,
-    is_active:       true,
+    max_score:       currentType === 'file' ? (parseInt(document.getElementById('a-score').value) || null) : null,
   };
 
   const { error } = await sb.from('assignments').insert(payload);
@@ -360,7 +372,7 @@ async function saveAssignment() {
 }
 
 async function deleteAssignment(id) {
-  if (!confirm('Delete this assignment and all submissions?')) return;
+  if (!confirm('Delete this assignment and all its submissions?')) return;
   await sb.from('assignment_submissions').delete().eq('assignment_id', id);
   const { error } = await sb.from('assignments').delete().eq('id', id);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
@@ -395,7 +407,6 @@ function showToast(msg, type='info') {
   document.getElementById('toasts').appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
-
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');

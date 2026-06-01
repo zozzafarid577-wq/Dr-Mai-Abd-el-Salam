@@ -31,6 +31,7 @@
     <a href="/drmai-staff-portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
     <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
     <a href="/drmai-staff-portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
     <a href="/drmai-staff-portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
     <a href="/drmai-staff-portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
   </div>
@@ -78,7 +79,7 @@
           </tr>
         </thead>
         <tbody id="students-tbody">
-          <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
+          <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -109,11 +110,11 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="form-group">
-            <label class="form-label">Parent Email</label>
+            <label class="form-label">Parent Email (optional)</label>
             <input type="email" class="form-input" id="add-parent-email" placeholder="parent@email.com">
           </div>
           <div class="form-group">
-            <label class="form-label">Parent Phone</label>
+            <label class="form-label">Parent Phone (optional)</label>
             <input type="tel" class="form-input" id="add-parent-phone" placeholder="+20 1xx xxx xxxx">
           </div>
         </div>
@@ -165,11 +166,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
           <label class="form-label">Parent Email</label>
-          <input type="email" class="form-input" id="edit-parent-email">
+          <input type="email" class="form-input" id="edit-parent-email" placeholder="parent@email.com">
         </div>
         <div class="form-group">
           <label class="form-label">Parent Phone</label>
-          <input type="tel" class="form-input" id="edit-parent-phone">
+          <input type="tel" class="form-input" id="edit-parent-phone" placeholder="+20 1xx xxx xxxx">
         </div>
       </div>
       <div class="form-group">
@@ -269,9 +270,9 @@ function renderTable(students) {
   }
   tbody.innerHTML = students.map(s => `
     <tr>
-      <td><strong>${escHtml(s.full_name)}</strong>${s.must_change_pw ? ' <span class="badge" style="font-size:.62rem">Temp PW</span>' : ''}<div style="font-size:.72rem;color:var(--muted)">${escHtml(s.phone||'')}</div></td>
+      <td><strong>${escHtml(s.full_name)}</strong>${s.must_change_pw ? ' <span class="badge" style="font-size:.62rem">Temp PW</span>' : ''}</td>
       <td>${escHtml(s.phone || '—')}</td>
-      <td>${s.parent_email ? `<span title="${escHtml(s.parent_email)}" style="font-size:.78rem">${escHtml(s.parent_email.length > 22 ? s.parent_email.substring(0,22)+'…' : s.parent_email)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${s.parent_email ? `<a href="mailto:${escHtml(s.parent_email)}" style="color:var(--primary)">${escHtml(s.parent_email)}</a>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td>${escHtml(s.parent_phone || '—')}</td>
       <td>${fmtDate(s.created_at)}</td>
       <td><span class="badge ${s.is_active ? 'badge-success' : 'badge-danger'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
@@ -341,7 +342,7 @@ async function submitAddStudent() {
     return;
   }
 
-  lastCreated = { name, email, phone, password: data.password };
+  lastCreated = { name, email, phone, parentEmail, parentPhone, password: data.password };
   document.getElementById('cred-email').textContent = email;
   document.getElementById('cred-pw').textContent    = data.password;
   document.getElementById('cred-box').style.display = 'block';
@@ -400,7 +401,7 @@ async function saveEdit() {
     phone: phone || null,
     parent_email: parentEmail || null,
     parent_phone: parentPhone || null,
-    is_active: active,
+    is_active: active
   }).eq('id', id);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 

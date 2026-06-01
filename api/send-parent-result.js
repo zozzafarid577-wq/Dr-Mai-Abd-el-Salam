@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'gigiimofarid@gmail.com';
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'gihanfarid23@gmail.com';
   const senderName  = process.env.BREVO_SENDER_NAME  || 'Dr Mai Portal';
   const passedColor = passed ? '#059669' : '#dc2626';
   const passedText  = passed ? 'Passed ✓' : 'Did Not Pass';

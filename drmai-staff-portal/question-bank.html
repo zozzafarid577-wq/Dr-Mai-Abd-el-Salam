@@ -41,6 +41,15 @@
 .icon-btn svg { width:14px;height:14px; }
 .icon-btn.del:hover { background:#fef2f2;color:#dc2626; }
 
+/* ── Bulk selection ── */
+.qb-card-check { display:flex;align-items:center;padding:0 4px 0 14px;flex-shrink:0; }
+.qb-card-check input[type=checkbox] { width:16px;height:16px;accent-color:var(--primary);cursor:pointer; }
+.qb-card.selected { border-color:var(--primary);background:#f8faff; }
+.bulk-bar { display:flex;align-items:center;gap:10px;padding:7px 12px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;margin-bottom:14px;flex-wrap:wrap; }
+.bulk-bar label { display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text);user-select:none; }
+.bulk-del-btn { margin-left:auto;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:7px;padding:4px 14px;font-size:.8rem;font-weight:700;cursor:pointer;display:none; }
+.bulk-del-btn.show { display:inline-block; }
+
 /* ── Type selector ── */
 .type-bar { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px; }
 .type-btn { display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:2px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;transition:all .15s;text-align:center; }
@@ -195,6 +204,15 @@
       </select>
       <input type="text" id="f-search" placeholder="Search questions…" oninput="applyFilters()">
       <div class="filter-count" id="filter-count"></div>
+    </div>
+
+    <div class="bulk-bar" id="bulk-bar">
+      <label>
+        <input type="checkbox" id="select-all-cb" style="width:16px;height:16px;accent-color:var(--primary)" onchange="toggleSelectAll(this.checked)">
+        Select All
+      </label>
+      <span id="bulk-count" style="font-size:.82rem;color:var(--muted)"></span>
+      <button class="bulk-del-btn" id="bulk-del-btn" onclick="bulkDeleteQ()">Delete Selected</button>
     </div>
 
     <div class="qb-list" id="qb-list">
@@ -456,6 +474,7 @@ function applyFilters() {
   document.getElementById('filter-count').textContent =
     `${visibleQs.length} of ${allQs.length} question${allQs.length !== 1 ? 's' : ''}`;
   renderList();
+  updateBulkBar();
 }
 
 function renderList() {
@@ -481,7 +500,10 @@ function renderCard(q) {
   const tagsHtml = (q.tags||[]).map(t => `<span class="qb-tag">${escHtml(t)}</span>`).join('');
 
   return `
-  <div class="qb-card">
+  <div class="qb-card${selectedQIds.has(q.id) ? ' selected' : ''}" id="qcard-${q.id}">
+    <div class="qb-card-check" onclick="event.stopPropagation()">
+      <input type="checkbox" ${selectedQIds.has(q.id) ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer" onchange="toggleQSelect('${q.id}',this.checked)">
+    </div>
     <div class="qb-card-stripe ${stripeCls}"></div>
     <div class="qb-card-body">
       <div class="qb-card-top">
@@ -875,6 +897,65 @@ async function saveQ(addAnother) {
     btn.disabled = btn2.disabled = false;
     btn.textContent = 'Save Question';
   }
+}
+
+// ── Bulk selection ───────────────────────────────────────────────
+
+let selectedQIds = new Set();
+
+function toggleQSelect(id, checked) {
+  if (checked) selectedQIds.add(id);
+  else selectedQIds.delete(id);
+  const card = document.getElementById('qcard-' + id);
+  if (card) card.classList.toggle('selected', checked);
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  visibleQs.forEach(q => {
+    if (checked) selectedQIds.add(q.id);
+    else selectedQIds.delete(q.id);
+  });
+  renderList();
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const n = selectedQIds.size;
+  const btn = document.getElementById('bulk-del-btn');
+  const countEl = document.getElementById('bulk-count');
+  const cb = document.getElementById('select-all-cb');
+  if (btn) btn.classList.toggle('show', n > 0);
+  if (countEl) countEl.textContent = n > 0 ? `${n} selected` : '';
+  if (btn) btn.textContent = `Delete Selected (${n})`;
+  if (cb) {
+    const vis = visibleQs.length;
+    cb.indeterminate = n > 0 && n < vis;
+    cb.checked = vis > 0 && n === vis;
+  }
+}
+
+async function bulkDeleteQ() {
+  if (!selectedQIds.size) return;
+  const ids = [...selectedQIds];
+  const n = ids.length;
+  if (!confirm(`Delete ${n} question${n > 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+  const token = (await sb.auth.getSession()).data.session?.access_token;
+  let failed = 0;
+  for (const id of ids) {
+    const resp = await fetch('/api/delete-bank-question', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ id }),
+    });
+    if (!resp.ok) failed++;
+    else allQs = allQs.filter(x => x.id !== id);
+  }
+  selectedQIds.clear();
+  updateStats();
+  applyFilters();
+  showToast(failed ? `Deleted with ${failed} error(s).` : `${n} question${n > 1 ? 's' : ''} deleted.`, failed ? 'error' : 'success');
 }
 
 // ── Delete ──────────────────────────────────────────────────────

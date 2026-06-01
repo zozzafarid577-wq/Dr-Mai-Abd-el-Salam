@@ -34,6 +34,20 @@ body { background:var(--bg); }
 .review-q { margin-bottom:16px;padding:16px;background:var(--bg);border-radius:11px;border:1px solid var(--border); }
 .email-note { font-size:.8rem;color:var(--muted);text-align:center;margin-top:14px; }
 .loading-center { text-align:center;padding:80px 20px;color:var(--muted); }
+/* Choose-Term (grouped) */
+.term-pool { background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px; }
+.term-pool-label { font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px; }
+.term-pool-grid { display:flex;flex-wrap:wrap;gap:8px; }
+.term-chip { display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:.84rem;font-weight:500; }
+.term-chip-letter { width:20px;height:20px;border-radius:5px;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800; }
+.stmt-list { display:flex;flex-direction:column;gap:12px; }
+.stmt-block { padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface); }
+.stmt-text { font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:10px;line-height:1.45; }
+.stmt-no { color:var(--primary);font-weight:800;margin-right:4px; }
+.stmt-choices { display:flex;flex-wrap:wrap;gap:7px; }
+.stmt-choice { width:38px;height:38px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:.85rem;font-weight:800;color:var(--text-2);cursor:pointer;transition:all .12s; }
+.stmt-choice:hover { border-color:var(--primary);color:var(--primary); }
+.stmt-choice.selected { background:var(--primary);border-color:var(--primary);color:#fff; }
 </style>
 </head>
 <body>
@@ -91,7 +105,7 @@ const testId  = params.get('id');
 
   const { data: qs, error: qErr } = await sb
     .from('test_questions')
-    .select('id, question_text, options, correct_index, order_index, image_url')
+    .select('id, question_text, options, correct_index, order_index, image_url, question_type, statements')
     .eq('test_id', testId)
     .order('order_index');
 
@@ -136,17 +150,58 @@ function updateTimer() {
   el.style.color = secondsLeft < 60 ? '#dc2626' : 'var(--primary)';
 }
 
+function isTerms(q) {
+  return q.question_type === 'terms' && Array.isArray(q.statements) && q.statements.length > 0;
+}
+function isAnswered(q) {
+  if (isTerms(q)) {
+    const a = answers[q.id];
+    return a && Object.keys(a).length === q.statements.length;
+  }
+  return answers[q.id] !== undefined;
+}
+
 function renderQuestion() {
   const q = questions[currentQ];
-  const opts = q.options || [];
-  const sel  = answers[q.id];
+  const navHtml = `
+    <div class="exam-nav">
+      <button class="btn btn-outline btn-sm" onclick="goQ(${currentQ-1})" ${currentQ===0?'disabled':''}>← Prev</button>
+      ${currentQ < questions.length - 1
+        ? `<button class="btn btn-primary btn-sm" onclick="goQ(${currentQ+1})">Next →</button>`
+        : `<button class="btn btn-success btn-sm" onclick="submitTest()">Submit ${isMock?'Mock':'Test'}</button>`}
+    </div>`;
+  const head = `
+    <div class="progress-dots">
+      ${questions.map((qq, i) => `<div class="dot${i===currentQ?' current':isAnswered(qq)?' answered':''}"></div>`).join('')}
+    </div>
+    <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>`;
 
-  document.getElementById('exam-body').innerHTML = `
-    <div class="exam-card">
-      <div class="progress-dots">
-        ${questions.map((qq, i) => `<div class="dot${i===currentQ?' current':answers[qq.id]!==undefined?' answered':''}"></div>`).join('')}
+  let body;
+  if (isTerms(q)) {
+    const terms = q.options || [];
+    const a = answers[q.id] || {};
+    body = `
+      <div class="q-text">${escHtml(q.question_text || 'Choose the correct term for each statement:')}</div>
+      <div class="term-pool">
+        <div class="term-pool-label">Terms</div>
+        <div class="term-pool-grid">
+          ${terms.map((t, i) => `<div class="term-chip"><span class="term-chip-letter">${LETTERS[i]}</span>${escHtml(t)}</div>`).join('')}
+        </div>
       </div>
-      <div class="q-num">Question ${currentQ + 1} of ${questions.length}</div>
+      <div class="stmt-list">
+        ${q.statements.map((s, si) => `
+          <div class="stmt-block">
+            <div class="stmt-text"><span class="stmt-no">${si+1}.</span> ${escHtml(s.text)}</div>
+            <div class="stmt-choices">
+              ${terms.map((t, ti) => `
+                <button type="button" class="stmt-choice${a[si]===ti?' selected':''}" onclick="selectTerm(${si},${ti})">${LETTERS[ti]}</button>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    const opts = q.options || [];
+    const sel  = answers[q.id];
+    body = `
       <div class="q-text">${escHtml(q.question_text)}</div>
       ${q.image_url ? `<img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:0 0 16px">` : ''}
       <div class="q-options">
@@ -155,19 +210,22 @@ function renderQuestion() {
             <div class="opt-letter">${LETTERS[i]}</div>
             <span>${escHtml(opt)}</span>
           </div>`).join('')}
-      </div>
-      <div class="exam-nav">
-        <button class="btn btn-outline btn-sm" onclick="goQ(${currentQ-1})" ${currentQ===0?'disabled':''}>← Prev</button>
-        ${currentQ < questions.length - 1
-          ? `<button class="btn btn-primary btn-sm" onclick="goQ(${currentQ+1})">Next →</button>`
-          : `<button class="btn btn-success btn-sm" onclick="submitTest()">Submit ${isMock?'Mock':'Test'}</button>`}
-      </div>
-    </div>`;
+      </div>`;
+  }
+
+  document.getElementById('exam-body').innerHTML = `<div class="exam-card">${head}${body}${navHtml}</div>`;
 }
 
 function selectOpt(idx) {
   if (finished) return;
   answers[questions[currentQ].id] = idx;
+  renderQuestion();
+}
+function selectTerm(stmtIdx, termIdx) {
+  if (finished) return;
+  const qid = questions[currentQ].id;
+  if (!answers[qid] || typeof answers[qid] !== 'object') answers[qid] = {};
+  answers[qid][stmtIdx] = termIdx;
   renderQuestion();
 }
 function goQ(idx) {
@@ -181,14 +239,22 @@ async function submitTest() {
   finished = true;
   if (timerInterval) clearInterval(timerInterval);
 
-  let correct = 0;
-  questions.forEach(q => { if (answers[q.id] === q.correct_index) correct++; });
-  const pct    = Math.round((correct / questions.length) * 100);
+  let correct = 0, total = 0;
+  questions.forEach(q => {
+    if (isTerms(q)) {
+      const a = answers[q.id] || {};
+      q.statements.forEach((s, si) => { total++; if (a[si] === s.correct_index) correct++; });
+    } else {
+      total++;
+      if (answers[q.id] === q.correct_index) correct++;
+    }
+  });
+  const pct    = total ? Math.round((correct / total) * 100) : 0;
   const passed = pct >= 60;
   const timeTaken = Math.round((Date.now() - startedAt) / 1000);
 
   // Show result immediately (do not block on network)
-  renderResult(correct, pct, passed);
+  renderResult(correct, total, pct, passed);
 
   // Save attempt
   const { error } = await sb.from('test_attempts').insert({
@@ -196,7 +262,7 @@ async function submitTest() {
     student_id: profile.id,
     answers,
     score: correct,
-    max_score: questions.length,
+    max_score: total,
     percentage: pct,
     passed,
     time_taken_sec: timeTaken,
@@ -212,7 +278,7 @@ async function submitTest() {
       const resp = await fetch('/api/send-parent-result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-        body: JSON.stringify({ test_title: test.title, score: correct, max_score: questions.length, percentage: pct, passed }),
+        body: JSON.stringify({ test_title: test.title, score: correct, max_score: total, percentage: pct, passed }),
       });
       const data = await resp.json().catch(() => ({}));
       if (resp.ok && data.sent)       emailStatus = '✓ A copy of these results was emailed to your parent.';
@@ -224,11 +290,34 @@ async function submitTest() {
   if (noteEl) noteEl.textContent = emailStatus;
 }
 
-function renderResult(correct, pct, passed) {
+function renderResult(correct, total, pct, passed) {
   document.getElementById('exam-timer').style.display = 'none';
   document.getElementById('exam-title').textContent = test.title + ' — Results';
 
   const reviewHtml = questions.map((q, i) => {
+    if (isTerms(q)) {
+      const terms = q.options || [];
+      const a = answers[q.id] || {};
+      return `
+        <div class="review-q">
+          <div style="font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:6px">Question ${i+1}</div>
+          <div style="font-size:.92rem;font-weight:600;margin-bottom:12px">${escHtml(q.question_text || 'Match each statement to a term')}</div>
+          ${q.statements.map((s, si) => {
+            const chosen  = a[si];
+            const correctIdx = s.correct_index;
+            const ok = chosen === correctIdx;
+            return `
+              <div style="margin-bottom:10px;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:${ok?'#f0fdf4':(chosen!==undefined?'#fef2f2':'var(--bg)')}">
+                <div style="font-size:.86rem;font-weight:600;margin-bottom:6px"><span style="color:var(--muted)">${si+1}.</span> ${escHtml(s.text)}</div>
+                <div style="font-size:.8rem;color:var(--text-2)">
+                  Your answer: <strong style="color:${ok?'#166534':'#991b1b'}">${chosen!==undefined ? LETTERS[chosen]+'. '+escHtml(terms[chosen]||'') : '—'}</strong>
+                  ${ok ? ' ✓' : ` · Correct: <strong style="color:#166534">${LETTERS[correctIdx]}. ${escHtml(terms[correctIdx]||'')}</strong>`}
+                </div>
+              </div>`;
+          }).join('')}
+          ${q.explanation ? `<div style="font-size:.82rem;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><strong>Explanation:</strong> ${escHtml(q.explanation)}</div>` : ''}
+        </div>`;
+    }
     const chosen = answers[q.id];
     const opts   = q.options || [];
     return `
@@ -249,7 +338,7 @@ function renderResult(correct, pct, passed) {
     <div class="exam-card">
       <div class="result-block">
         <div class="result-score">${pct}%</div>
-        <div class="result-label">${correct} / ${questions.length} correct</div>
+        <div class="result-label">${correct} / ${total} correct</div>
         <div class="result-badge badge ${passed?'badge-success':'badge-danger'}">${passed ? 'Passed ✓' : 'Not Passed'}</div>
         <div class="email-note" id="email-note">Sending parent notification…</div>
       </div>

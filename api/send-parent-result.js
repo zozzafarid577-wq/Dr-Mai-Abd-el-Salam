@@ -32,13 +32,21 @@ export default async function handler(req, res) {
   if (profErr) return res.status(500).json({ error: 'Could not load profile: ' + profErr.message });
   if (!prof?.parent_email) return res.status(200).json({ skipped: true });
 
-  const BREVO_API_KEY = (process.env.BREVO_API_KEY || '').trim();
+  // Find the Brevo key by name, OR by its value signature (Brevo keys start with "xkeysib-")
+  // so it works no matter what the Vercel env var was named.
+  let BREVO_API_KEY = (process.env.BREVO_API_KEY || '').trim();
   if (!BREVO_API_KEY) {
-    const seen = Object.keys(process.env).filter(k => /BREVO|SENDINBLUE/i.test(k));
+    for (const v of Object.values(process.env)) {
+      if (typeof v === 'string' && v.trim().startsWith('xkeysib-')) { BREVO_API_KEY = v.trim(); break; }
+    }
+  }
+  if (!BREVO_API_KEY) {
+    const SYS = /^(VERCEL|AWS|LAMBDA|NODE|PATH|PWD|HOME|LANG|TZ|HOSTNAME|SHLVL|TERM|NOW_REGION|_|__|X_|LC_|EDGE_)/i;
+    const names = Object.keys(process.env).filter(k => !SYS.test(k)).sort();
     return res.status(500).json({
-      error: 'BREVO_API_KEY not set on this deployment. '
-        + (seen.length ? 'Vars visible to it: ' + seen.join(', ') : 'NO brevo-related vars are visible — it is not on the Production environment.')
-        + ' [build ' + (process.env.VERCEL_GIT_COMMIT_SHA || 'local').slice(0, 7) + ']'
+      error: 'No Brevo API key found (looked for any var named BREVO_API_KEY or any value starting with "xkeysib-"). '
+        + 'Custom env var names this deployment can see: [' + (names.join(', ') || 'NONE') + '] '
+        + '[build ' + (process.env.VERCEL_GIT_COMMIT_SHA || 'local').slice(0, 7) + ']'
     });
   }
 

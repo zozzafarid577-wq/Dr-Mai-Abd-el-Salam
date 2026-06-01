@@ -300,13 +300,16 @@
 
       <!-- ── Choose Term ── -->
       <div class="form-section" id="form-terms">
+        <div class="field-label">Group Title *</div>
+        <input class="q-input" id="terms-group-title" placeholder="e.g. Chapter 3 — Cell Types" style="margin-bottom:10px">
+
         <div class="field-label">Terms Pool * <span style="font-weight:400;text-transform:none;letter-spacing:0">— all the options students will pick from</span></div>
         <div class="term-pool-list" id="term-pool-list"></div>
         <button type="button" class="add-distractor-btn" onclick="addTerm()">+ Add term</button>
 
         <div class="form-divider"></div>
 
-        <div class="field-label">Statements * <span style="font-weight:400;text-transform:none;letter-spacing:0" id="stmt-label-note">— each saves as a separate question</span></div>
+        <div class="field-label">Statements * <span style="font-weight:400;text-transform:none;letter-spacing:0" id="stmt-label-note">— all saved together as one grouped question</span></div>
         <div class="stmt-list" id="stmt-list"></div>
         <button type="button" class="add-distractor-btn" id="add-stmt-btn" onclick="addStatement()">+ Add statement</button>
       </div>
@@ -604,6 +607,8 @@ function loadQIntoForm(q) {
   document.getElementById('q-tags').value   = (q.tags || []).join(', ');
   document.getElementById('q-status').value = q.status || 'published';
 
+  document.getElementById('terms-group-title').value = '';
+
   if (q.question_type === 'mcq') {
     document.getElementById('mcq-question').value = q.question_text || '';
     (q.options || []).forEach((opt, i) => {
@@ -612,6 +617,7 @@ function loadQIntoForm(q) {
     const rad = document.querySelector(`input[name="mcq-correct"][value="${q.correct_index ?? 0}"]`);
     if (rad) { rad.checked = true; highlightCorrect('mcq'); }
   } else if (q.question_type === 'terms') {
+    document.getElementById('terms-group-title').value = q.statements?.length ? (q.question_text || '') : '';
     const opts = q.options || [];
     const tList = document.getElementById('term-pool-list');
     tList.innerHTML = '';
@@ -623,7 +629,7 @@ function loadQIntoForm(q) {
     loadedStmts.forEach(s => addStatementRow(s.text, s.correct_index ?? 0));
     rebuildLetterButtons();
     document.getElementById('add-stmt-btn').style.display = '';
-    document.getElementById('stmt-label-note').textContent = '';
+    document.getElementById('stmt-label-note').textContent = 'all saved together as one grouped question';
   } else if (q.question_type === 'true_false') {
     document.getElementById('tf-question').value = q.question_text || '';
     selectTF(q.correct_answer || 'true');
@@ -667,6 +673,7 @@ const TM_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 // ── Terms pool management ────────────────────────────────────────
 
 function resetTermsForm() {
+  document.getElementById('terms-group-title').value = '';
   const tList = document.getElementById('term-pool-list');
   tList.innerHTML = '';
   addTermWithValue(''); addTermWithValue(''); addTermWithValue(''); addTermWithValue('');
@@ -808,6 +815,8 @@ function buildPayload() {
     correct_answer = options[correct_index] || null;
 
   } else if (type === 'terms') {
+    const groupTitle = document.getElementById('terms-group-title').value.trim();
+    if (!groupTitle) { showToast('Please enter a Group Title.', 'warning'); return null; }
     const terms = getTerms();
     if (terms.length < 2) { showToast('Please enter at least 2 terms in the pool.', 'warning'); return null; }
     const stmts = getStatements();
@@ -820,7 +829,7 @@ function buildPayload() {
       id: editingId || undefined,
       course_id: course, module_id: module, question_type: 'terms', difficulty: diff,
       options: terms, explanation: expl, image_url: img, tags: tags.length ? tags : null, status,
-      question_text: stmts[0].text,
+      question_text: groupTitle,
       statements,
       correct_index: null,
       correct_answer: null,

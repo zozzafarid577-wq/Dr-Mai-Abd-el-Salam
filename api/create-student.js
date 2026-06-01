@@ -52,7 +52,7 @@ export default async function handler(req, res) {
   }
   if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
 
-  const { full_name, email, phone, course_ids = [] } = req.body;
+  const { full_name, email, phone, parent_email, parent_phone, course_ids = [] } = req.body;
   if (!full_name || !email) return res.status(400).json({ error: 'full_name and email are required' });
 
   const password = generatePassword();
@@ -74,6 +74,8 @@ export default async function handler(req, res) {
     id: uid,
     full_name,
     phone: phone || null,
+    parent_email: parent_email || null,
+    parent_phone: parent_phone || null,
     role: 'student',
     is_active: true,
     must_change_pw: true,

@@ -14,6 +14,9 @@
 .cp-pct { font-size:.88rem;font-weight:800;color:var(--primary); }
 .big-prog { height:10px;background:var(--border);border-radius:5px;overflow:hidden; }
 .big-prog-fill { height:100%;border-radius:5px;background:linear-gradient(90deg,#1a56db,#7c3aed);transition:width 1s ease; }
+.cp-breakdown { display:flex;flex-wrap:wrap;gap:14px;margin-top:10px; }
+.cp-breakdown span { display:inline-flex;align-items:center;gap:5px;font-size:.74rem;color:var(--muted);font-weight:600; }
+.cp-breakdown svg { width:13px;height:13px; }
 .test-history-row { display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border); }
 .test-history-row:last-child { border-bottom:none; }
 .th-name { flex:1;font-size:.84rem;font-weight:600; }
@@ -89,7 +92,7 @@
   ] = await Promise.all([
     sb.from('enrollments').select('course_id, courses(id, title, subject)').eq('student_id', profile.id),
     sb.from('lesson_completions').select('lesson_id, lessons(module_id, modules(course_id))').eq('student_id', profile.id),
-    sb.from('test_attempts').select('id, test_id, percentage, passed, created_at, practice_tests(title)').eq('student_id', profile.id).order('created_at', { ascending: false }),
+    sb.from('test_attempts').select('id, test_id, percentage, passed, completed_at, practice_tests(title, course_id)').eq('student_id', profile.id).order('completed_at', { ascending: false }),
     sb.from('assignment_submissions').select('id, score, assignment_id, assignments(max_score, title)').eq('student_id', profile.id)
   ]);
 
@@ -103,12 +106,33 @@
     if (cid) compByCourse[cid] = (compByCourse[cid] || 0) + 1;
   });
 
-  // Total lessons per course
-  const { data: modules } = await sb.from('modules').select('course_id, lessons(id)').in('course_id', courseIds);
+  // Total lessons per course + total tests per course (run together)
+  const [{ data: modules }, { data: allTests }] = await Promise.all([
+    sb.from('modules').select('course_id, lessons(id)').in('course_id', courseIds.length ? courseIds : ['00000000-0000-0000-0000-000000000000']),
+    sb.from('practice_tests').select('id, course_id').in('course_id', courseIds.length ? courseIds : ['00000000-0000-0000-0000-000000000000']).eq('is_active', true)
+  ]);
   const totalByCourse = {};
   (modules || []).forEach(m => {
     totalByCourse[m.course_id] = (totalByCourse[m.course_id] || 0) + (m.lessons?.length || 0);
   });
+  const totalTestsByCourse = {};
+  (allTests || []).forEach(t => { totalTestsByCourse[t.course_id] = (totalTestsByCourse[t.course_id] || 0) + 1; });
+
+  // Distinct tests attempted per course + best score per test (for course mastery)
+  const takenTestsByCourse = {};   // course_id -> Set of test_id
+  const bestByTest = {};           // test_id -> best percentage
+  (attempts || []).forEach(a => {
+    const cid = a.practice_tests?.course_id;
+    if (cid) (takenTestsByCourse[cid] ||= new Set()).add(a.test_id);
+    const p = a.percentage || 0;
+    if (bestByTest[a.test_id] === undefined || p > bestByTest[a.test_id]) bestByTest[a.test_id] = p;
+  });
+  const testsTakenCount = cid => (takenTestsByCourse[cid] ? takenTestsByCourse[cid].size : 0);
+  const courseAvgTest = cid => {
+    const ids = takenTestsByCourse[cid] ? [...takenTestsByCourse[cid]] : [];
+    if (!ids.length) return null;
+    return Math.round(ids.reduce((s, id) => s + (bestByTest[id] || 0), 0) / ids.length);
+  };
 
   // Stats
   const totalLessons  = Object.values(totalByCourse).reduce((a,b) => a+b, 0);
@@ -136,17 +160,28 @@
       ${courses.length === 0
         ? '<div class="empty-state" style="padding:20px 0"><div class="empty-title">No Courses</div></div>'
         : courses.map(c => {
-          const done  = compByCourse[c.id] || 0;
-          const total = totalByCourse[c.id] || 0;
-          const pct   = total > 0 ? Math.round(done / total * 100) : 0;
+          const doneL  = compByCourse[c.id] || 0;
+          const totalL = totalByCourse[c.id] || 0;
+          const doneT  = testsTakenCount(c.id);
+          const totalT = totalTestsByCourse[c.id] || 0;
+          // Combined completion: lessons watched + tests attempted, over everything in the course
+          const totalItems = totalL + totalT;
+          const doneItems  = Math.min(doneL, totalL) + Math.min(doneT, totalT);
+          const pct        = totalItems > 0 ? Math.round(doneItems / totalItems * 100) : 0;
+          const mastery    = courseAvgTest(c.id);
+          const complete   = totalItems > 0 && doneItems >= totalItems;
           return `
             <div class="course-progress-card">
               <div class="cp-header">
-                <div class="cp-title">${escHtml(c.title)}</div>
+                <div class="cp-title">${escHtml(c.title)}${complete ? ' <span class="badge badge-success" style="font-size:.62rem;margin-left:6px">Complete ✓</span>' : ''}</div>
                 <div class="cp-pct">${pct}%</div>
               </div>
               <div class="big-prog"><div class="big-prog-fill" style="width:${pct}%"></div></div>
-              <div style="font-size:.72rem;color:var(--muted);margin-top:6px">${done} / ${total} lessons</div>
+              <div class="cp-breakdown">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> ${doneL} / ${totalL} lessons</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg> ${doneT} / ${totalT} tests</span>
+                ${mastery !== null ? `<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${mastery}% avg score</span>` : ''}
+              </div>
             </div>`;
         }).join('')}
     </div>
@@ -161,7 +196,7 @@
               <span class="badge ${a.passed ? 'badge-success' : 'badge-danger'}" style="font-size:.65rem">${a.passed ? 'Pass' : 'Fail'}</span>
               <div class="th-name">${escHtml(a.practice_tests?.title || 'Test')}</div>
               <div class="th-score">${a.percentage}%</div>
-              <div class="th-date">${fmtDate(a.created_at)}</div>
+              <div class="th-date">${fmtDate(a.completed_at)}</div>
             </div>`).join('')}
           </div></div>`}
     </div>

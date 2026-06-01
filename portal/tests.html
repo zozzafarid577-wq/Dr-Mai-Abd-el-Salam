@@ -125,7 +125,7 @@ const LETTERS = ['A','B','C','D','E'];
   const [{ data: mods }, { data: testsData }, { data: attempts }] = await Promise.all([
     sb.from('modules').select('id, title, course_id, order_index').in('course_id', courseIds).order('order_index'),
     sb.from('practice_tests').select('id, title, module_id, course_id, time_limit_min, is_active').in('course_id', courseIds).eq('is_active', true).eq('is_mock', false).order('created_at'),
-    sb.from('test_attempts').select('id, test_id, percentage, passed, created_at').eq('student_id', profile.id).order('created_at', { ascending: false })
+    sb.from('test_attempts').select('id, test_id, percentage, passed, completed_at').eq('student_id', profile.id).order('completed_at', { ascending: false })
   ]);
 
   modulesData = mods || [];

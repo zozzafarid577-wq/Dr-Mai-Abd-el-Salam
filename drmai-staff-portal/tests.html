@@ -527,7 +527,7 @@ async function importBankQuestions() {
     test_id:       bpTestId,
     question_text: q.question_text,
     options:       q.options || null,
-    correct_index: q.correct_index ?? null,
+    correct_index: q.correct_index ?? 0,
     order_index:   existing.length + i,
     image_url:     q.image_url || null,
     question_type: q.question_type || 'mcq',

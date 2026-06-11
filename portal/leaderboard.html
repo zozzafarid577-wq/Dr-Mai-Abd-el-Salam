@@ -113,7 +113,7 @@ async function load() {
   let data;
   try {
     const session = await getSession();
-    const resp = await fetch('/api/leaderboard?window=' + currentWindow, {
+    const resp = await fetch('/api/student-activity?action=leaderboard&window=' + currentWindow, {
       headers: { 'Authorization': 'Bearer ' + session.access_token },
     });
     data = await resp.json();

@@ -1,7 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-import { extractJsonArray, normalizeQuestion } from './_lib/questions.js';
+import { extractJsonArray, normalizeQuestion, parseQuestionsFromText } from './_lib/questions.js';
 
+// Admin-only question authoring tools. One function, two actions, to stay
+// within Vercel's per-deployment function limit:
+//   { action: 'generate',  topic, count, difficulty, notes }  -> AI drafts
+//   { action: 'parse-text', text }                            -> parse pasted MCQs
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -29,14 +33,33 @@ export default async function handler(req, res) {
   }
   if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
 
+  const { action } = req.body || {};
+  if (action === 'parse-text') return parseText(req, res);
+  if (action === 'generate')   return generate(req, res);
+  return res.status(400).json({ error: "action must be 'generate' or 'parse-text'" });
+}
+
+function parseText(req, res) {
+  const { text } = req.body || {};
+  if (!text || !String(text).trim()) return res.status(400).json({ error: 'text is required' });
+
+  const questions = parseQuestionsFromText(text);
+  if (!questions.length) {
+    return res.status(422).json({
+      error: 'No questions could be parsed. Expected each question followed by lettered options (A) … and an "Answer: X" line.',
+    });
+  }
+  return res.status(200).json({ questions, parsed: questions.length });
+}
+
+async function generate(req, res) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not configured in Vercel environment variables.' });
   }
 
   const { topic, count, difficulty, notes } = req.body || {};
-  if (!topic || !String(topic).trim()) {
-    return res.status(400).json({ error: 'topic is required' });
-  }
+  if (!topic || !String(topic).trim()) return res.status(400).json({ error: 'topic is required' });
+
   const n = Math.min(Math.max(parseInt(count) || 5, 1), 20);
   const diff = ['easy', 'medium', 'hard'].includes(difficulty) ? difficulty : 'medium';
 

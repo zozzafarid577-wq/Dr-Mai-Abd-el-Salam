@@ -215,10 +215,10 @@ async function grade(correct) {
   // Persist via API (Leitner spacing); non-blocking for UX.
   try {
     const session = await getSession();
-    fetch('/api/flashcard-review', {
+    fetch('/api/student-activity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ question_id: c.id, correct }),
+      body: JSON.stringify({ action: 'flashcard-review', question_id: c.id, correct }),
     });
   } catch (_) {}
 

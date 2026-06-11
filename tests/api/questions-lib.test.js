@@ -114,6 +114,33 @@ Answer: A`;
     expect(out[0].question_text).toBe('Real question');
   });
 
+  it('accepts plain dash bullets with a trailing * for the correct answer', () => {
+    const text = `What is the powerhouse of the cell?
+- Nucleus
+- Mitochondrion *
+- Ribosome`;
+    const [q] = parseQuestionsFromText(text);
+    expect(q.options).toEqual(['Nucleus', 'Mitochondrion', 'Ribosome']);
+    expect(q.correct_index).toBe(1);
+  });
+
+  it('accepts a trailing ✓ on a lettered option', () => {
+    const text = `Capital of France?
+A) Berlin
+B) Paris ✓`;
+    expect(parseQuestionsFromText(text)[0].correct_index).toBe(1);
+  });
+
+  it('accepts bullet (•) options', () => {
+    const text = `Pick the gas
+• Iron
+• Helium *
+• Gold`;
+    const q = parseQuestionsFromText(text)[0];
+    expect(q.options).toEqual(['Iron', 'Helium', 'Gold']);
+    expect(q.correct_index).toBe(1);
+  });
+
   it('returns an empty array for empty input', () => {
     expect(parseQuestionsFromText('')).toEqual([]);
     expect(parseQuestionsFromText(null)).toEqual([]);

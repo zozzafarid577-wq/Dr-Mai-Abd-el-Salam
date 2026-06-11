@@ -169,10 +169,10 @@
     </div>
     <div class="topbar-right" style="display:flex;gap:8px">
       <button class="btn btn-outline btn-sm" onclick="openImportModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Import / Generate
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M3 12h3m12 0h3M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/></svg>
+        AI &amp; Bulk Import
       </button>
-      <button class="btn btn-primary btn-sm" onclick="openQModal()">
+      <button class="btn btn-primary btn-sm" onclick="openQuickAdd()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Question
       </button>
@@ -229,6 +229,53 @@
 </div>
 
 <div class="toast-wrap" id="toasts"></div>
+
+<!-- ═══════════════════════════════════════════
+     Quick Add — the simple, default way to add questions
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="quick-modal">
+  <div class="modal" style="max-width:680px;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title">New Question</div>
+      <button class="modal-close" onclick="closeQuickAdd()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;flex:1">
+
+      <div class="form-row" style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Course <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+          <select class="form-select" id="qk-course" onchange="qkRememberCourse()"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Difficulty</label>
+          <select class="form-select" id="qk-diff"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:8px">
+        <label class="form-label">Type your question, options, and mark the answer with <strong>*</strong></label>
+        <textarea class="form-textarea" id="qk-text" rows="8" oninput="qkPreviewDebounced()" placeholder="What is the powerhouse of the cell?
+- Nucleus
+- Mitochondrion *
+- Ribosome
+
+Tip: add a blank line and keep typing to add more questions at once."></textarea>
+        <div class="form-hint">Mark the correct option with a <strong>*</strong> at the end (or write <strong>Answer: B</strong>). Options can be <strong>A) B) C)</strong> or just dashes <strong>-</strong>. Leave a blank line between questions.</div>
+      </div>
+
+      <div id="qk-preview" style="margin-top:14px"></div>
+
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;font-size:.78rem">
+        <a onclick="closeQuickAdd();openImportModal()" style="color:var(--primary);font-weight:600;cursor:pointer">✨ Generate with AI / paste a lot</a>
+        <a onclick="closeQuickAdd();openQModal()" style="color:var(--muted);font-weight:600;cursor:pointer">Advanced editor (images, true/false, choose-term)</a>
+      </div>
+    </div>
+    <div class="modal-footer" style="flex-shrink:0">
+      <button class="btn btn-ghost" onclick="closeQuickAdd()">Cancel</button>
+      <button class="btn btn-primary" id="qk-save-btn" onclick="qkSave()" disabled>Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════
      Bulk Import / AI Generate Modal
@@ -943,6 +990,129 @@ function buildPayload() {
 }
 
 // ── Save ────────────────────────────────────────────────────────
+
+// ── Quick Add (simple default) ───────────────────────────────────
+
+let qkParsed = [];
+let qkTimer = null;
+
+function openQuickAdd() {
+  qkParsed = [];
+  document.getElementById('qk-text').value = '';
+  document.getElementById('qk-preview').innerHTML = qkHelpCard();
+  document.getElementById('qk-save-btn').disabled = true;
+
+  const sel = document.getElementById('qk-course');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    courses.map(c => `<option value="${c.id}">${escHtml(c.title)}</option>`).join('');
+  // Remember the teacher's last-used course + difficulty so repeated adds are instant.
+  const lastCourse = localStorage.getItem('qk_course') || '';
+  const lastDiff   = localStorage.getItem('qk_diff') || 'medium';
+  if (courses.some(c => c.id === lastCourse)) sel.value = lastCourse;
+  document.getElementById('qk-diff').value = lastDiff;
+
+  document.getElementById('quick-modal').classList.add('show');
+  setTimeout(() => document.getElementById('qk-text').focus(), 50);
+}
+function closeQuickAdd() { document.getElementById('quick-modal').classList.remove('show'); }
+function qkRememberCourse() { localStorage.setItem('qk_course', document.getElementById('qk-course').value); }
+
+// Ctrl/⌘+Enter saves straight from the textarea.
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' &&
+      document.getElementById('quick-modal').classList.contains('show') &&
+      !document.getElementById('qk-save-btn').disabled) {
+    e.preventDefault();
+    qkSave();
+  }
+});
+
+function qkHelpCard() {
+  return `<div style="background:var(--bg);border:1px dashed var(--border);border-radius:10px;padding:16px;font-size:.8rem;color:var(--muted);line-height:1.6">
+    Your questions will preview here as you type. For example:
+    <div style="margin-top:8px;font-family:ui-monospace,monospace;color:var(--text);font-size:.76rem;white-space:pre-line">What gas do plants release?
+- Carbon dioxide
+- Oxygen *
+- Nitrogen</div>
+  </div>`;
+}
+
+function qkPreviewDebounced() {
+  clearTimeout(qkTimer);
+  qkTimer = setTimeout(qkPreview, 400);
+}
+
+async function qkPreview() {
+  const text = document.getElementById('qk-text').value.trim();
+  const box = document.getElementById('qk-preview');
+  if (!text) { qkParsed = []; box.innerHTML = qkHelpCard(); document.getElementById('qk-save-btn').disabled = true; return; }
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp = await fetch('/api/question-tools', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'parse-text', text }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { qkParsed = []; box.innerHTML = `<div class="alert alert-warning" style="font-size:.8rem">${escHtml(data.error || 'Keep typing…')}</div>`; document.getElementById('qk-save-btn').disabled = true; return; }
+    qkParsed = data.questions;
+    qkRenderPreview();
+  } catch (_) { /* transient; ignore */ }
+}
+
+function qkRenderPreview() {
+  const box = document.getElementById('qk-preview');
+  const n = qkParsed.length;
+  document.getElementById('qk-save-btn').disabled = n === 0;
+  document.getElementById('qk-save-btn').textContent = n > 1 ? `Save ${n} Questions` : 'Save Question';
+  if (!n) { box.innerHTML = qkHelpCard(); return; }
+  box.innerHTML = `<div style="font-size:.72rem;font-weight:700;color:var(--success);margin-bottom:8px">✓ ${n} question${n>1?'s':''} ready</div>` +
+    qkParsed.map((q, i) => `
+      <div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="font-size:.84rem;font-weight:700;margin-bottom:6px">${i+1}. ${escHtml(q.question_text)}</div>
+        ${q.options.map((o, oi) => `<div style="font-size:.79rem;padding:2px 0;color:${oi===q.correct_index?'var(--success)':'var(--text-2)'};font-weight:${oi===q.correct_index?'700':'400'}">${String.fromCharCode(65+oi)}) ${escHtml(o)}${oi===q.correct_index?' ✓':''}</div>`).join('')}
+      </div>`).join('');
+}
+
+async function qkSave() {
+  if (!qkParsed.length) return;
+  const btn = document.getElementById('qk-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const course_id  = document.getElementById('qk-course').value || null;
+  const difficulty = document.getElementById('qk-diff').value;
+  localStorage.setItem('qk_course', course_id || '');
+  localStorage.setItem('qk_diff', difficulty);
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const saved = [];
+    for (const q of qkParsed) {
+      const resp = await fetch('/api/save-bank-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          course_id, module_id: null, question_type: 'mcq', difficulty,
+          question_text: q.question_text, options: q.options,
+          correct_index: q.correct_index, explanation: q.explanation || null,
+          status: 'published',
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Save failed');
+      saved.push(data);
+    }
+    allQs.unshift(...[...saved].reverse());
+    updateStats();
+    applyFilters();
+    showToast(`${saved.length} question${saved.length!==1?'s':''} added!`, 'success');
+    closeQuickAdd();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; qkRenderPreview();
+  }
+}
 
 // ── Bulk import / AI generate ────────────────────────────────────
 

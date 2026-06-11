@@ -145,4 +145,77 @@ B) Paris ✓`;
     expect(parseQuestionsFromText('')).toEqual([]);
     expect(parseQuestionsFromText(null)).toEqual([]);
   });
+
+  it('tags plain MCQs with question_type mcq and a correct_answer', () => {
+    const [q] = parseQuestionsFromText('Capital of France?\nA) Berlin\nB) Paris\nAnswer: B');
+    expect(q.question_type).toBe('mcq');
+    expect(q.correct_answer).toBe('Paris');
+  });
+
+  it('parses a statement with "Answer: True" as true/false', () => {
+    const [q] = parseQuestionsFromText('Plants make their own food.\nAnswer: True');
+    expect(q).toMatchObject({
+      question_type: 'true_false',
+      options: ['True', 'False'],
+      correct_index: 0,
+      correct_answer: 'true',
+    });
+  });
+
+  it('detects true/false when the two options are True and False', () => {
+    const [q] = parseQuestionsFromText('Water boils at 90°C.\nA) True\nB) False\nAnswer: B');
+    expect(q.question_type).toBe('true_false');
+    expect(q.correct_index).toBe(1);
+    expect(q.correct_answer).toBe('false');
+  });
+
+  it('parses a question with an Answer line and no options as fill-in-blank', () => {
+    const [q] = parseQuestionsFromText('The movement of water across a membrane is called ___.\nAnswer: Osmosis');
+    expect(q).toMatchObject({
+      question_type: 'fill_blank',
+      options: null,
+      correct_index: null,
+      correct_answer: 'Osmosis',
+    });
+  });
+
+  it('parses a grouped Choose-Term block with a Terms: pool and = answers', () => {
+    const text = `Match each statement to the correct process
+Terms: Osmosis, Diffusion, Mitosis
+1. Water moves across a membrane = A
+2. Cell division (C)`;
+    const [q] = parseQuestionsFromText(text);
+    expect(q.question_type).toBe('terms');
+    expect(q.question_text).toBe('Match each statement to the correct process');
+    expect(q.options).toEqual(['Osmosis', 'Diffusion', 'Mitosis']);
+    expect(q.statements).toEqual([
+      { text: 'Water moves across a membrane', correct_index: 0 },
+      { text: 'Cell division', correct_index: 2 },
+    ]);
+  });
+
+  it('uses a default title when a terms block has no title line', () => {
+    const [q] = parseQuestionsFromText('Terms: Xylem, Phloem\n1. Carries water = A\n2. Carries sugars = B');
+    expect(q.question_type).toBe('terms');
+    expect(q.question_text).toMatch(/choose the correct term/i);
+  });
+
+  it('captures an Explanation: line', () => {
+    const [q] = parseQuestionsFromText('Pick the gas\nA) Iron\nB) Helium *\nExplanation: Helium is a noble gas.');
+    expect(q.explanation).toBe('Helium is a noble gas.');
+  });
+
+  it('parses mixed types pasted together', () => {
+    const text = `What is 2+2?
+A) 3
+B) 4 *
+
+The sky is green.
+Answer: False
+
+The capital of Egypt is ___.
+Answer: Cairo`;
+    const out = parseQuestionsFromText(text);
+    expect(out.map((q) => q.question_type)).toEqual(['mcq', 'true_false', 'fill_blank']);
+  });
 });

@@ -46,7 +46,7 @@ function parseText(req, res) {
   const questions = parseQuestionsFromText(text);
   if (!questions.length) {
     return res.status(422).json({
-      error: 'No questions could be parsed. Expected each question followed by lettered options (A) … and an "Answer: X" line.',
+      error: 'No questions could be parsed. Expected blocks like: a question with A)/- options and an "Answer: X" line (or * on the correct one); a statement with "Answer: True/False"; a question with "Answer: text" for fill-in-blank; or "Terms: a, b, c" followed by statements ending in "= A".',
     });
   }
   return res.status(200).json({ questions, parsed: questions.length });

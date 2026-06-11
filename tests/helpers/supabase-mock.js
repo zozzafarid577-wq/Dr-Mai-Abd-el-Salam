@@ -135,6 +135,21 @@ const anonClient = {
   rpc,
 };
 
+const storage = {
+  from(bucket) {
+    return {
+      async createSignedUrl(path, ttl) {
+        const call = { op: 'storage.createSignedUrl', bucket, path, ttl };
+        state.calls.push(call);
+        return resolveResult('storage.createSignedUrl', call, {
+          data: { signedUrl: `https://test.supabase.co/storage/v1/object/sign/${bucket}/${path}?token=mock` },
+          error: null,
+        });
+      },
+    };
+  },
+};
+
 const adminClient = {
   auth: {
     admin: {
@@ -145,6 +160,7 @@ const adminClient = {
   },
   from: (table) => new QueryBuilder(table),
   rpc,
+  storage,
 };
 
 export function createClient(url, key, opts) {

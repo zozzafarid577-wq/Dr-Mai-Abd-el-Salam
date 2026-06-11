@@ -9,10 +9,10 @@ import {
 
 vi.mock('@supabase/supabase-js', () => import('../helpers/supabase-mock.js'));
 
-const { default: leaderboard } = await import('../../api/leaderboard.js');
-const { default: flashcardReview } = await import('../../api/flashcard-review.js');
+// Both actions live in the consolidated student-activity endpoint.
+const { default: handler } = await import('../../api/student-activity.js');
 
-describe('GET /api/leaderboard', () => {
+describe('GET /api/student-activity?action=leaderboard', () => {
   beforeEach(() => {
     resetSupabaseMock();
     configureSupabaseMock({ authUser: STUDENT_USER });
@@ -20,7 +20,7 @@ describe('GET /api/leaderboard', () => {
 
   it('rejects requests without a token', async () => {
     const res = makeRes();
-    await leaderboard(makeReq({ method: 'GET', token: null }), res);
+    await handler(makeReq({ method: 'GET', token: null, body: {}, headers: {} }), res);
     expect(res.statusCode).toBe(401);
   });
 
@@ -37,7 +37,7 @@ describe('GET /api/leaderboard', () => {
       },
     });
     const res = makeRes();
-    await leaderboard(makeReq({ method: 'GET', body: {} }), res);
+    await handler({ method: 'GET', headers: { authorization: 'Bearer t' }, query: { action: 'leaderboard' }, body: {} }, res);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.leaderboard[0]).toMatchObject({ rank: 1, is_me: false });
@@ -47,20 +47,20 @@ describe('GET /api/leaderboard', () => {
 
   it('passes window_days=0 when window is "all"', async () => {
     const res = makeRes();
-    await leaderboard(makeReq({ method: 'POST', body: { window: 'all' } }), res);
+    await handler(makeReq({ method: 'POST', body: { action: 'leaderboard', window: 'all' } }), res);
     const [call] = getSupabaseCalls('rpc.get_leaderboard');
     expect(call.args.window_days).toBe(0);
   });
 
   it('defaults to a 7-day window', async () => {
     const res = makeRes();
-    await leaderboard(makeReq({ method: 'POST', body: {} }), res);
+    await handler(makeReq({ method: 'POST', body: { action: 'leaderboard' } }), res);
     const [call] = getSupabaseCalls('rpc.get_leaderboard');
     expect(call.args.window_days).toBe(7);
   });
 });
 
-describe('POST /api/flashcard-review', () => {
+describe('POST /api/student-activity (action: flashcard-review)', () => {
   beforeEach(() => {
     resetSupabaseMock();
     configureSupabaseMock({ authUser: STUDENT_USER });
@@ -68,7 +68,7 @@ describe('POST /api/flashcard-review', () => {
 
   it('requires question_id and a boolean correct', async () => {
     const res = makeRes();
-    await flashcardReview(makeReq({ body: { question_id: 'q1' } }), res);
+    await handler(makeReq({ body: { action: 'flashcard-review', question_id: 'q1' } }), res);
     expect(res.statusCode).toBe(400);
   });
 
@@ -80,7 +80,7 @@ describe('POST /api/flashcard-review', () => {
       },
     });
     const res = makeRes();
-    await flashcardReview(makeReq({ body: { question_id: 'q1', correct: true } }), res);
+    await handler(makeReq({ body: { action: 'flashcard-review', question_id: 'q1', correct: true } }), res);
 
     expect(res.statusCode).toBe(200);
     const [upsert] = getSupabaseCalls('flashcard_progress.upsert');
@@ -102,10 +102,23 @@ describe('POST /api/flashcard-review', () => {
       },
     });
     const res = makeRes();
-    await flashcardReview(makeReq({ body: { question_id: 'q1', correct: false } }), res);
+    await handler(makeReq({ body: { action: 'flashcard-review', question_id: 'q1', correct: false } }), res);
 
     const [upsert] = getSupabaseCalls('flashcard_progress.upsert');
     expect(upsert.payload.box).toBe(1);
     expect(upsert.payload.correct).toBe(7);
+  });
+});
+
+describe('POST /api/student-activity (unknown action)', () => {
+  beforeEach(() => {
+    resetSupabaseMock();
+    configureSupabaseMock({ authUser: STUDENT_USER });
+  });
+
+  it('400s on a missing/unknown action', async () => {
+    const res = makeRes();
+    await handler(makeReq({ body: {} }), res);
+    expect(res.statusCode).toBe(400);
   });
 });

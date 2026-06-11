@@ -995,10 +995,10 @@ async function runParse() {
   btn.disabled = true; btn.textContent = 'Parsing…';
   try {
     const token = (await sb.auth.getSession()).data.session?.access_token;
-    const resp = await fetch('/api/import-questions-text', {
+    const resp = await fetch('/api/question-tools', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ action: 'parse-text', text }),
     });
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Could not parse');
@@ -1018,10 +1018,11 @@ async function runGenerate() {
   btn.disabled = true; btn.textContent = 'Generating…';
   try {
     const token = (await sb.auth.getSession()).data.session?.access_token;
-    const resp = await fetch('/api/generate-questions', {
+    const resp = await fetch('/api/question-tools', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
+        action: 'generate',
         topic,
         count: parseInt(document.getElementById('ai-count').value) || 5,
         difficulty: document.getElementById('imp-diff').value,

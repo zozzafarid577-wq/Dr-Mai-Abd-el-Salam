@@ -306,7 +306,7 @@ async function loadCourses() {
 
   const [{ data: modules }, { data: lessons }] = await Promise.all([
     sb.from('modules').select('id, title, course_id, order_index').in('course_id', courseIds).order('order_index'),
-    sb.from('lessons').select('id, title, module_id, youtube_id, order_index').order('order_index'),
+    sb.from('lessons').select('id, title, module_id, youtube_id, video_id, order_index').order('order_index'),
   ]);
 
   const modMap = {};
@@ -325,7 +325,7 @@ async function loadCourses() {
       if (!lsns.length) return '';
       return `<div class="mod-label">${escHtml(m.title)}</div>` +
         lsns.map((l, li) => {
-          const hasvid = !!l.youtube_id;
+          const hasvid = !!(l.video_id || l.youtube_id);
           return hasvid
             ? `<a href="/portal/lessons.html?course=${c.id}&lesson=${l.id}" class="lrow">
                 <span class="lrow-num">${li + 1}</span>

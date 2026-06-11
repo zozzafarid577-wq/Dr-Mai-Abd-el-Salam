@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Flashcards | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+.fc-setup { max-width:520px;margin:0 auto; }
+.fc-stage { max-width:620px;margin:0 auto; }
+.fc-progress { display:flex;align-items:center;gap:12px;margin-bottom:18px; }
+.fc-progress .prog-bar { flex:1;height:7px; }
+.fc-count { font-size:.78rem;font-weight:700;color:var(--muted);white-space:nowrap; }
+
+.flashcard {
+  position:relative;width:100%;min-height:280px;perspective:1600px;cursor:pointer;margin-bottom:18px;
+}
+.flashcard-inner {
+  position:relative;width:100%;min-height:280px;transition:transform .55s cubic-bezier(.4,0,.2,1);
+  transform-style:preserve-3d;
+}
+.flashcard.flipped .flashcard-inner { transform:rotateY(180deg); }
+.fc-face {
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:18px;border:1px solid var(--border);background:var(--card);
+  box-shadow:var(--shadow-md);padding:34px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:14px;
+}
+.fc-face.back { transform:rotateY(180deg);background:linear-gradient(160deg,#f0f7ff,#fff); }
+.fc-tag { font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--muted); }
+.fc-q { font-size:1.15rem;font-weight:800;letter-spacing:-.02em;line-height:1.4;color:var(--text); }
+.fc-answer { font-size:1.5rem;font-weight:900;letter-spacing:-.03em;color:var(--primary); }
+.fc-expl { font-size:.84rem;color:var(--text-2);line-height:1.55;max-width:90%; }
+.fc-hint { font-size:.72rem;color:var(--muted);font-weight:600; }
+.fc-grade { display:flex;gap:12px; }
+.fc-grade .btn { flex:1;justify-content:center;padding:13px; }
+.diff-pill { display:inline-block;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:3px 9px;border-radius:20px; }
+.diff-easy { background:#f0fdf4;color:#15803d; }
+.diff-medium { background:#fffbeb;color:#92400e; }
+.diff-hard { background:#fef2f2;color:#b91c1c; }
+.fc-done { text-align:center;max-width:440px;margin:40px auto;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:40px 28px;box-shadow:var(--shadow-sm); }
+.fc-done-score { font-size:3.4rem;font-weight:900;letter-spacing:-.04em;color:var(--primary);line-height:1; }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar"><div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Portal</span></div>
+<div class="sidebar-scroll" id="nav-scroll"></div>
+<div class="sidebar-foot"><div class="user-row">
+  <div class="user-avatar" id="u-av">…</div>
+  <div class="user-info"><div class="user-name" id="u-name">Loading…</div><div class="user-role">Student</div></div>
+  <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+</div></div></aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Flashcards</span>
+    </div>
+  </header>
+
+  <main class="content">
+    <!-- Setup -->
+    <div id="setup" class="fc-setup">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Revision Flashcards</span></div>
+        <div class="card-body">
+          <p style="font-size:.84rem;color:var(--muted);margin-bottom:18px;line-height:1.6">Review questions from your courses as flashcards. Cards you find hard come back sooner — cards you know are spaced further apart.</p>
+          <div class="form-group">
+            <label class="form-label">Course</label>
+            <select class="form-select" id="course-sel"><option value="">All my courses</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Session length</label>
+            <select class="form-select" id="len-sel">
+              <option value="10">10 cards</option>
+              <option value="20" selected>20 cards</option>
+              <option value="40">40 cards</option>
+              <option value="0">Everything due</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" id="start-btn" onclick="startSession()">Start Studying</button>
+        </div>
+      </div>
+      <div id="due-hint" style="text-align:center;font-size:.78rem;color:var(--muted);margin-top:14px"></div>
+    </div>
+
+    <!-- Stage -->
+    <div id="stage" class="fc-stage" style="display:none">
+      <div class="fc-progress">
+        <span class="fc-count" id="pos">1 / 20</span>
+        <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+        <span class="fc-count" id="known">✓ 0</span>
+      </div>
+      <div class="flashcard" id="card" onclick="flip()">
+        <div class="flashcard-inner">
+          <div class="fc-face front">
+            <span class="diff-pill" id="diff"></span>
+            <div class="fc-q" id="q"></div>
+            <div class="fc-hint">Tap to reveal answer</div>
+          </div>
+          <div class="fc-face back">
+            <span class="fc-tag">Answer</span>
+            <div class="fc-answer" id="a"></div>
+            <div class="fc-expl" id="expl"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-grade">
+        <button class="btn btn-danger" onclick="grade(false)">Got it wrong</button>
+        <button class="btn btn-success" onclick="grade(true)">Got it right</button>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div id="done" style="display:none">
+      <div class="fc-done">
+        <div class="fc-tag" style="font-size:.66rem;color:var(--muted)">Session complete</div>
+        <div class="fc-done-score" id="done-score">0%</div>
+        <div style="font-size:.9rem;color:var(--text-2);margin:10px 0 22px" id="done-sub"></div>
+        <button class="btn btn-primary" style="justify-content:center" onclick="location.reload()">Study Again</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/portal-nav.js"></script>
+<script>
+let profile = null, deck = [], idx = 0, knownCount = 0, revealed = false;
+
+(async () => {
+  profile = await requireAuth('student');
+  if (!profile) return;
+  renderNav('flashcards');
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+  await loadCourses();
+})();
+
+async function loadCourses() {
+  const { data: enr } = await sb.from('enrollments')
+    .select('course_id, courses(id, title)').eq('student_id', profile.id);
+  const sel = document.getElementById('course-sel');
+  (enr || []).forEach(e => {
+    if (!e.courses) return;
+    const o = document.createElement('option');
+    o.value = e.courses.id; o.textContent = e.courses.title;
+    sel.appendChild(o);
+  });
+}
+
+async function startSession() {
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true; btn.textContent = 'Loading…';
+  const courseId = document.getElementById('course-sel').value;
+  const limit = parseInt(document.getElementById('len-sel').value);
+
+  let q = sb.from('question_bank')
+    .select('id, question_text, options, correct_index, correct_answer, explanation, difficulty')
+    .eq('status', 'published');
+  if (courseId) q = q.eq('course_id', courseId);
+  const { data: questions, error } = await q;
+
+  if (error) { showToast('Could not load cards', 'error'); btn.disabled = false; btn.textContent = 'Start Studying'; return; }
+  let pool = (questions || []).filter(x => Array.isArray(x.options) && x.options.length);
+  if (!pool.length) { showToast('No flashcards available yet', 'warning'); btn.disabled = false; btn.textContent = 'Start Studying'; return; }
+
+  // Pull due dates so overdue cards come first, then shuffle within.
+  const { data: prog } = await sb.from('flashcard_progress')
+    .select('question_id, due_at').eq('student_id', profile.id);
+  const dueMap = {};
+  (prog || []).forEach(p => { dueMap[p.question_id] = p.due_at; });
+  const now = Date.now();
+  pool.forEach(c => { c._due = dueMap[c.id] ? new Date(dueMap[c.id]).getTime() : 0; c._rand = Math.random(); });
+  pool.sort((a, b) => (a._due - b._due) || (a._rand - b._rand));
+  if (limit > 0) pool = pool.slice(0, limit);
+
+  deck = pool; idx = 0; knownCount = 0;
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('stage').style.display = 'block';
+  showCard();
+}
+
+function showCard() {
+  revealed = false;
+  const c = deck[idx];
+  document.getElementById('card').classList.remove('flipped');
+  const diff = (c.difficulty || 'medium').toLowerCase();
+  const dEl = document.getElementById('diff');
+  dEl.className = 'diff-pill diff-' + (['easy','medium','hard'].includes(diff) ? diff : 'medium');
+  dEl.textContent = diff;
+  document.getElementById('q').textContent = c.question_text;
+  const ans = Number.isInteger(c.correct_index) && c.options[c.correct_index] != null
+    ? c.options[c.correct_index] : (c.correct_answer || '—');
+  document.getElementById('a').textContent = ans;
+  document.getElementById('expl').textContent = c.explanation || '';
+  document.getElementById('pos').textContent = `${idx + 1} / ${deck.length}`;
+  document.getElementById('known').textContent = `✓ ${knownCount}`;
+  document.getElementById('prog').style.width = (idx / deck.length * 100) + '%';
+}
+
+function flip() {
+  revealed = !revealed;
+  document.getElementById('card').classList.toggle('flipped', revealed);
+}
+
+async function grade(correct) {
+  const c = deck[idx];
+  if (correct) knownCount++;
+  // Persist via API (Leitner spacing); non-blocking for UX.
+  try {
+    const session = await getSession();
+    fetch('/api/flashcard-review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ question_id: c.id, correct }),
+    });
+  } catch (_) {}
+
+  idx++;
+  if (idx >= deck.length) return finish();
+  showCard();
+}
+
+function finish() {
+  document.getElementById('stage').style.display = 'none';
+  const pct = Math.round(knownCount / deck.length * 100);
+  document.getElementById('done-score').textContent = pct + '%';
+  document.getElementById('done-sub').textContent = `You knew ${knownCount} of ${deck.length} cards. Keep going — the ones you missed will come back sooner.`;
+  document.getElementById('done').style.display = 'block';
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('stage').style.display === 'none') return;
+  if (e.code === 'Space') { e.preventDefault(); flip(); }
+  if (revealed && (e.key === '1' || e.key.toLowerCase() === 'x')) grade(false);
+  if (revealed && (e.key === '2' || e.key.toLowerCase() === 'c')) grade(true);
+});
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`; t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+</script>
+</body>
+</html>

@@ -27,17 +27,30 @@ export default async function handler(req, res) {
   }
   if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
 
-  const { title, course_id, module_id, is_mock, time_limit_min, questions, test_id } = req.body;
+  const { title, course_id, module_id, is_mock, time_limit_min, questions, test_id, open_at, close_at } = req.body;
   if (!title || !course_id || !Array.isArray(questions) || questions.length === 0) {
     return res.status(400).json({ error: 'title, course_id, and questions[] are required' });
   }
+  if (open_at && close_at && new Date(close_at) <= new Date(open_at)) {
+    return res.status(400).json({ error: 'close_at must be after open_at' });
+  }
+
+  const testFields = {
+    title,
+    course_id,
+    module_id: module_id || null,
+    is_mock: !!is_mock,
+    time_limit_min: time_limit_min ? parseInt(time_limit_min) : null,
+    open_at: open_at || null,
+    close_at: close_at || null,
+  };
 
   // If test_id provided, update existing test; otherwise create new
   let testRecord;
   if (test_id) {
     const { data, error } = await supabaseAdmin
       .from('practice_tests')
-      .update({ title, is_mock: !!is_mock, time_limit_min: time_limit_min ? parseInt(time_limit_min) : null })
+      .update(testFields)
       .eq('id', test_id)
       .select()
       .single();
@@ -49,14 +62,7 @@ export default async function handler(req, res) {
   } else {
     const { data, error } = await supabaseAdmin
       .from('practice_tests')
-      .insert({
-        title,
-        course_id,
-        module_id: module_id || null,
-        is_active: true,
-        is_mock: !!is_mock,
-        time_limit_min: time_limit_min ? parseInt(time_limit_min) : null,
-      })
+      .insert({ ...testFields, is_active: true })
       .select()
       .single();
     if (error) return res.status(500).json({ error: error.message });

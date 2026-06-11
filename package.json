@@ -2,8 +2,15 @@
   "name": "dr-mai-portal",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "@supabase/supabase-js": "^2.49.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8"
   }
 }

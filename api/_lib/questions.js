@@ -55,26 +55,36 @@ export function parseQuestionsFromText(text) {
     .filter(Boolean);
 
   const out = [];
-  const optRe = /^\s*[*]?\s*([A-Ha-h])\s*[).:\-]\s+(.*)$/;
-  const ansRe = /^\s*(?:answer|correct|ans)\s*[:.\-]?\s*(.+)$/i;
+  const ansRe    = /^(?:answer|correct answer|correct|ans)\s*[:.\-)]?\s*(.+)$/i;
+  const letterRe = /^([A-Ha-h])\s*[).:\-]\s+(.*)$/;   // A) text | B. text | C: text | D- text
+  const bulletRe = /^[-–—•·]\s+(.*)$/;                // - text | • text
 
   for (const block of blocks) {
-    const lines = block.split('\n').map((l) => l.trimEnd());
+    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
     const qLines = [];
     const options = [];
     let answerRaw = null;
     let starIndex = -1;
 
     for (const line of lines) {
-      const ans = line.match(ansRe);
-      const opt = line.match(optRe);
-      if (ans && !opt) {
-        answerRaw = ans[1].trim();
-      } else if (opt) {
-        if (/^\s*[*]/.test(line)) starIndex = options.length;
-        options.push(opt[2].trim());
-      } else if (!options.length) {
-        qLines.push(line);
+      // Strip a correctness marker (leading or trailing * / ✓) and remember it.
+      let work = line;
+      let marked = false;
+      const trail = work.match(/[ \t]*[*✓]+[ \t]*$/);
+      if (trail && trail.index > 0) { work = work.slice(0, trail.index).trimEnd(); marked = true; }
+      if (/^[*✓]\s*[A-Ha-h]\s*[).:\-]/.test(work)) { work = work.replace(/^[*✓]\s*/, ''); marked = true; }
+
+      const letter = work.match(letterRe);
+      const bullet = letter ? null : work.match(bulletRe);
+      const optBody = letter ? letter[2].trim() : (bullet ? bullet[1].trim() : null);
+
+      if (optBody) {
+        if (marked) starIndex = options.length;
+        options.push(optBody);
+      } else {
+        const ans = line.match(ansRe);
+        if (ans) answerRaw = ans[1].trim();
+        else if (!options.length) qLines.push(line);
       }
     }
 

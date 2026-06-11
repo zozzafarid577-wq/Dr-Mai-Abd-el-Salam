@@ -130,6 +130,13 @@
 .stmt-letter-btn:hover { border-color:var(--primary);color:var(--primary); }
 .stmt-letter-btn.selected { border-color:var(--primary);background:var(--primary);color:#fff; }
 
+/* ── Image uploader ── */
+.img-zone { border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative;font-size:.78rem;color:var(--muted); }
+.img-zone:hover,.img-zone.dragover { border-color:var(--primary);background:#f8faff; }
+.img-zone img { max-width:100%;max-height:160px;border-radius:8px;display:block;margin:0 auto; }
+.img-zone .img-remove { position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:#fef2f2;color:#dc2626;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem; }
+.img-zone.uploading { opacity:.6;pointer-events:none; }
+
 @media (max-width:600px) {
   .type-bar { grid-template-columns:1fr 1fr; }
   .stats-row { display:none; }
@@ -253,21 +260,34 @@
       </div>
 
       <div class="form-group" style="margin-bottom:8px">
-        <label class="form-label">Type your question, options, and mark the answer with <strong>*</strong></label>
+        <label class="form-label">Type your questions — any type, one per block</label>
         <textarea class="form-textarea" id="qk-text" rows="8" oninput="qkPreviewDebounced()" placeholder="What is the powerhouse of the cell?
 - Nucleus
 - Mitochondrion *
 - Ribosome
 
 Tip: add a blank line and keep typing to add more questions at once."></textarea>
-        <div class="form-hint">Mark the correct option with a <strong>*</strong> at the end (or write <strong>Answer: B</strong>). Options can be <strong>A) B) C)</strong> or just dashes <strong>-</strong>. Leave a blank line between questions.</div>
+        <div class="form-hint">Mark the correct option with a <strong>*</strong> (or write <strong>Answer: B</strong>). Leave a blank line between questions.</div>
+        <details style="margin-top:6px">
+          <summary style="font-size:.74rem;color:var(--primary);font-weight:600;cursor:pointer">All formats: True/False, Fill in Blank, Choose Term…</summary>
+          <div style="margin-top:6px;font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;white-space:pre-line">Plants make their own food.
+Answer: True
+
+The movement of water across a membrane is called ___.
+Answer: Osmosis
+
+Match each statement to the correct process
+Terms: Osmosis, Diffusion, Mitosis
+1. Water moves across a membrane = A
+2. Cell division = C</div>
+        </details>
       </div>
 
       <div id="qk-preview" style="margin-top:14px"></div>
 
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;font-size:.78rem">
         <a onclick="closeQuickAdd();openImportModal()" style="color:var(--primary);font-weight:600;cursor:pointer">✨ Generate with AI / paste a lot</a>
-        <a onclick="closeQuickAdd();openQModal()" style="color:var(--muted);font-weight:600;cursor:pointer">Advanced editor (images, true/false, choose-term)</a>
+        <a onclick="closeQuickAdd();openQModal()" style="color:var(--muted);font-weight:600;cursor:pointer">Advanced editor (forms &amp; images)</a>
       </div>
     </div>
     <div class="modal-footer" style="flex-shrink:0">
@@ -320,7 +340,7 @@ C) Ribosome
 Answer: B
 
 2. ..."></textarea>
-          <div class="form-hint">One question per block (blank line between). Options as A) B) C)… Mark the answer with an "Answer: B" line or a * before the correct option.</div>
+          <div class="form-hint">One question per block (blank line between). MCQ: options as A) B) C)… with "Answer: B" or a * on the correct one. True/False: statement + "Answer: True". Fill in blank: question + "Answer: text". Choose Term: "Terms: a, b, c" then statements ending in "= A".</div>
         </div>
         <button class="btn btn-outline" onclick="runParse()" id="parse-btn">Preview Questions</button>
       </div>
@@ -475,15 +495,21 @@ Answer: B
       <div class="field-label">Explanation <span style="font-weight:400;text-transform:none;letter-spacing:0">(shown to students after they answer)</span></div>
       <textarea class="q-textarea" id="q-explanation" placeholder="Explain why the correct answer is right and why the others are wrong…" style="min-height:80px"></textarea>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-        <div>
-          <div class="field-label">Image URL <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
-          <input type="text" class="q-input" id="q-image" placeholder="https://… or /assets/…">
-        </div>
-        <div>
-          <div class="field-label">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma-separated)</span></div>
-          <input type="text" class="q-input" id="q-tags" placeholder="e.g. Osmosis, Cell Membrane">
-        </div>
+      <div class="field-label">Image <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+      <div class="img-zone" id="q-image-zone" onclick="if(event.target.tagName!=='BUTTON')document.getElementById('q-image-file').click()"
+           ondragover="event.preventDefault();this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="event.preventDefault();this.classList.remove('dragover');handleImageFile(event.dataTransfer.files[0])">
+        <div id="q-image-empty">📷 Click to upload, drag &amp; drop, or paste a screenshot (Ctrl+V)</div>
+        <img id="q-image-preview" style="display:none" alt="Question image">
+        <button type="button" class="img-remove" id="q-image-remove" style="display:none" onclick="clearImage()" title="Remove image">✕</button>
+      </div>
+      <input type="file" id="q-image-file" accept="image/*" style="display:none" onchange="handleImageFile(this.files[0]);this.value=''">
+      <input type="text" class="q-input" id="q-image" placeholder="…or paste an image URL" oninput="syncImagePreview()" style="margin-top:6px;font-size:.78rem;padding:6px 10px">
+
+      <div style="margin-top:10px">
+        <div class="field-label">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma-separated)</span></div>
+        <input type="text" class="q-input" id="q-tags" placeholder="e.g. Osmosis, Cell Membrane">
       </div>
 
       <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
@@ -708,6 +734,7 @@ function resetForm() {
   document.getElementById('q-diff').value   = 'medium';
   document.getElementById('q-explanation').value = '';
   document.getElementById('q-image').value  = '';
+  syncImagePreview();
   document.getElementById('q-tags').value   = '';
   document.getElementById('q-status').value = 'published';
   // MCQ
@@ -738,6 +765,7 @@ function loadQIntoForm(q) {
   document.getElementById('q-diff').value   = q.difficulty || 'medium';
   document.getElementById('q-explanation').value = q.explanation || '';
   document.getElementById('q-image').value  = q.image_url || '';
+  syncImagePreview();
   document.getElementById('q-tags').value   = (q.tags || []).join(', ');
   document.getElementById('q-status').value = q.status || 'published';
 
@@ -1061,6 +1089,35 @@ async function qkPreview() {
   } catch (_) { /* transient; ignore */ }
 }
 
+// Render one parsed question (any type) as a preview card with a remove
+// button, shared by Quick Add and the bulk import preview.
+function parsedQCard(q, i, removeFn) {
+  const type = q.question_type || 'mcq';
+  const typeBadge = type !== 'mcq'
+    ? `<span class="qb-type-badge ${TYPE_CLS[type] || 'type-mcq'}" style="margin-left:6px">${TYPE_LABELS[type] || type}</span>` : '';
+  let body;
+  if (type === 'terms') {
+    body = `<div style="font-size:.76rem;color:var(--muted);margin-bottom:4px">Terms: ${(q.options||[]).map((t,ti)=>`<strong>${String.fromCharCode(65+ti)})</strong> ${escHtml(t)}`).join(' · ')}</div>` +
+      (q.statements||[]).map((s, si) => `<div style="font-size:.79rem;padding:2px 0;color:var(--text-2)">${si+1}. ${escHtml(s.text)} → <strong style="color:var(--success)">${String.fromCharCode(65+(s.correct_index||0))}</strong></div>`).join('');
+  } else if (type === 'fill_blank') {
+    body = `<div style="font-size:.79rem;color:var(--success);font-weight:700">Answer: ${escHtml(q.correct_answer || '')}</div>`;
+  } else {
+    body = (q.options||[]).map((o, oi) => `<div style="font-size:.79rem;padding:2px 0;color:${oi===q.correct_index?'var(--success)':'var(--text-2)'};font-weight:${oi===q.correct_index?'700':'400'}">${String.fromCharCode(65+oi)}) ${escHtml(o)}${oi===q.correct_index?' ✓':''}</div>`).join('');
+  }
+  return `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;position:relative">
+      <button type="button" class="icon-btn del" onclick="${removeFn}(${i})" title="Remove this question" style="position:absolute;top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div style="font-size:.84rem;font-weight:700;margin-bottom:6px;padding-right:30px">${i+1}. ${escHtml(q.question_text)}${typeBadge}</div>
+      ${body}
+      ${q.explanation ? `<div style="font-size:.74rem;color:var(--muted);margin-top:6px;font-style:italic">${escHtml(q.explanation)}</div>` : ''}
+    </div>`;
+}
+
+function qkRemove(i) {
+  qkParsed.splice(i, 1);
+  qkRenderPreview();
+}
+
 function qkRenderPreview() {
   const box = document.getElementById('qk-preview');
   const n = qkParsed.length;
@@ -1068,11 +1125,7 @@ function qkRenderPreview() {
   document.getElementById('qk-save-btn').textContent = n > 1 ? `Save ${n} Questions` : 'Save Question';
   if (!n) { box.innerHTML = qkHelpCard(); return; }
   box.innerHTML = `<div style="font-size:.72rem;font-weight:700;color:var(--success);margin-bottom:8px">✓ ${n} question${n>1?'s':''} ready</div>` +
-    qkParsed.map((q, i) => `
-      <div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
-        <div style="font-size:.84rem;font-weight:700;margin-bottom:6px">${i+1}. ${escHtml(q.question_text)}</div>
-        ${q.options.map((o, oi) => `<div style="font-size:.79rem;padding:2px 0;color:${oi===q.correct_index?'var(--success)':'var(--text-2)'};font-weight:${oi===q.correct_index?'700':'400'}">${String.fromCharCode(65+oi)}) ${escHtml(o)}${oi===q.correct_index?' ✓':''}</div>`).join('')}
-      </div>`).join('');
+    qkParsed.map((q, i) => parsedQCard(q, i, 'qkRemove')).join('');
 }
 
 async function qkSave() {
@@ -1092,9 +1145,12 @@ async function qkSave() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({
-          course_id, module_id: null, question_type: 'mcq', difficulty,
-          question_text: q.question_text, options: q.options,
-          correct_index: q.correct_index, explanation: q.explanation || null,
+          course_id, module_id: null, question_type: q.question_type || 'mcq', difficulty,
+          question_text: q.question_text, options: q.options || null,
+          correct_index: Number.isInteger(q.correct_index) ? q.correct_index : null,
+          correct_answer: q.correct_answer || null,
+          statements: q.statements || null,
+          explanation: q.explanation || null,
           status: 'published',
         }),
       });
@@ -1211,6 +1267,11 @@ async function runGenerate() {
   }
 }
 
+function impRemove(i) {
+  parsedQuestions.splice(i, 1);
+  renderImportPreview();
+}
+
 function renderImportPreview() {
   const el = document.getElementById('imp-preview');
   if (!parsedQuestions.length) {
@@ -1218,13 +1279,8 @@ function renderImportPreview() {
     document.getElementById('imp-save-btn').style.display = 'none';
     return;
   }
-  el.innerHTML = `<div style="font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:10px">PREVIEW — ${parsedQuestions.length} question${parsedQuestions.length!==1?'s':''} (review before saving)</div>` +
-    parsedQuestions.map((q, i) => `
-      <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
-        <div style="font-size:.85rem;font-weight:700;margin-bottom:8px">${i+1}. ${escHtml(q.question_text)}</div>
-        ${q.options.map((o, oi) => `<div style="font-size:.8rem;padding:3px 0;color:${oi===q.correct_index?'var(--success)':'var(--text-2)'};font-weight:${oi===q.correct_index?'700':'400'}">${String.fromCharCode(65+oi)}) ${escHtml(o)}${oi===q.correct_index?' ✓':''}</div>`).join('')}
-        ${q.explanation ? `<div style="font-size:.74rem;color:var(--muted);margin-top:6px;font-style:italic">${escHtml(q.explanation)}</div>` : ''}
-      </div>`).join('');
+  el.innerHTML = `<div style="font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:10px">PREVIEW — ${parsedQuestions.length} question${parsedQuestions.length!==1?'s':''} (review before saving; ✕ removes one)</div>` +
+    parsedQuestions.map((q, i) => parsedQCard(q, i, 'impRemove')).join('');
   document.getElementById('imp-save-btn').style.display = 'inline-flex';
 }
 
@@ -1244,9 +1300,12 @@ async function saveImported() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({
-          course_id, module_id, question_type: 'mcq', difficulty,
-          question_text: q.question_text, options: q.options,
-          correct_index: q.correct_index, explanation: q.explanation || null,
+          course_id, module_id, question_type: q.question_type || 'mcq', difficulty,
+          question_text: q.question_text, options: q.options || null,
+          correct_index: Number.isInteger(q.correct_index) ? q.correct_index : null,
+          correct_answer: q.correct_answer || null,
+          statements: q.statements || null,
+          explanation: q.explanation || null,
           status: 'published',
         }),
       });
@@ -1428,6 +1487,64 @@ async function duplicateQ(id) {
     showToast('Error: ' + e.message, 'error');
   }
 }
+
+// ── Image upload (advanced editor) ──────────────────────────────
+// Uploads go to the public `question-images` storage bucket (migration v15);
+// the resulting public URL lands in the #q-image field that buildPayload reads.
+
+async function uploadQuestionImage(file) {
+  if (!file) throw new Error('No file selected.');
+  if (!file.type.startsWith('image/')) throw new Error('Please choose an image file.');
+  if (file.size > 3 * 1024 * 1024) throw new Error('Image must be under 3 MB.');
+  const ext  = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await sb.storage.from('question-images').upload(path, file, { contentType: file.type, cacheControl: '3600' });
+  if (error) throw new Error(error.message + ' (has migration v15 — the question-images bucket — been run?)');
+  return sb.storage.from('question-images').getPublicUrl(path).data.publicUrl;
+}
+
+async function handleImageFile(file) {
+  if (!file) return;
+  const zone = document.getElementById('q-image-zone');
+  zone.classList.add('uploading');
+  document.getElementById('q-image-empty').textContent = 'Uploading…';
+  try {
+    const url = await uploadQuestionImage(file);
+    document.getElementById('q-image').value = url;
+    syncImagePreview();
+  } catch (e) {
+    showToast('Image upload failed: ' + e.message, 'error');
+    syncImagePreview();
+  } finally {
+    zone.classList.remove('uploading');
+  }
+}
+
+function syncImagePreview() {
+  const url     = document.getElementById('q-image').value.trim();
+  const img     = document.getElementById('q-image-preview');
+  const empty   = document.getElementById('q-image-empty');
+  const removeB = document.getElementById('q-image-remove');
+  img.style.display     = url ? '' : 'none';
+  removeB.style.display = url ? '' : 'none';
+  empty.style.display   = url ? 'none' : '';
+  empty.textContent     = '📷 Click to upload, drag & drop, or paste a screenshot (Ctrl+V)';
+  if (url) img.src = url;
+}
+
+function clearImage() {
+  document.getElementById('q-image').value = '';
+  syncImagePreview();
+}
+
+// Pasting a screenshot while the advanced editor is open uploads it.
+document.addEventListener('paste', (e) => {
+  if (!document.getElementById('qb-modal').classList.contains('show')) return;
+  const item = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
+  if (!item) return;
+  e.preventDefault();
+  handleImageFile(item.getAsFile());
+});
 
 // ── UI helpers ──────────────────────────────────────────────────
 

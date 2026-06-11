@@ -105,7 +105,7 @@ const testId  = params.get('id');
 
   const { data: qs, error: qErr } = await sb
     .from('test_questions')
-    .select('id, question_text, options, correct_index, order_index, image_url, question_type, statements')
+    .select('id, question_text, options, correct_index, correct_answer, order_index, image_url, question_type, statements')
     .eq('test_id', testId)
     .order('order_index');
 
@@ -153,11 +153,19 @@ function updateTimer() {
 function isTerms(q) {
   return q.question_type === 'terms' && Array.isArray(q.statements) && q.statements.length > 0;
 }
+function isFill(q) {
+  return q.question_type === 'fill_blank';
+}
+function fillCorrect(q) {
+  const a = answers[q.id];
+  return typeof a === 'string' && a.trim().toLowerCase() === String(q.correct_answer || '').trim().toLowerCase();
+}
 function isAnswered(q) {
   if (isTerms(q)) {
     const a = answers[q.id];
     return a && Object.keys(a).length === q.statements.length;
   }
+  if (isFill(q)) return typeof answers[q.id] === 'string' && answers[q.id].trim() !== '';
   return answers[q.id] !== undefined;
 }
 
@@ -182,6 +190,7 @@ function renderQuestion() {
     const a = answers[q.id] || {};
     body = `
       <div class="q-text">${escHtml(q.question_text || 'Choose the correct term for each statement:')}</div>
+      ${q.image_url ? `<img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:0 0 16px">` : ''}
       <div class="term-pool">
         <div class="term-pool-label">Terms</div>
         <div class="term-pool-grid">
@@ -198,6 +207,14 @@ function renderQuestion() {
             </div>
           </div>`).join('')}
       </div>`;
+  } else if (isFill(q)) {
+    body = `
+      <div class="q-text">${escHtml(q.question_text)}</div>
+      ${q.image_url ? `<img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:0 0 16px">` : ''}
+      <input type="text" id="fill-input" placeholder="Type your answer…" autocomplete="off"
+        oninput="typeFill(this.value)"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:.95rem;outline:none"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">`;
   } else {
     const opts = q.options || [];
     const sel  = answers[q.id];
@@ -214,12 +231,21 @@ function renderQuestion() {
   }
 
   document.getElementById('exam-body').innerHTML = `<div class="exam-card">${head}${body}${navHtml}</div>`;
+  // Set the typed value via the DOM (not the value attribute) so quotes
+  // and other special characters in the student's answer are preserved.
+  const fillEl = document.getElementById('fill-input');
+  if (fillEl) fillEl.value = typeof answers[q.id] === 'string' ? answers[q.id] : '';
 }
 
 function selectOpt(idx) {
   if (finished) return;
   answers[questions[currentQ].id] = idx;
   renderQuestion();
+}
+function typeFill(val) {
+  if (finished) return;
+  // No re-render here: it would steal focus from the input on every keystroke.
+  answers[questions[currentQ].id] = val;
 }
 function selectTerm(stmtIdx, termIdx) {
   if (finished) return;
@@ -244,6 +270,9 @@ async function submitTest() {
     if (isTerms(q)) {
       const a = answers[q.id] || {};
       q.statements.forEach((s, si) => { total++; if (a[si] === s.correct_index) correct++; });
+    } else if (isFill(q)) {
+      total++;
+      if (fillCorrect(q)) correct++;
     } else {
       total++;
       if (answers[q.id] === q.correct_index) correct++;
@@ -315,6 +344,20 @@ function renderResult(correct, total, pct, passed) {
                 </div>
               </div>`;
           }).join('')}
+          ${q.explanation ? `<div style="font-size:.82rem;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><strong>Explanation:</strong> ${escHtml(q.explanation)}</div>` : ''}
+        </div>`;
+    }
+    if (isFill(q)) {
+      const typed = typeof answers[q.id] === 'string' ? answers[q.id].trim() : '';
+      const ok = fillCorrect(q);
+      return `
+        <div class="review-q">
+          <div style="font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:6px">Question ${i+1}${!typed?' · Not answered':''}</div>
+          <div style="font-size:.92rem;font-weight:600;margin-bottom:12px">${escHtml(q.question_text)}</div>
+          <div style="padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:${ok?'#f0fdf4':'#fef2f2'};font-size:.86rem">
+            Your answer: <strong style="color:${ok?'#166534':'#991b1b'}">${typed ? escHtml(typed) : '—'}</strong>
+            ${ok ? ' ✓' : ` · Correct: <strong style="color:#166534">${escHtml(q.correct_answer || '')}</strong>`}
+          </div>
           ${q.explanation ? `<div style="font-size:.82rem;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><strong>Explanation:</strong> ${escHtml(q.explanation)}</div>` : ''}
         </div>`;
     }

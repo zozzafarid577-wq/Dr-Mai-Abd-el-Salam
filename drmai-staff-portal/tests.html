@@ -19,6 +19,14 @@
 .q-opts-preview { font-size:.75rem;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap; }
 .q-opt-chip { padding:2px 8px;border-radius:12px;background:var(--bg);border:1px solid var(--border); }
 .q-opt-chip.correct { background:#f0fdf4;border-color:#bbf7d0;color:#166534;font-weight:700; }
+.q-type-chip { padding:1px 7px;border-radius:10px;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-left:6px;vertical-align:1px; }
+.q-type-chip.terms { background:#f0fdf4;color:#166534; }
+.q-type-chip.tf    { background:#fef9c3;color:#854d0e; }
+.q-type-chip.fill  { background:#fdf4ff;color:#7e22ce; }
+.q-img-thumb { width:42px;height:42px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;cursor:zoom-in; }
+.q-row-btn { border:none;background:transparent;color:var(--muted);cursor:pointer;padding:3px 6px;border-radius:6px;font-size:.72rem;font-weight:600;white-space:nowrap; }
+.q-row-btn:hover { background:var(--bg);color:var(--text); }
+.q-row-btn.danger:hover { background:#fef2f2;color:#dc2626; }
 </style>
 </head>
 <body>
@@ -161,34 +169,55 @@
   </div>
 </div>
 
-<!-- Add Question Modal -->
+<!-- Add Questions Modal (bulk, all types) -->
 <div class="modal-overlay" id="q-modal">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-header">
-      <div class="modal-title">Add Question</div>
+  <div class="modal" style="max-width:680px;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div>
+        <div class="modal-title">Add Questions</div>
+        <div id="tq-test-name" style="font-size:.74rem;color:var(--muted);margin-top:2px"></div>
+      </div>
       <button class="modal-close" onclick="closeQModal()">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" style="overflow-y:auto;flex:1">
       <input type="hidden" id="q-test-id">
-      <div class="form-group">
-        <label class="form-label">Question Text *</label>
-        <textarea class="form-input" id="q-text" rows="3" placeholder="Enter the question…" style="resize:vertical"></textarea>
+      <div class="form-group" style="margin-bottom:8px">
+        <label class="form-label">Type one or many questions — MCQ, True/False, Fill in Blank, or Choose Term</label>
+        <textarea class="form-input" id="tq-text" rows="8" oninput="tqPreviewDebounced()" style="resize:vertical" placeholder="What is the powerhouse of the cell?
+- Nucleus
+- Mitochondrion *
+- Ribosome
+
+Plants make their own food.
+Answer: True
+
+Leave a blank line between questions to add several at once."></textarea>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px">Mark the correct option with a <strong>*</strong> (or write <strong>Answer: B</strong>). Leave a blank line between questions.</div>
+        <details style="margin-top:6px">
+          <summary style="font-size:.74rem;color:var(--primary);font-weight:600;cursor:pointer">All formats: True/False, Fill in Blank, Choose Term…</summary>
+          <div style="margin-top:6px;font-family:ui-monospace,monospace;font-size:.72rem;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;white-space:pre-line">Plants make their own food.
+Answer: True
+
+The movement of water across a membrane is called ___.
+Answer: Osmosis
+
+Match each statement to the correct process
+Terms: Osmosis, Diffusion, Mitosis
+1. Water moves across a membrane = A
+2. Cell division = C</div>
+        </details>
       </div>
-      <div class="form-group">
-        <label class="form-label">Answer Options (one per line, 2-5 options) *</label>
-        <textarea class="form-input" id="q-opts" rows="5" placeholder="Option A&#10;Option B&#10;Option C&#10;Option D" style="resize:vertical"></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Correct Answer (1-based index) *</label>
-        <input type="number" class="form-input" id="q-correct" placeholder="e.g. 1 for first option" min="1" max="5">
-      </div>
+      <div id="tq-preview" style="margin-top:12px"></div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="flex-shrink:0">
       <button class="btn btn-outline" onclick="closeQModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveQuestion()">Add Question</button>
+      <button class="btn btn-primary" id="tq-save-btn" onclick="tqSave()" disabled>Add Questions</button>
     </div>
   </div>
 </div>
+
+<!-- Hidden picker for per-question images -->
+<input type="file" id="q-img-input" accept="image/*" style="display:none" onchange="onQImgPicked(this)">
 
 <!-- Bank Picker Modal -->
 <div class="modal-overlay" id="bank-modal">
@@ -256,7 +285,7 @@ async function loadTests() {
   tests = data || [];
 
   if (tests.length > 0) {
-    const { data: qs } = await sb.from('test_questions').select('id, test_id, question_text, options, correct_index, order_index').in('test_id', tests.map(t => t.id)).order('order_index');
+    const { data: qs } = await sb.from('test_questions').select('id, test_id, question_text, options, correct_index, correct_answer, order_index, question_type, statements, image_url').in('test_id', tests.map(t => t.id)).order('order_index');
     questionsMap = {};
     (qs || []).forEach(q => {
       if (!questionsMap[q.test_id]) questionsMap[q.test_id] = [];
@@ -291,26 +320,54 @@ function renderTests() {
 
         ${qs.length > 0 ? `
           <div style="margin-bottom:10px">
-            ${qs.map((q, i) => `
-              <div class="q-admin-row">
-                <div class="q-num-badge">${i+1}</div>
-                <div class="q-admin-body">
-                  <div class="q-text-preview">${escHtml(q.question_text)}</div>
-                  <div class="q-opts-preview">
-                    ${(q.options||[]).map((opt, oi) => `<span class="q-opt-chip${oi===q.correct_index?' correct':''}">${LETTERS[oi]}) ${escHtml(opt)}</span>`).join('')}
-                  </div>
-                </div>
-                <button class="btn btn-ghost btn-sm" style="color:#dc2626;padding:2px 6px;flex-shrink:0" onclick="deleteQuestion('${q.id}','${t.id}')">✕</button>
-              </div>`).join('')}
+            ${qs.map((q, i) => renderQuestionRow(q, i)).join('')}
           </div>` : ''}
 
-        <button class="btn btn-outline btn-sm" onclick="openQModal('${t.id}')">+ Manual Question</button>
+        <button class="btn btn-outline btn-sm" onclick="openQModal('${t.id}')">+ Add Questions</button>
         <button class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--primary)" onclick="openBankPicker('${t.id}','${t.course_id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;margin-right:3px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
           From Bank
         </button>
       </div>`;
   }).join('');
+}
+
+function renderQuestionRow(q, i) {
+  const type = q.question_type || 'mcq';
+  const isTermsQ = type === 'terms' && Array.isArray(q.statements) && q.statements.length;
+  const typeChip = type === 'true_false' ? '<span class="q-type-chip tf">True/False</span>'
+                 : type === 'fill_blank' ? '<span class="q-type-chip fill">Fill Blank</span>'
+                 : isTermsQ              ? '<span class="q-type-chip terms">Choose Term</span>' : '';
+
+  let answersHtml;
+  if (isTermsQ) {
+    answersHtml = `
+      <div class="q-opts-preview" style="margin-bottom:4px">
+        ${(q.options||[]).map((t, ti) => `<span class="q-opt-chip">${LETTERS[ti] || '?'}) ${escHtml(t)}</span>`).join('')}
+      </div>
+      ${q.statements.map((s, si) => `<div style="font-size:.74rem;color:var(--muted);padding:1px 0">${si+1}. ${escHtml(s.text)} → <strong style="color:#166534">${LETTERS[s.correct_index] || '?'}</strong></div>`).join('')}`;
+  } else if (type === 'fill_blank') {
+    answersHtml = `<div class="q-opts-preview"><span class="q-opt-chip correct">Answer: ${escHtml(q.correct_answer || '—')}</span></div>`;
+  } else {
+    answersHtml = `<div class="q-opts-preview">
+      ${(q.options||[]).map((opt, oi) => `<span class="q-opt-chip${oi===q.correct_index?' correct':''}">${LETTERS[oi]}) ${escHtml(opt)}</span>`).join('')}
+    </div>`;
+  }
+
+  return `
+    <div class="q-admin-row">
+      <div class="q-num-badge">${i+1}</div>
+      ${q.image_url ? `<img class="q-img-thumb" src="${escHtml(q.image_url)}" alt="" onclick="window.open('${escHtml(q.image_url)}','_blank')" title="View image">` : ''}
+      <div class="q-admin-body">
+        <div class="q-text-preview">${escHtml(q.question_text)}${typeChip}</div>
+        ${answersHtml}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:flex-end">
+        <button class="q-row-btn danger" onclick="deleteQuestion('${q.id}','${q.test_id}')" title="Remove this question from the test">✕ Remove</button>
+        <button class="q-row-btn" onclick="pickQImage('${q.id}')" title="${q.image_url ? 'Replace the image' : 'Attach an image'}">🖼 ${q.image_url ? 'Replace' : 'Image'}</button>
+        ${q.image_url ? `<button class="q-row-btn danger" onclick="removeQImage('${q.id}')" title="Remove the image">🖼 ✕</button>` : ''}
+      </div>
+    </div>`;
 }
 
 function openTestModal() { document.getElementById('test-modal').classList.add('show'); }
@@ -409,37 +466,152 @@ async function deleteTest(id) {
   showToast('Test deleted.', 'success');
 }
 
+// ── Add Questions (bulk, all types) ─────────────────────────────
+
+let tqParsed = [];
+let tqTimer  = null;
+
 function openQModal(testId) {
+  const t = tests.find(x => x.id === testId);
   document.getElementById('q-test-id').value = testId;
-  document.getElementById('q-text').value = '';
-  document.getElementById('q-opts').value = '';
-  document.getElementById('q-correct').value = '';
+  document.getElementById('tq-test-name').textContent = t ? `Adding to: ${t.title}` : '';
+  document.getElementById('tq-text').value = '';
+  document.getElementById('tq-preview').innerHTML = '';
+  document.getElementById('tq-save-btn').disabled = true;
+  document.getElementById('tq-save-btn').textContent = 'Add Questions';
+  tqParsed = [];
   document.getElementById('q-modal').classList.add('show');
+  setTimeout(() => document.getElementById('tq-text').focus(), 50);
 }
 function closeQModal() { document.getElementById('q-modal').classList.remove('show'); }
 
-async function saveQuestion() {
-  const testId  = document.getElementById('q-test-id').value;
-  const text    = document.getElementById('q-text').value.trim();
-  const optsRaw = document.getElementById('q-opts').value.trim();
-  const correct = parseInt(document.getElementById('q-correct').value) - 1;
+function tqPreviewDebounced() {
+  clearTimeout(tqTimer);
+  tqTimer = setTimeout(tqPreview, 400);
+}
 
-  if (!text || !optsRaw) { showToast('Question and options are required.', 'warning'); return; }
-  const options = optsRaw.split('\n').map(s => s.trim()).filter(Boolean);
-  if (options.length < 2) { showToast('At least 2 options required.', 'warning'); return; }
-  if (isNaN(correct) || correct < 0 || correct >= options.length) { showToast('Valid correct index required.', 'warning'); return; }
+async function tqPreview() {
+  const text = document.getElementById('tq-text').value.trim();
+  const box  = document.getElementById('tq-preview');
+  if (!text) { tqParsed = []; box.innerHTML = ''; document.getElementById('tq-save-btn').disabled = true; return; }
 
-  const existingQs = questionsMap[testId] || [];
-  const { error } = await sb.from('test_questions').insert({ test_id: testId, question_text: text, options, correct_index: correct, order_index: existingQs.length });
-  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  try {
+    const session = await getSession();
+    const resp = await fetch('/api/question-tools', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ action: 'parse-text', text }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { tqParsed = []; box.innerHTML = `<div class="alert alert-warning" style="font-size:.8rem">${escHtml(data.error || 'Keep typing…')}</div>`; document.getElementById('tq-save-btn').disabled = true; return; }
+    tqParsed = data.questions;
+    tqRenderPreview();
+  } catch (_) { /* transient; ignore */ }
+}
+
+function tqRemove(i) {
+  tqParsed.splice(i, 1);
+  tqRenderPreview();
+}
+
+function tqRenderPreview() {
+  const box = document.getElementById('tq-preview');
+  const n = tqParsed.length;
+  document.getElementById('tq-save-btn').disabled = n === 0;
+  document.getElementById('tq-save-btn').textContent = n > 1 ? `Add ${n} Questions` : 'Add Question';
+  if (!n) { box.innerHTML = ''; return; }
+
+  const TYPE_NAMES = { mcq:'MCQ', terms:'Choose Term', true_false:'True/False', fill_blank:'Fill Blank' };
+  box.innerHTML = `<div style="font-size:.72rem;font-weight:700;color:#16a34a;margin-bottom:8px">✓ ${n} question${n>1?'s':''} ready — ✕ removes one before saving</div>` +
+    tqParsed.map((q, i) => {
+      const type = q.question_type || 'mcq';
+      let body;
+      if (type === 'terms') {
+        body = `<div style="font-size:.74rem;color:var(--muted);margin-bottom:4px">Terms: ${(q.options||[]).map((t,ti)=>`<strong>${LETTERS[ti]||'?'})</strong> ${escHtml(t)}`).join(' · ')}</div>` +
+          (q.statements||[]).map((s, si) => `<div style="font-size:.78rem;padding:1px 0">${si+1}. ${escHtml(s.text)} → <strong style="color:#16a34a">${LETTERS[s.correct_index]||'?'}</strong></div>`).join('');
+      } else if (type === 'fill_blank') {
+        body = `<div style="font-size:.78rem;color:#16a34a;font-weight:700">Answer: ${escHtml(q.correct_answer || '')}</div>`;
+      } else {
+        body = (q.options||[]).map((o, oi) => `<div style="font-size:.78rem;padding:1px 0;color:${oi===q.correct_index?'#16a34a':'inherit'};font-weight:${oi===q.correct_index?'700':'400'}">${LETTERS[oi]||'?'}) ${escHtml(o)}${oi===q.correct_index?' ✓':''}</div>`).join('');
+      }
+      return `
+        <div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative">
+          <button type="button" class="q-row-btn danger" style="position:absolute;top:6px;right:6px" onclick="tqRemove(${i})" title="Remove this question">✕</button>
+          <div style="font-size:.82rem;font-weight:700;margin-bottom:4px;padding-right:30px">${i+1}. ${escHtml(q.question_text)}${type!=='mcq' ? ` <span style="font-size:.62rem;font-weight:800;color:var(--muted);text-transform:uppercase">· ${TYPE_NAMES[type]}</span>` : ''}</div>
+          ${body}
+        </div>`;
+    }).join('');
+}
+
+async function tqSave() {
+  if (!tqParsed.length) return;
+  const testId = document.getElementById('q-test-id').value;
+  const btn = document.getElementById('tq-save-btn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+
+  const existing = questionsMap[testId] || [];
+  const rows = tqParsed.map((q, i) => ({
+    test_id:        testId,
+    question_text:  q.question_text,
+    options:        q.options || null,
+    correct_index:  Number.isInteger(q.correct_index) ? q.correct_index : null,
+    correct_answer: q.correct_answer || null,
+    question_type:  q.question_type || 'mcq',
+    statements:     Array.isArray(q.statements) && q.statements.length ? q.statements : null,
+    order_index:    existing.length + i,
+  }));
+
+  const { error } = await sb.from('test_questions').insert(rows);
+  if (error) { showToast('Error: ' + error.message, 'error'); btn.disabled = false; tqRenderPreview(); return; }
   closeQModal();
   await loadTests();
-  showToast('Question added!', 'success');
+  showToast(`${rows.length} question${rows.length!==1?'s':''} added!`, 'success');
 }
 
 async function deleteQuestion(qId, testId) {
-  if (!confirm('Delete this question?')) return;
-  await sb.from('test_questions').delete().eq('id', qId);
+  if (!confirm('Remove this question from the test?')) return;
+  const { error } = await sb.from('test_questions').delete().eq('id', qId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  await loadTests();
+  showToast('Question removed.', 'success');
+}
+
+// ── Per-question images ─────────────────────────────────────────
+
+let imgTargetQId = null;
+
+function pickQImage(qId) {
+  imgTargetQId = qId;
+  const el = document.getElementById('q-img-input');
+  el.value = '';
+  el.click();
+}
+
+async function onQImgPicked(input) {
+  const file = input.files[0];
+  if (!file || !imgTargetQId) return;
+  if (!file.type.startsWith('image/')) { showToast('Please choose an image file.', 'warning'); return; }
+  if (file.size > 3 * 1024 * 1024) { showToast('Image must be under 3 MB.', 'warning'); return; }
+  showToast('Uploading image…');
+  try {
+    const ext  = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await sb.storage.from('question-images').upload(path, file, { contentType: file.type, cacheControl: '3600' });
+    if (upErr) throw new Error(upErr.message + ' (has migration v15 — the question-images bucket — been run?)');
+    const url = sb.storage.from('question-images').getPublicUrl(path).data.publicUrl;
+    const { error } = await sb.from('test_questions').update({ image_url: url }).eq('id', imgTargetQId);
+    if (error) throw new Error(error.message);
+    await loadTests();
+    showToast('Image attached.', 'success');
+  } catch (e) {
+    showToast('Image upload failed: ' + e.message, 'error');
+  }
+}
+
+async function removeQImage(qId) {
+  if (!confirm('Remove this image from the question?')) return;
+  const { error } = await sb.from('test_questions').update({ image_url: null }).eq('id', qId);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
   await loadTests();
 }
 
@@ -548,14 +720,15 @@ async function importBankQuestions() {
   const selected = bpAllQs.filter(q => bpSelectedIds.has(q.id));
   const existing = questionsMap[bpTestId] || [];
   const rows = selected.map((q, i) => ({
-    test_id:       bpTestId,
-    question_text: q.question_text,
-    options:       q.options || null,
-    correct_index: q.correct_index ?? 0,
-    order_index:   existing.length + i,
-    image_url:     q.image_url || null,
-    question_type: q.question_type || 'mcq',
-    statements:    Array.isArray(q.statements) && q.statements.length ? q.statements : null,
+    test_id:        bpTestId,
+    question_text:  q.question_text,
+    options:        q.options || null,
+    correct_index:  Number.isInteger(q.correct_index) ? q.correct_index : null,
+    correct_answer: q.correct_answer || null,
+    order_index:    existing.length + i,
+    image_url:      q.image_url || null,
+    question_type:  q.question_type || 'mcq',
+    statements:     Array.isArray(q.statements) && q.statements.length ? q.statements : null,
   }));
 
   const { error } = await sb.from('test_questions').insert(rows);

@@ -87,6 +87,9 @@ class QueryBuilder {
     this.call.filters[col] = vals;
     return this;
   }
+  not() {
+    return this;
+  }
   order() {
     return this;
   }

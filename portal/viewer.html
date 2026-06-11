@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Viewing PDF | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+html, body { height: 100%; }
+.viewer-shell { position: fixed; inset: 0; display: flex; flex-direction: column; background: #1a1d29; }
+.viewer-bar {
+  height: 54px; flex-shrink: 0; display: flex; align-items: center; gap: 14px;
+  padding: 0 18px; background: #0d1021; color: #fff; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.viewer-bar .back { display: inline-flex; align-items: center; gap: 7px; color: #c7d2fe; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.viewer-bar .back svg { width: 16px; height: 16px; }
+.viewer-title { font-size: .86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.viewer-tag { font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #8b93a7; }
+.viewer-stage { position: relative; flex: 1; overflow: hidden; }
+.viewer-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; background: #525659; }
+
+/* Repeating diagonal watermark across the document — name + email + date.
+   pointer-events:none so it never blocks scrolling. */
+.wm-overlay {
+  position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden;
+  display: flex; flex-wrap: wrap; align-content: center; justify-content: center;
+  transform: rotate(-30deg) scale(1.4); opacity: .14;
+}
+.wm-cell { width: 320px; text-align: center; color: #fff; font-size: .8rem; font-weight: 700; padding: 40px 0; user-select: none; }
+
+.viewer-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #cbd5e1; flex-direction: column; gap: 10px; text-align: center; padding: 24px; }
+.viewer-msg .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,.18); border-top-color: #818cf8; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="viewer-shell">
+  <div class="viewer-bar">
+    <span class="back" onclick="history.length > 1 ? history.back() : location.href='/portal/pdfs.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back
+    </span>
+    <span class="viewer-title" id="v-title">Loading…</span>
+    <span class="viewer-tag">View only</span>
+  </div>
+  <div class="viewer-stage" id="stage">
+    <div class="viewer-msg"><div class="spinner"></div><div>Preparing document…</div></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+(async () => {
+  const profile = await requireAuth('student');
+  if (!profile) return;
+  if (!profile.email) { const s = await getSession(); profile.email = s?.user?.email || ''; }
+
+  const params = new URLSearchParams(location.search);
+  const id  = params.get('id');
+  const src = params.get('src') === 'lesson' ? 'lesson' : 'module';
+  const stage = document.getElementById('stage');
+
+  if (!id) { stage.innerHTML = msg('No document specified.'); return; }
+
+  let data;
+  try {
+    const session = await getSession();
+    const resp = await fetch('/api/student-activity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ action: 'signed-pdf', pdf_id: id, source: src }),
+    });
+    data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Could not open document');
+  } catch (e) {
+    stage.innerHTML = msg(e.message);
+    return;
+  }
+
+  document.getElementById('v-title').textContent = data.title || 'Document';
+
+  // Hide the browser PDF toolbar (download/print) where supported, and embed.
+  const sep = data.url.includes('#') ? '&' : '#';
+  const embedUrl = data.url + sep + 'toolbar=0&navpanes=0&scrollbar=0&view=FitH';
+
+  const wm = watermark(profile.full_name, profile.email || '');
+  stage.innerHTML = `<iframe src="${embedUrl.replace(/"/g, '&quot;')}" title="PDF"></iframe>${wm}`;
+})();
+
+function watermark(name, email) {
+  const stamp = `${name} · ${email} · ${new Date().toLocaleDateString('en-GB')}`;
+  const cells = Array.from({ length: 60 }, () => `<div class="wm-cell">${escHtml(stamp)}</div>`).join('');
+  return `<div class="wm-overlay">${cells}</div>`;
+}
+function msg(text) {
+  return `<div class="viewer-msg"><div style="font-size:1rem;font-weight:700;color:#fff">Can't open this document</div><div style="font-size:.85rem">${escHtml(text)}</div></div>`;
+}
+
+// Light deterrents: block right-click and text selection on the viewer.
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
+</script>
+</body>
+</html>

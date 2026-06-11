@@ -113,7 +113,7 @@ let activeFilter = 'all';
   const normalizedM = (mPdfs || [])
     .filter(p => courseIds.includes(p.modules?.course_id))
     .map(p => ({
-      id: p.id, title: p.title, file_url: p.file_url, created_at: p.created_at,
+      id: p.id, src: 'module', title: p.title, created_at: p.created_at,
       course_id: p.modules?.course_id,
       course_title: p.modules?.courses?.title || '',
       lesson_title: p.modules?.title || '',
@@ -122,7 +122,7 @@ let activeFilter = 'all';
   const normalizedL = (lPdfs || [])
     .filter(p => courseIds.includes(p.lessons?.modules?.course_id))
     .map(p => ({
-      id: p.id, title: p.title, file_url: p.file_url, created_at: p.created_at,
+      id: p.id, src: 'lesson', title: p.title, created_at: p.created_at,
       course_id: p.lessons?.modules?.course_id,
       course_title: p.lessons?.modules?.courses?.title || '',
       lesson_title: p.lessons?.title || '',
@@ -179,9 +179,9 @@ function renderPdfs() {
         <div class="pdf-name">${escHtml(p.title)}</div>
         <div class="pdf-meta">${escHtml(p.course_title)} · ${escHtml(p.lesson_title)}</div>
       </div>
-      <a class="pdf-dl" href="${escHtml(p.file_url)}" target="_blank" download>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download
+      <a class="pdf-dl" href="/portal/viewer.html?id=${encodeURIComponent(p.id)}&src=${p.src}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        View
       </a>
     </div>`).join('');
 }

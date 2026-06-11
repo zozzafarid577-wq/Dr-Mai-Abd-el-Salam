@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Admin Dashboard | Dr Mai Portal</title>
 <link rel="stylesheet" href="/css/portal.css">
+<link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
 <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
@@ -79,31 +80,45 @@
 
   <main class="content">
 
+    <!-- Hero -->
+    <div class="admin-hero">
+      <div class="hero-eyebrow">Admin Console</div>
+      <h1>Welcome back, <span id="hero-name">…</span></h1>
+      <p>Here's what's happening across your courses today. Add students, build tests, and keep your class up to date.</p>
+      <div class="hero-actions" style="margin-top:16px">
+        <a href="/drmai-staff-portal/students.html?action=new" class="btn btn-white btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Add Student
+        </a>
+        <a href="/drmai-staff-portal/question-bank.html" class="btn btn-sm" style="background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.28)">Question Bank</a>
+      </div>
+    </div>
+
     <!-- Stats -->
     <div class="stats-grid mb24">
       <div class="stat-card">
-        <div class="stat-icon" style="background:#eff6ff">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <div class="stat-icon" style="background:linear-gradient(135deg,#eef2ff,#e0e7ff)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
         </div>
         <div class="stat-n" id="s-students">—</div>
         <div class="stat-l">Total Students</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#f0fdf4">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5)">
           <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         </div>
         <div class="stat-n" id="s-courses">—</div>
         <div class="stat-l">Active Courses</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#faf5ff">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe)">
           <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
         </div>
         <div class="stat-n" id="s-attempts">—</div>
         <div class="stat-l">Tests Taken</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fff7ed">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#fff7ed,#ffedd5)">
           <svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
         </div>
         <div class="stat-n" id="s-pending">—</div>
@@ -112,30 +127,27 @@
     </div>
 
     <!-- Quick actions -->
-    <div class="card mb24">
-      <div class="card-header"><span class="card-title">Quick Actions</span></div>
-      <div class="card-body">
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a href="/drmai-staff-portal/students.html?action=new" class="btn btn-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-            Add Student
-          </a>
-          <a href="/drmai-staff-portal/courses.html?action=new" class="btn btn-outline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            New Course
-          </a>
-          <a href="/drmai-staff-portal/announcements.html?action=new" class="btn btn-outline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            Send Announcement
-          </a>
-          <a href="/drmai-staff-portal/tests.html?action=new" class="btn btn-outline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-            New Practice Test
-          </a>
-        </div>
-      </div>
+    <div class="section-head"><div><h2>Quick Actions</h2><div class="sub">Jump straight into a task</div></div></div>
+    <div class="qa-grid mb24">
+      <a href="/drmai-staff-portal/students.html?action=new" class="qa-tile">
+        <div class="qa-ic" style="background:linear-gradient(135deg,#4f46e5,#4338ca)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+        <div class="qa-tx"><div class="qa-tt">Add Student</div><div class="qa-sb">Create an account</div></div>
+      </a>
+      <a href="/drmai-staff-portal/question-bank.html" class="qa-tile">
+        <div class="qa-ic" style="background:linear-gradient(135deg,#0891b2,#0e7490)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/></svg></div>
+        <div class="qa-tx"><div class="qa-tt">Question Bank</div><div class="qa-sb">Add or import questions</div></div>
+      </a>
+      <a href="/drmai-staff-portal/tests.html?action=new" class="qa-tile">
+        <div class="qa-ic" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
+        <div class="qa-tx"><div class="qa-tt">New Test</div><div class="qa-sb">Build a practice test</div></div>
+      </a>
+      <a href="/drmai-staff-portal/announcements.html?action=new" class="qa-tile">
+        <div class="qa-ic" style="background:linear-gradient(135deg,#ea580c,#c2410c)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <div class="qa-tx"><div class="qa-tt">Announce</div><div class="qa-sb">Message your students</div></div>
+      </a>
     </div>
 
+    <div class="section-head"><div><h2>Activity</h2><div class="sub">Latest students and test attempts</div></div></div>
     <div class="g2">
       <!-- Recent students -->
       <div class="card">
@@ -262,6 +274,8 @@ let allCourses = [];
   if (!profile) return;
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
+  const heroName = document.getElementById('hero-name');
+  if (heroName) heroName.textContent = profile.full_name.split(' ')[0];
   await Promise.all([loadStats(), loadRecentStudents(), loadRecentAttempts(), loadCourses()]);
 
   if (new URLSearchParams(location.search).get('action') === 'new') openModal('new-student-modal');

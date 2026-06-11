@@ -96,6 +96,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/auth.js"></script>
+<script src="/js/video.js"></script>
 <script>
 let profile = null;
 let allData  = [];
@@ -135,7 +136,7 @@ let activeCourse = null;
 
   const { data: modules } = await sb
     .from('modules')
-    .select('id, title, order_index, course_id, lessons(id, title, youtube_id, order_index, duration_min)')
+    .select('id, title, order_index, course_id, lessons(id, title, youtube_id, video_provider, video_id, order_index, duration_min)')
     .in('course_id', courseIds)
     .order('order_index');
 
@@ -188,9 +189,11 @@ function renderLessons() {
     lessons.forEach(lesson => {
       globalIdx++;
       const done = completedSet.has(lesson.id);
-      const isSoon = !lesson.youtube_id;
+      const vid = lesson.video_id || lesson.youtube_id;
+      const provider = lesson.video_provider || 'youtube';
+      const isSoon = !vid;
       const rowClass = `lesson-row${done?' done':''}${isSoon?' soon':''}`;
-      const onclickAttr = !isSoon ? `onclick="openPlayer('${lesson.id}','${escHtml(lesson.title)}','${lesson.youtube_id}')"` : '';
+      const onclickAttr = !isSoon ? `onclick="openPlayer('${lesson.id}','${escHtml(lesson.title)}','${provider}','${escHtml(vid)}')"` : '';
       html += `
         <div class="${rowClass}" ${onclickAttr}>
           <div class="lesson-num">${globalIdx}</div>
@@ -210,12 +213,11 @@ function renderLessons() {
   container.innerHTML = html;
 }
 
-function openPlayer(lessonId, title, youtubeId) {
-  if (!youtubeId) { showToast('No recording available for this lesson yet.', 'warning'); return; }
+function openPlayer(lessonId, title, provider, videoId) {
+  if (!videoId) { showToast('No recording available for this lesson yet.', 'warning'); return; }
   document.getElementById('player-title').textContent = title;
-  // Privacy-enhanced embed: no cookies, no related videos, minimal branding.
-  const params = 'autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1';
-  document.getElementById('player-iframe').src = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`;
+  // Build the right embed for the provider (YouTube privacy embed or Drive preview).
+  document.getElementById('player-iframe').src = Video.videoEmbedUrl(provider, videoId);
   // Identify the viewer on-screen (deters casual screen-recording / re-sharing).
   document.getElementById('player-wm').textContent = `${profile.full_name} · ${profile.email || ''}`;
   document.getElementById('player-modal-overlay').classList.add('show');

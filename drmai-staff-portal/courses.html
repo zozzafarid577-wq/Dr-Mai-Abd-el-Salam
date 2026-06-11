@@ -377,9 +377,16 @@
         <input type="text" class="form-input" id="rec-title" placeholder="e.g. Session 1">
       </div>
       <div class="form-group">
-        <label class="form-label">YouTube Video ID *</label>
-        <input type="text" class="form-input" id="rec-yt" placeholder="e.g. dQw4w9WgXcQ" style="font-family:monospace">
-        <div class="form-hint">Paste only the ID part after <code>?v=</code> in the YouTube URL</div>
+        <label class="form-label">Where is the video? *</label>
+        <select class="form-input" id="rec-provider" onchange="recProviderHint()">
+          <option value="youtube">YouTube</option>
+          <option value="gdrive">Google Drive</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Video link or ID *</label>
+        <input type="text" class="form-input" id="rec-vid" placeholder="Paste the YouTube link or ID" style="font-family:monospace">
+        <div class="form-hint" id="rec-hint">Paste the full YouTube link, or just the ID.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Duration (minutes)</label>
@@ -485,6 +492,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/auth.js"></script>
+<script src="/js/video.js"></script>
 <script>
 // ── State ──────────────────────────────────────────────────────────
 let courses      = [];
@@ -534,7 +542,7 @@ async function loadAll() {
 
   const [{ data: mods }, { data: recs }, { data: tests }, { data: assigns }, { data: pdfs }] = await Promise.all([
     sb.from('modules').select('id, course_id, title, description, order_index, is_active').in('course_id', ids).order('order_index'),
-    sb.from('lessons').select('id, module_id, title, youtube_id, duration_min, order_index').order('order_index'),
+    sb.from('lessons').select('id, module_id, title, youtube_id, video_provider, video_id, duration_min, order_index').order('order_index'),
     sb.from('practice_tests').select('id, module_id, course_id, title, is_mock, is_active, time_limit_min').order('created_at', { ascending: false }),
     sb.from('assignments').select('id, module_id, course_id, title, description, due_at, max_score, is_active').order('created_at', { ascending: false }),
     sb.from('module_pdfs').select('id, module_id, title, file_url, created_at').order('created_at', { ascending: false }),
@@ -660,7 +668,7 @@ function renderModuleDetail(m) {
       <div class="recording-row">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#dc2626;flex-shrink:0"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
         <div class="recording-title-txt">${escHtml(r.title)}</div>
-        <div class="recording-yt" style="color:var(--muted)">${r.youtube_id ? 'yt: ' + escHtml(r.youtube_id) : 'No video'}</div>
+        <div class="recording-yt" style="color:var(--muted)">${(r.video_id || r.youtube_id) ? ((r.video_provider === 'gdrive' ? 'drive: ' : 'yt: ') + escHtml(r.video_id || r.youtube_id)) : 'No video'}</div>
         ${r.duration_min ? `<span style="font-size:.7rem;color:var(--muted)">${r.duration_min}m</span>` : ''}
         <button class="icon-btn" style="color:#dc2626" onclick="deleteRecording('${r.id}','${m.id}')" title="Delete">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -811,20 +819,45 @@ async function saveModuleTitle() {
 function openAddRecordingModal(moduleId) {
   activeModuleId = moduleId;
   document.getElementById('rec-title').value = '';
-  document.getElementById('rec-yt').value    = '';
+  document.getElementById('rec-vid').value   = '';
   document.getElementById('rec-dur').value   = '';
+  document.getElementById('rec-provider').value = 'youtube';
+  recProviderHint();
   document.getElementById('add-recording-modal').classList.add('show');
 }
 function closeAddRecordingModal() { document.getElementById('add-recording-modal').classList.remove('show'); }
 
+function recProviderHint() {
+  const p = document.getElementById('rec-provider').value;
+  const input = document.getElementById('rec-vid');
+  const hint  = document.getElementById('rec-hint');
+  if (p === 'gdrive') {
+    input.placeholder = 'Paste the Google Drive share link';
+    hint.innerHTML = "In Drive, set the file to <strong>Anyone with the link → Viewer</strong>, and turn OFF “viewers can download”. Then paste the share link here.";
+  } else {
+    input.placeholder = 'Paste the YouTube link or ID';
+    hint.innerHTML = 'Paste the full YouTube link, or just the ID.';
+  }
+}
+
 async function saveRecording() {
-  const title = document.getElementById('rec-title').value.trim();
-  const yt    = document.getElementById('rec-yt').value.trim() || null;
-  const dur   = parseInt(document.getElementById('rec-dur').value) || null;
+  const title    = document.getElementById('rec-title').value.trim();
+  const provider = document.getElementById('rec-provider').value;
+  const raw      = document.getElementById('rec-vid').value.trim();
+  const dur      = parseInt(document.getElementById('rec-dur').value) || null;
   if (!title) { showToast('Title is required.', 'warning'); return; }
+
+  const vid = raw ? Video.parseVideoId(provider, raw) : null;
+  if (raw && !vid) { showToast("Couldn't read that video link/ID — check it and try again.", 'warning'); return; }
+
   const existing = recordingMap[activeModuleId] || [];
   const { data, error } = await sb.from('lessons')
-    .insert({ module_id: activeModuleId, title, youtube_id: yt, duration_min: dur, order_index: existing.length })
+    .insert({
+      module_id: activeModuleId, title,
+      video_provider: provider, video_id: vid,
+      youtube_id: provider === 'youtube' ? vid : null, // keep legacy column in sync
+      duration_min: dur, order_index: existing.length,
+    })
     .select().single();
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
   (recordingMap[activeModuleId] ||= []).push(data);

@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS public.flashcard_progress (
 
 ALTER TABLE public.flashcard_progress ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "own_flashcard_progress" ON public.flashcard_progress;
 CREATE POLICY "own_flashcard_progress" ON public.flashcard_progress
   FOR ALL USING (auth.uid() = student_id);
 

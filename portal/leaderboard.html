@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Leaderboard | Student Portal</title>
+<link rel="stylesheet" href="/css/portal.css">
+<style>
+.lb-tabs { display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px;margin-bottom:20px; }
+.lb-tab { padding:8px 16px;border:none;background:transparent;border-radius:8px;font-size:.8rem;font-weight:700;font-family:inherit;cursor:pointer;color:var(--muted); }
+.lb-tab.active { background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.25); }
+
+.podium { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;align-items:end; }
+.pod { background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 14px;text-align:center;box-shadow:var(--shadow-xs);position:relative;overflow:hidden; }
+.pod.gold   { border-color:#fcd34d;box-shadow:0 8px 28px rgba(251,191,36,.22); }
+.pod.silver { border-color:#cbd5e1; }
+.pod.bronze { border-color:#fdba74; }
+.pod-rank { font-size:1.6rem;margin-bottom:6px; }
+.pod-av { width:54px;height:54px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;font-weight:800;color:#fff; }
+.pod.gold .pod-av   { background:linear-gradient(135deg,#f59e0b,#b45309); }
+.pod.silver .pod-av { background:linear-gradient(135deg,#94a3b8,#475569); }
+.pod.bronze .pod-av { background:linear-gradient(135deg,#fb923c,#c2410c); }
+.pod-name { font-size:.82rem;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.pod-pts { font-size:1.25rem;font-weight:900;color:var(--primary);margin-top:4px;letter-spacing:-.02em; }
+.pod-sub { font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px; }
+
+.lb-row { display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--border); }
+.lb-row:last-child { border-bottom:none; }
+.lb-row.me { background:linear-gradient(90deg,#eff6ff,transparent);border-radius:10px; }
+.lb-pos { width:30px;font-size:.92rem;font-weight:800;color:var(--muted);text-align:center;flex-shrink:0; }
+.lb-av { width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#60a5fa);color:#fff;font-size:.74rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.lb-info { flex:1;min-width:0; }
+.lb-name { font-size:.85rem;font-weight:700;letter-spacing:-.01em; }
+.lb-meta { font-size:.7rem;color:var(--muted);margin-top:1px; }
+.lb-streak { font-size:.72rem;font-weight:700;color:#ea580c;white-space:nowrap; }
+.lb-pts { font-size:.98rem;font-weight:900;color:var(--primary);white-space:nowrap;letter-spacing:-.02em; }
+.you-banner { display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:14px;padding:16px 20px;color:#fff;margin-bottom:20px; }
+.you-banner .yb-pos { font-size:1.8rem;font-weight:900;letter-spacing:-.03em; }
+.you-banner .yb-l { font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;opacity:.7; }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar"><div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Portal</span></div>
+<div class="sidebar-scroll" id="nav-scroll"></div>
+<div class="sidebar-foot"><div class="user-row">
+  <div class="user-avatar" id="u-av">…</div>
+  <div class="user-info"><div class="user-name" id="u-name">Loading…</div><div class="user-role">Student</div></div>
+  <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+</div></div></aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Leaderboard</span>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="lb-tabs">
+      <button class="lb-tab active" data-w="7"   onclick="setWindow('7',this)">This Week</button>
+      <button class="lb-tab"        data-w="30"  onclick="setWindow('30',this)">This Month</button>
+      <button class="lb-tab"        data-w="all" onclick="setWindow('all',this)">All Time</button>
+    </div>
+
+    <div id="you"></div>
+    <div id="podium"></div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Rankings</span><span style="font-size:.7rem;color:var(--muted)">Points = sum of your test scores</span></div>
+      <div id="rows">
+        <div class="card-body">
+          <div class="skeleton" style="height:44px;margin-bottom:8px"></div>
+          <div class="skeleton" style="height:44px;margin-bottom:8px"></div>
+          <div class="skeleton" style="height:44px"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/portal-nav.js"></script>
+<script>
+let profile = null, currentWindow = '7';
+
+(async () => {
+  profile = await requireAuth('student');
+  if (!profile) return;
+  renderNav('leaderboard');
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+  load();
+})();
+
+function setWindow(w, btn) {
+  currentWindow = w;
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  load();
+}
+
+async function load() {
+  const rowsEl = document.getElementById('rows');
+  rowsEl.innerHTML = '<div class="card-body"><div class="skeleton" style="height:44px;margin-bottom:8px"></div><div class="skeleton" style="height:44px"></div></div>';
+  document.getElementById('podium').innerHTML = '';
+  document.getElementById('you').innerHTML = '';
+
+  let data;
+  try {
+    const session = await getSession();
+    const resp = await fetch('/api/leaderboard?window=' + currentWindow, {
+      headers: { 'Authorization': 'Bearer ' + session.access_token },
+    });
+    data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed');
+  } catch (e) {
+    rowsEl.innerHTML = `<div class="empty-state"><div class="empty-title">Couldn't load leaderboard</div><div class="empty-sub">${escHtml(e.message)}</div></div>`;
+    return;
+  }
+
+  const board = data.leaderboard || [];
+  if (!board.length) {
+    rowsEl.innerHTML = '<div class="empty-state"><div class="empty-title">No results yet</div><div class="empty-sub">Complete a test to get on the board.</div></div>';
+    return;
+  }
+
+  // "You" banner when the student isn't in the top 3
+  if (data.me && data.me.rank > 3) {
+    document.getElementById('you').innerHTML = `
+      <div class="you-banner">
+        <div><div class="yb-l">Your rank</div><div class="yb-pos">#${data.me.rank}</div></div>
+        <div style="flex:1"></div>
+        <div style="text-align:right"><div class="yb-l">Points</div><div class="yb-pos">${data.me.points}</div></div>
+        ${data.me.streak_days > 1 ? `<div style="text-align:right"><div class="yb-l">Streak</div><div class="yb-pos">🔥${data.me.streak_days}</div></div>` : ''}
+      </div>`;
+  }
+
+  // Podium for top 3
+  const medal = ['🥇','🥈','🥉'], cls = ['gold','silver','bronze'];
+  document.getElementById('podium').innerHTML =
+    '<div class="podium">' + board.slice(0, 3).map((r, i) => `
+      <div class="pod ${cls[i]}">
+        <div class="pod-rank">${medal[i]}</div>
+        <div class="pod-av">${escHtml(initials(r.display_name))}</div>
+        <div class="pod-name">${escHtml(r.display_name)}${r.is_me ? ' (You)' : ''}</div>
+        <div class="pod-pts">${r.points}</div>
+        <div class="pod-sub">${r.tests_taken} test${r.tests_taken!=1?'s':''}</div>
+      </div>`).join('') + '</div>';
+
+  rowsEl.innerHTML = board.map(r => `
+    <div class="lb-row ${r.is_me ? 'me' : ''}">
+      <div class="lb-pos">${r.rank}</div>
+      <div class="lb-av">${escHtml(initials(r.display_name))}</div>
+      <div class="lb-info">
+        <div class="lb-name">${escHtml(r.display_name)}${r.is_me ? ' <span style="color:var(--primary)">· You</span>' : ''}</div>
+        <div class="lb-meta">${r.tests_taken} test${r.tests_taken!=1?'s':''} · avg ${r.avg_pct ?? 0}%</div>
+      </div>
+      ${r.streak_days > 1 ? `<div class="lb-streak">🔥 ${r.streak_days}d</div>` : ''}
+      <div class="lb-pts">${r.points}</div>
+    </div>`).join('');
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`; t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+</script>
+</body>
+</html>

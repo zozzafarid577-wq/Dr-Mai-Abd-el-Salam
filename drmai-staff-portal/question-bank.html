@@ -166,10 +166,16 @@
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <span class="page-title">Question Bank</span>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="openQModal()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      New Question
-    </button>
+    <div class="topbar-right" style="display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="openImportModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Import / Generate
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openQModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Question
+      </button>
+    </div>
   </header>
 
   <main class="content">
@@ -222,6 +228,86 @@
 </div>
 
 <div class="toast-wrap" id="toasts"></div>
+
+<!-- ═══════════════════════════════════════════
+     Bulk Import / AI Generate Modal
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal" style="max-width:720px;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title">Import or Generate Questions</div>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;flex:1">
+
+      <div class="seg-ctrl" style="display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;margin-bottom:18px">
+        <button type="button" class="seg-btn active" id="imp-tab-paste" onclick="setImportTab('paste')" style="flex:1;padding:8px;border:none;background:#fff;border-radius:8px;font-size:.8rem;font-weight:600;font-family:inherit;cursor:pointer;color:var(--primary);box-shadow:var(--shadow-xs)">Paste Text</button>
+        <button type="button" class="seg-btn" id="imp-tab-ai" onclick="setImportTab('ai')" style="flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-size:.8rem;font-weight:600;font-family:inherit;cursor:pointer;color:var(--muted)">AI Generate</button>
+      </div>
+
+      <!-- Destination -->
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label class="form-label">Course</label>
+          <select class="form-select" id="imp-course" onchange="updateImportModules()"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Module</label>
+          <select class="form-select" id="imp-module"><option value="">— None —</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Difficulty</label>
+        <select class="form-select" id="imp-diff"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
+      </div>
+
+      <!-- Paste pane -->
+      <div id="imp-pane-paste">
+        <div class="form-group">
+          <label class="form-label">Paste questions</label>
+          <textarea class="form-textarea" id="imp-text" rows="9" placeholder="1. What is the powerhouse of the cell?
+A) Nucleus
+B) Mitochondrion
+C) Ribosome
+Answer: B
+
+2. ..."></textarea>
+          <div class="form-hint">One question per block (blank line between). Options as A) B) C)… Mark the answer with an "Answer: B" line or a * before the correct option.</div>
+        </div>
+        <button class="btn btn-outline" onclick="runParse()" id="parse-btn">Preview Questions</button>
+      </div>
+
+      <!-- AI pane -->
+      <div id="imp-pane-ai" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Topic</label>
+          <input type="text" class="form-input" id="ai-topic" placeholder="e.g. Photosynthesis and the light-dependent reactions">
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label class="form-label">How many?</label>
+            <input type="number" class="form-input" id="ai-count" value="5" min="1" max="20">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Extra instructions (optional)</label>
+          <input type="text" class="form-input" id="ai-notes" placeholder="e.g. focus on diagrams, ACT exam style">
+        </div>
+        <button class="btn btn-outline" onclick="runGenerate()" id="gen-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M3 12h3m12 0h3M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/></svg>
+          Generate with AI
+        </button>
+      </div>
+
+      <!-- Preview -->
+      <div id="imp-preview" style="margin-top:20px"></div>
+    </div>
+    <div class="modal-footer" style="flex-shrink:0">
+      <button class="btn btn-ghost" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary" id="imp-save-btn" onclick="saveImported()" style="display:none">Save to Bank</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════
      New / Edit Question Modal
@@ -856,6 +942,157 @@ function buildPayload() {
 }
 
 // ── Save ────────────────────────────────────────────────────────
+
+// ── Bulk import / AI generate ────────────────────────────────────
+
+let importTab = 'paste';
+let parsedQuestions = [];
+
+function openImportModal() {
+  parsedQuestions = [];
+  document.getElementById('imp-text').value = '';
+  document.getElementById('ai-topic').value = '';
+  document.getElementById('ai-notes').value = '';
+  document.getElementById('imp-preview').innerHTML = '';
+  document.getElementById('imp-save-btn').style.display = 'none';
+
+  // Mirror the bank's course list into the import dropdown.
+  const sel = document.getElementById('imp-course');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    courses.map(c => `<option value="${c.id}">${escHtml(c.title)}</option>`).join('');
+  updateImportModules();
+  setImportTab('paste');
+  document.getElementById('import-modal').classList.add('show');
+}
+function closeImportModal() { document.getElementById('import-modal').classList.remove('show'); }
+
+function updateImportModules() {
+  const courseId = document.getElementById('imp-course').value;
+  const sel = document.getElementById('imp-module');
+  sel.innerHTML = '<option value="">— None —</option>' +
+    modulesAll.filter(m => m.course_id === courseId)
+      .map(m => `<option value="${m.id}">${escHtml(m.title)}</option>`).join('');
+}
+
+function setImportTab(tab) {
+  importTab = tab;
+  const paste = tab === 'paste';
+  document.getElementById('imp-pane-paste').style.display = paste ? 'block' : 'none';
+  document.getElementById('imp-pane-ai').style.display    = paste ? 'none' : 'block';
+  const tp = document.getElementById('imp-tab-paste'), ta = document.getElementById('imp-tab-ai');
+  tp.style.background = paste ? '#fff' : 'transparent';
+  tp.style.color = paste ? 'var(--primary)' : 'var(--muted)';
+  tp.style.boxShadow = paste ? 'var(--shadow-xs)' : 'none';
+  ta.style.background = paste ? 'transparent' : '#fff';
+  ta.style.color = paste ? 'var(--muted)' : 'var(--primary)';
+  ta.style.boxShadow = paste ? 'none' : 'var(--shadow-xs)';
+}
+
+async function runParse() {
+  const text = document.getElementById('imp-text').value.trim();
+  if (!text) { showToast('Paste some questions first.', 'warning'); return; }
+  const btn = document.getElementById('parse-btn');
+  btn.disabled = true; btn.textContent = 'Parsing…';
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp = await fetch('/api/import-questions-text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ text }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Could not parse');
+    parsedQuestions = data.questions;
+    renderImportPreview();
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Preview Questions';
+  }
+}
+
+async function runGenerate() {
+  const topic = document.getElementById('ai-topic').value.trim();
+  if (!topic) { showToast('Enter a topic first.', 'warning'); return; }
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const resp = await fetch('/api/generate-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        topic,
+        count: parseInt(document.getElementById('ai-count').value) || 5,
+        difficulty: document.getElementById('imp-diff').value,
+        notes: document.getElementById('ai-notes').value.trim(),
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Could not generate');
+    parsedQuestions = data.questions;
+    renderImportPreview();
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M3 12h3m12 0h3M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/></svg> Generate with AI';
+  }
+}
+
+function renderImportPreview() {
+  const el = document.getElementById('imp-preview');
+  if (!parsedQuestions.length) {
+    el.innerHTML = '<div class="alert alert-warning">No questions found.</div>';
+    document.getElementById('imp-save-btn').style.display = 'none';
+    return;
+  }
+  el.innerHTML = `<div style="font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:10px">PREVIEW — ${parsedQuestions.length} question${parsedQuestions.length!==1?'s':''} (review before saving)</div>` +
+    parsedQuestions.map((q, i) => `
+      <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="font-size:.85rem;font-weight:700;margin-bottom:8px">${i+1}. ${escHtml(q.question_text)}</div>
+        ${q.options.map((o, oi) => `<div style="font-size:.8rem;padding:3px 0;color:${oi===q.correct_index?'var(--success)':'var(--text-2)'};font-weight:${oi===q.correct_index?'700':'400'}">${String.fromCharCode(65+oi)}) ${escHtml(o)}${oi===q.correct_index?' ✓':''}</div>`).join('')}
+        ${q.explanation ? `<div style="font-size:.74rem;color:var(--muted);margin-top:6px;font-style:italic">${escHtml(q.explanation)}</div>` : ''}
+      </div>`).join('');
+  document.getElementById('imp-save-btn').style.display = 'inline-flex';
+}
+
+async function saveImported() {
+  if (!parsedQuestions.length) return;
+  const btn = document.getElementById('imp-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const course_id = document.getElementById('imp-course').value || null;
+  const module_id = document.getElementById('imp-module').value || null;
+  const difficulty = document.getElementById('imp-diff').value;
+
+  try {
+    const token = (await sb.auth.getSession()).data.session?.access_token;
+    const saved = [];
+    for (const q of parsedQuestions) {
+      const resp = await fetch('/api/save-bank-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          course_id, module_id, question_type: 'mcq', difficulty,
+          question_text: q.question_text, options: q.options,
+          correct_index: q.correct_index, explanation: q.explanation || null,
+          status: 'published',
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Save failed');
+      saved.push(data);
+    }
+    allQs.unshift(...[...saved].reverse());
+    updateStats();
+    applyFilters();
+    showToast(`${saved.length} question${saved.length!==1?'s':''} added to the bank!`, 'success');
+    closeImportModal();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save to Bank';
+  }
+}
 
 async function saveQ(addAnother) {
   const payload = buildPayload();

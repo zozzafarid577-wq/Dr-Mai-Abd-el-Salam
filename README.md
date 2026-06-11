@@ -1,2 +1,60 @@
 # Dr-Mai-Abd-el-Salam
+
+Educational portal for Dr Mai Abd El Salam — a public marketing site, a
+student portal, and a staff/admin portal, backed by Supabase and a set of
+Vercel serverless functions in `api/`.
+
+## Project layout
+
+| Path                  | What it is                                                        |
+| --------------------- | ----------------------------------------------------------------- |
+| `index.html`, `*.html`| Public marketing site                                             |
+| `portal/`             | Student portal (dashboard, courses, tests, flashcards, leaderboard…) |
+| `drmai-staff-portal/` | Staff/admin portal (students, courses, question bank, tests…)     |
+| `api/`                | Vercel serverless functions (admin actions, AI, email, RPC proxies) |
+| `api/_lib/`           | Dependency-free helpers shared by the functions (unit-tested)     |
+| `css/portal.css`      | Shared portal design system                                       |
+| `js/`                 | Client helpers (`auth.js`, `portal-nav.js`)                       |
+| `supabase-*.sql`      | Database setup + ordered migrations (`v2` … `v13`)                |
+| `tests/`              | Vitest test suite for the API handlers + portal static checks     |
+
+## Database setup
+
+Run `supabase-setup.sql` first, then each `supabase-migration-vN.sql` in
+order (v2 → v13) in the Supabase SQL editor.
+
+The latest migration (`v13`) adds:
+
+- **Scheduled tests** — `open_at` / `close_at` on `practice_tests`. The
+  `test_questions` read policy enforces `open_at` at the database level, so
+  students cannot fetch a scheduled test's questions before it opens.
+- **Flashcards** — student read access to published `question_bank` rows for
+  their enrolled courses, plus a `flashcard_progress` table for per-student
+  spaced-repetition (Leitner box) scheduling.
+- **Leaderboard** — a `get_leaderboard(window_days)` `SECURITY DEFINER`
+  function returning an aggregate, anonymity-preserving ranking (points,
+  tests taken, average, and study streak).
+
+## Features for staff
+
+- **Question bank** with bulk authoring: paste plain-text MCQs, or generate
+  drafts from a topic with AI, preview them, then save to the bank
+  (`/api/import-questions-text`, `/api/generate-questions`).
+- **Test builder** with optional scheduling (open/close window).
+- Student management, PDF-to-quiz import, assignments, announcements.
+
+## Tests
+
+```bash
+npm install
+npm test          # vitest run
+npm run test:watch
+```
+
+The suite covers every `api/` handler (auth/role checks, validation, success
+and rollback paths) against an in-memory Supabase mock — no network or real
+database — plus static checks over every portal page (inline-JS syntax,
+duplicate/broken sidebar links). CI runs it on every pull request
+(`.github/workflows/ci.yml`).
+
 # Vercel redeploy trigger: 2026-05-30T22:37:40Z

@@ -64,6 +64,12 @@ class QueryBuilder {
     this.call.payload = payload;
     return this;
   }
+  upsert(payload, opts) {
+    this.call.op = 'upsert';
+    this.call.payload = payload;
+    this.call.opts = opts;
+    return this;
+  }
   update(payload) {
     this.call.op = 'update';
     this.call.payload = payload;
@@ -109,6 +115,12 @@ function makeAdminAuthFn(name) {
   };
 }
 
+async function rpc(fn, args) {
+  const call = { op: `rpc.${fn}`, args };
+  state.calls.push(call);
+  return resolveResult(call.op, call, { data: [], error: null });
+}
+
 const anonClient = {
   auth: {
     async getUser(token) {
@@ -120,6 +132,7 @@ const anonClient = {
     },
   },
   from: (table) => new QueryBuilder(table),
+  rpc,
 };
 
 const adminClient = {
@@ -131,8 +144,12 @@ const adminClient = {
     },
   },
   from: (table) => new QueryBuilder(table),
+  rpc,
 };
 
-export function createClient(url, key) {
-  return key === process.env.SUPABASE_SERVICE_ROLE_KEY ? adminClient : anonClient;
+export function createClient(url, key, opts) {
+  // Endpoints build a per-request client with the caller's token via
+  // global.headers.Authorization; treat that like the anon client.
+  const base = key === process.env.SUPABASE_SERVICE_ROLE_KEY ? adminClient : anonClient;
+  return base;
 }

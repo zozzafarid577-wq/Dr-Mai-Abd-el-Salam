@@ -107,8 +107,11 @@ const ACT = [
   { month:'February 2027',  open:'2026-06-08', close:'2027-02-11', test:'2027-02-20', am:'Math 1', pm:'Chemistry, English 1' },
   { month:'April 2027',     open:'2026-06-08', close:'2027-04-01', test:'2027-04-10', am:'Math 1', pm:'Biology, Math 2, English 2' },
   { month:'June 2027',      open:'2026-06-08', close:'2027-06-10', test:'2027-06-19', am:'Math 1', pm:'English 2' },
-  { month:'July 2027',      open:'2026-06-08', close:'2027-07-08', test:'2027-07-17', am:'Math 1', pm:'Biology, English 1' },
+  { month:'July 2027',      open:'2026-06-08', close:'2027-07-08', test:'2027-07-18', am:'Math 1', pm:'Biology, English 1' },
 ];
+// Official registration links (replace with Dr Mai's exact links if different).
+const ACT_REG_URL = 'https://www.act.org/content/act/en/products-and-services/the-act/registration.html';
+const EST_REG_URL = 'https://www.estegypt.org/';
 // ── EST trial registration windows (yellow) ────────────────────
 const EST = [
   { subjects:'Math Level 1-2, Biology, Chemistry',         from:'2025-12-09', to:'2025-12-29' },
@@ -195,6 +198,7 @@ function render() {
             <div class="exam-field"><div class="ef-label">Morning</div><div class="ef-val sub">${e.am}</div></div>
             <div class="exam-field"><div class="ef-label">Afternoon</div><div class="ef-val sub">${e.pm}</div></div>
           </div>
+          <a href="${ACT_REG_URL}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="margin-top:12px">Register for ACT →</a>
         </div>`;
     }).join('');
   } else {
@@ -213,6 +217,7 @@ function render() {
             <div class="exam-field"><div class="ef-label">Registration closes</div><div class="ef-val">${fmt(e.to)}</div></div>
             <div class="exam-field" style="grid-column:1/-1"><div class="ef-label">Subjects</div><div class="ef-val sub">${e.subjects}</div></div>
           </div>
+          <a href="${EST_REG_URL}" target="_blank" rel="noopener" class="btn btn-sm" style="margin-top:12px;background:#f4c20d;color:#3a2f00;border:none">Register for EST →</a>
         </div>`;
     }).join('');
   }

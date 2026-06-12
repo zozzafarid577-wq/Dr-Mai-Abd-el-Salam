@@ -15,13 +15,18 @@ Vercel serverless functions in `api/`.
 | `api/_lib/`           | Dependency-free helpers shared by the functions (unit-tested)     |
 | `css/portal.css`      | Shared portal design system                                       |
 | `js/`                 | Client helpers (`auth.js`, `portal-nav.js`)                       |
-| `supabase-*.sql`      | Database setup + ordered migrations (`v2` … `v18`)                |
+| `supabase-*.sql`      | Database setup + ordered migrations (`v2` … `v19`)                |
 | `tests/`              | Vitest test suite for the API handlers + portal static checks     |
 
 ## Database setup
 
 Run `supabase-setup.sql` first, then each `supabase-migration-vN.sql` in
-order (v2 → v18) in the Supabase SQL editor.
+order (v2 → v19) in the Supabase SQL editor.
+
+Migration (`v19`) adds a public `lesson-media` storage bucket so admins
+can upload recordings and lesson PDFs directly (instead of relying on
+Google Drive links). Raise the storage file-size limit in Supabase if you
+need to upload longer videos.
 
 Migration (`v18`) adds `student_notes` — a private per-student notes pad
 used by the new "My Scores & Notes" page (saved test results + a personal

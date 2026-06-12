@@ -81,12 +81,13 @@
             <th>Parent Email</th>
             <th>Parent Phone</th>
             <th>Joined</th>
+            <th>Last seen</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="students-tbody">
-          <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
+          <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -281,7 +282,7 @@ let lastCreated  = null;
   document.getElementById('u-av').textContent   = initials(adminProfile.full_name);
 
   const [{ data: students }, { data: coursesData }] = await Promise.all([
-    sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw').eq('role','student').order('created_at', { ascending: false }),
+    sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw, last_login_at, last_login_ip').eq('role','student').order('created_at', { ascending: false }),
     sb.from('courses').select('id, title').eq('is_active', true).order('title')
   ]);
 
@@ -363,7 +364,7 @@ async function submitBulkStudents() {
   }
 
   // Refresh the table.
-  const { data: students } = await sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw').eq('role','student').order('created_at', { ascending: false });
+  const { data: students } = await sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw, last_login_at, last_login_ip').eq('role','student').order('created_at', { ascending: false });
   allStudents = students || [];
   renderTable(allStudents);
 
@@ -392,7 +393,7 @@ function copyBulkResults() {
 function renderTable(students) {
   const tbody = document.getElementById('students-tbody');
   if (!students || students.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No students found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No students found</td></tr>';
     return;
   }
   tbody.innerHTML = students.map(s => `
@@ -402,6 +403,7 @@ function renderTable(students) {
       <td>${s.parent_email ? `<a href="mailto:${escHtml(s.parent_email)}" style="color:var(--primary)">${escHtml(s.parent_email)}</a>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td>${escHtml(s.parent_phone || '—')}</td>
       <td>${fmtDate(s.created_at)}</td>
+      <td title="${s.last_login_ip ? 'IP: ' + escHtml(s.last_login_ip) : ''}">${s.last_login_at ? timeAgo(s.last_login_at) : '<span style="color:var(--muted)">Never</span>'}</td>
       <td><span class="badge ${s.is_active ? 'badge-success' : 'badge-danger'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
       <td>
         ${s.parent_email
@@ -522,7 +524,7 @@ async function submitAddStudent() {
   document.getElementById('add-footer').style.display = 'none';
 
   // Refresh table
-  const { data: students } = await sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw').eq('role','student').order('created_at', { ascending: false });
+  const { data: students } = await sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw, last_login_at, last_login_ip').eq('role','student').order('created_at', { ascending: false });
   allStudents = students || [];
   renderTable(allStudents);
 }

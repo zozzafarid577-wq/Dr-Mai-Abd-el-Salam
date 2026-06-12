@@ -516,3 +516,9 @@ html[data-theme="dark"] .bio-bg svg { opacity: .10; }
   .sidebar:not(:hover) .user-info { font-size: 0; }   /* hide text, keep icons */
   .sidebar:not(:hover) .logout-btn { opacity: 0; pointer-events: none; }
 }
+
+/* Brand logo at the top of the sidebar uses the biology favicon. */
+.sidebar-brand .b-dot {
+  background: #2563eb url('/assets/favicon.svg') center/cover no-repeat;
+  box-shadow: 0 2px 8px rgba(37,99,235,.35);
+}

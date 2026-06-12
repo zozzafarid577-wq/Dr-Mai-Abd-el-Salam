@@ -113,14 +113,14 @@ const ACT = [
 // Official registration links (replace with Dr Mai's exact links if different).
 const ACT_REG_URL = 'https://www.act.org/content/act/en/products-and-services/the-act/registration.html';
 const EST_REG_URL = 'https://www.estegypt.org/';
-// ── EST trial registration windows (yellow) ────────────────────
+// ── EST test days (yellow) ─────────────────────────────────────
 const EST = [
-  { subjects:'Math Level 1-2, Biology, Chemistry',         from:'2025-12-09', to:'2025-12-29' },
-  { subjects:'Math Level 1-2, Biology, Physics',           from:'2026-02-10', to:'2026-03-02' },
-  { subjects:'Math Level 1-2, Biology, Physics, Chemistry',from:'2026-03-31', to:'2026-04-20' },
-  { subjects:'Math Level 1-2, Biology, Physics, Chemistry',from:'2026-05-19', to:'2026-06-08' },
-  { subjects:'Math Level 1-2, Biology, Physics',           from:'2026-08-25', to:'2026-09-14' },
-  { subjects:'Math Level 1-2, Biology, Chemistry',         from:'2026-10-27', to:'2026-11-16' },
+  { round:'January 2026',  test:'2026-01-23' }, { round:'January 2026',  test:'2026-01-24' },
+  { round:'March 2026',    test:'2026-03-27' }, { round:'March 2026',    test:'2026-03-28' },
+  { round:'May 2026',      test:'2026-05-15' }, { round:'May 2026',      test:'2026-05-16' },
+  { round:'July 2026',     test:'2026-07-03' }, { round:'July 2026',     test:'2026-07-04' },
+  { round:'October 2026',  test:'2026-10-09' }, { round:'October 2026',  test:'2026-10-10' },
+  { round:'December 2026', test:'2026-12-11' }, { round:'December 2026', test:'2026-12-12' },
 ];
 
 let activeTab = 'act';
@@ -146,8 +146,8 @@ function fmt(d) {
 function pickCountdown() {
   const now = Date.now();
   const events = [];
-  ACT.forEach(e => events.push({ date:new Date(e.test+'T00:00:00').getTime(), label:`Next ACT test · ${fmt(e.test)}`, type:'act', key:e.month }));
-  EST.forEach(e => { const d = e.test || e.to; events.push({ date:new Date(d+'T00:00:00').getTime(), label:`Next EST test · ${fmt(d)}`, type:'est', key:e.subjects }); });
+  ACT.forEach(e => events.push({ date:new Date(e.test+'T00:00:00').getTime(), dstr:e.test, label:`Next ACT test · ${fmt(e.test)}`, type:'act' }));
+  EST.forEach(e => events.push({ date:new Date(e.test+'T00:00:00').getTime(), dstr:e.test, label:`Next EST test · ${fmt(e.test)}`, type:'est' }));
   const upcoming = events.filter(e => e.date > now).sort((a,b) => a.date - b.date);
   countdownTarget = upcoming[0] || null;
 }
@@ -182,12 +182,12 @@ function render() {
   const body = document.getElementById('tt-body');
   const now = Date.now();
   const rows = activeTab === 'act'
-    ? ACT.map(e => ({ type:'act', date:e.test, key:e.month }))
-    : EST.map(e => ({ type:'est', date:e.test || e.to, key:e.subjects }));
+    ? ACT.map(e => ({ type:'act', date:e.test }))
+    : EST.map(e => ({ type:'est', date:e.test }));
 
   body.innerHTML = rows.map(r => {
     const past = new Date(r.date+'T00:00:00').getTime() < now;
-    const isNext = countdownTarget && countdownTarget.type===r.type && countdownTarget.key===r.key;
+    const isNext = countdownTarget && countdownTarget.type===r.type && countdownTarget.dstr===r.date;
     return `
       <div class="exam-card ${r.type}${past?' past':''}">
         <div class="exam-head" style="margin-bottom:0">

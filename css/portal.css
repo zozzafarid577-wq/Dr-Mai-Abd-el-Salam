@@ -396,3 +396,70 @@ button, input, select, textarea { font-family: inherit; }
   .stat-n { font-size: 1.6rem; }
   .modal { border-radius: 14px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Dark theme — black/white with a little blue.
+   Toggled by setting <html data-theme="dark"> (see js/auth.js).
+   ═══════════════════════════════════════════════════════════════ */
+html[data-theme="dark"] {
+  --bg:      #0b0d12;
+  --card:    #14171f;
+  --surface: #14171f;
+  --border:  #262b36;
+  --text:    #f3f5f9;
+  --text-2:  #b8c0cf;
+  --muted:   #7b8597;
+  --primary:       #4d8dff;
+  --accent:        #4d8dff;
+  --accent-lt:     #16243d;
+  --primary-hover: #6ba0ff;
+  --primary-glow:  rgba(77,141,255,.22);
+  --sidebar:   #07090d;
+  --sb-border: rgba(255,255,255,.06);
+  --sb-hover:  rgba(255,255,255,.05);
+  --sb-active: rgba(77,141,255,.22);
+  --shadow-xs: 0 1px 3px rgba(0,0,0,.5);
+  --shadow-sm: 0 2px 10px rgba(0,0,0,.5);
+  --shadow-md: 0 8px 28px rgba(0,0,0,.55);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,.6);
+}
+html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+/* Keep the green/red answer tints readable on dark surfaces. */
+html[data-theme="dark"] .q-opt.correct { background: rgba(22,163,74,.14); color: #86efac; }
+html[data-theme="dark"] .q-opt.wrong   { background: rgba(220,38,38,.14);  color: #fca5a5; }
+
+/* ── Floating biology icons background ─────────────────────────── */
+.bio-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bio-bg svg {
+  position: absolute; width: 46px; height: 46px;
+  color: var(--primary); opacity: .07;
+  animation: bioFloat linear infinite;
+  will-change: transform;
+}
+html[data-theme="dark"] .bio-bg svg { opacity: .10; }
+@keyframes bioFloat {
+  0%   { transform: translateY(20px) rotate(0deg); }
+  50%  { transform: translateY(-26px) rotate(180deg); }
+  100% { transform: translateY(20px) rotate(360deg); }
+}
+/* Lift the app above the floating layer. */
+body > .main, body > .sidebar, body > .sidebar-overlay { position: relative; z-index: 1; }
+
+/* ── Floating theme toggle ─────────────────────────────────────── */
+.theme-toggle {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md); transition: transform .15s, background .2s;
+}
+.theme-toggle:hover { transform: scale(1.08); }
+.theme-toggle svg { width: 20px; height: 20px; }
+
+/* ── Print: only the printable review shows on paper ───────────── */
+@media print {
+  body * { visibility: hidden; }
+  .printable, .printable * { visibility: visible; }
+  .printable { position: absolute; inset: 0; width: 100%; }
+  .no-print, .theme-toggle, .bio-bg { display: none !important; }
+}

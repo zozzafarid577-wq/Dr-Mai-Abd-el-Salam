@@ -79,7 +79,44 @@ let secondsLeft = 0;
 let startedAt = 0;
 let finished = false;
 let isMock = false;
+let immediate = false;        // practice tests reveal right/wrong per question with a sound
+const revealed = {};          // question id -> true once its answer is locked & shown
+let audioCtx = null;
 const LETTERS = ['A','B','C','D','E','F'];
+
+// Synthesise a short cheerful "ding" (correct) or a soft "buzz" (incorrect)
+// using the Web Audio API — no audio files to host, works offline.
+function playFeedbackSound(correct) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    if (correct) {
+      // Two rising notes — a pleasant confirmation chime.
+      [[880, 0], [1318.5, 0.12]].forEach(([freq, t]) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, now + t);
+        gain.gain.exponentialRampToValueAtTime(0.25, now + t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.22);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now + t); osc.stop(now + t + 0.24);
+      });
+    } else {
+      // A low, short "wrong" buzz.
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square'; osc.frequency.setValueAtTime(196, now);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.32);
+    }
+  } catch (_) { /* audio not available — silently ignore */ }
+}
 
 const params  = new URLSearchParams(location.search);
 const testId  = params.get('id');
@@ -92,15 +129,16 @@ const testId  = params.get('id');
 
   const { data: t, error: tErr } = await sb
     .from('practice_tests')
-    .select('id, title, time_limit_min, is_active, is_mock')
+    .select('id, title, time_limit_min, is_active, is_mock, pdf_url, pdf_name')
     .eq('id', testId)
     .single();
 
   if (tErr || !t) { fail('Test not found.'); return; }
   if (!t.is_active) { fail('This test is no longer available.'); return; }
 
-  test   = t;
-  isMock = !!t.is_mock;
+  test      = t;
+  isMock    = !!t.is_mock;
+  immediate = !isMock;   // mock exams stay exam-style (feedback only at the end)
   document.getElementById('exam-title').textContent = t.title;
 
   const { data: qs, error: qErr } = await sb
@@ -198,36 +236,61 @@ function renderQuestion() {
         </div>
       </div>
       <div class="stmt-list">
-        ${q.statements.map((s, si) => `
+        ${q.statements.map((s, si) => {
+          const locked = immediate && a[si] !== undefined;
+          return `
           <div class="stmt-block">
             <div class="stmt-text"><span class="stmt-no">${si+1}.</span> ${escHtml(s.text)}</div>
             <div class="stmt-choices">
-              ${terms.map((t, ti) => `
-                <button type="button" class="stmt-choice${a[si]===ti?' selected':''}" onclick="selectTerm(${si},${ti})">${LETTERS[ti]}</button>`).join('')}
+              ${terms.map((t, ti) => {
+                let extra = a[si]===ti ? ' selected' : '';
+                let style = '';
+                if (locked) {
+                  if (ti === s.correct_index) style = 'background:#16a34a;border-color:#16a34a;color:#fff';
+                  else if (ti === a[si]) style = 'background:#dc2626;border-color:#dc2626;color:#fff';
+                  extra = '';
+                }
+                return `<button type="button" class="stmt-choice${extra}" ${style?`style="${style}"`:''} ${locked ? '' : `onclick="selectTerm(${si},${ti})"`}>${LETTERS[ti]}</button>`;
+              }).join('')}
             </div>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>`;
   } else if (isFill(q)) {
+    const show = immediate && revealed[q.id];
+    const ok   = show && fillCorrect(q);
     body = `
       <div class="q-text">${escHtml(q.question_text)}</div>
       ${q.image_url ? `<img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:0 0 16px">` : ''}
-      <input type="text" id="fill-input" placeholder="Type your answer…" autocomplete="off"
-        oninput="typeFill(this.value)"
-        style="width:100%;box-sizing:border-box;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:.95rem;outline:none"
-        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">`;
+      <input type="text" id="fill-input" placeholder="Type your answer…" autocomplete="off" ${show ? 'readonly' : ''}
+        oninput="typeFill(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();checkFill();}"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;border:2px solid ${show ? (ok ? '#16a34a' : '#dc2626') : 'var(--border)'};border-radius:10px;font-family:inherit;font-size:.95rem;outline:none"
+        ${show ? '' : `onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"`}>
+      ${immediate && !show ? `<button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="checkFill()">Check Answer</button>` : ''}
+      ${show ? feedbackBanner(ok, q.explanation, ok ? '' : 'Correct answer: ' + (q.correct_answer || '')) : ''}`;
   } else {
     const opts = q.options || [];
     const sel  = answers[q.id];
+    const show = immediate && revealed[q.id];   // reveal right/wrong inline
     body = `
       <div class="q-text">${escHtml(q.question_text)}</div>
       ${q.image_url ? `<img src="${q.image_url}" alt="Question figure" style="max-width:100%;border-radius:8px;margin:0 0 16px">` : ''}
       <div class="q-options">
-        ${opts.map((opt, i) => `
-          <div class="q-opt${sel===i?' selected':''}" onclick="selectOpt(${i})">
+        ${opts.map((opt, i) => {
+          let cls = sel === i ? ' selected' : '';
+          if (show) {
+            if (i === q.correct_index) cls = ' correct';
+            else if (i === sel) cls = ' wrong';
+            else cls = '';
+          }
+          return `
+          <div class="q-opt${cls}" ${show ? '' : `onclick="selectOpt(${i})"`} ${show ? 'style="cursor:default"' : ''}>
             <div class="opt-letter">${LETTERS[i]}</div>
             <span>${escHtml(opt)}</span>
-          </div>`).join('')}
-      </div>`;
+          </div>`;
+        }).join('')}
+      </div>
+      ${show ? feedbackBanner(sel === q.correct_index, q.explanation) : ''}`;
   }
 
   document.getElementById('exam-body').innerHTML = `<div class="exam-card">${head}${body}${navHtml}</div>`;
@@ -237,21 +300,59 @@ function renderQuestion() {
   if (fillEl) fillEl.value = typeof answers[q.id] === 'string' ? answers[q.id] : '';
 }
 
+// A green (correct) or red (incorrect) banner shown under a revealed question.
+function feedbackBanner(correct, explanation, extra) {
+  const bg = correct ? '#f0fdf4' : '#fef2f2';
+  const bd = correct ? '#bbf7d0' : '#fecaca';
+  const fg = correct ? '#166534' : '#991b1b';
+  const label = correct ? '✓ Correct!' : '✗ Not quite';
+  return `
+    <div style="margin-top:16px;padding:12px 14px;border-radius:10px;background:${bg};border:1px solid ${bd}">
+      <div style="font-weight:800;color:${fg};font-size:.9rem">${label}</div>
+      ${extra ? `<div style="font-size:.82rem;color:${fg};margin-top:4px">${escHtml(extra)}</div>` : ''}
+      ${explanation ? `<div style="font-size:.82rem;color:var(--text-2);margin-top:6px">${escHtml(explanation)}</div>` : ''}
+    </div>`;
+}
+
 function selectOpt(idx) {
   if (finished) return;
-  answers[questions[currentQ].id] = idx;
+  const q = questions[currentQ];
+  if (immediate && revealed[q.id]) return;   // locked once revealed
+  answers[q.id] = idx;
+  if (immediate) {
+    revealed[q.id] = true;
+    playFeedbackSound(idx === q.correct_index);
+  }
   renderQuestion();
 }
 function typeFill(val) {
   if (finished) return;
+  const q = questions[currentQ];
+  if (immediate && revealed[q.id]) return;
   // No re-render here: it would steal focus from the input on every keystroke.
-  answers[questions[currentQ].id] = val;
+  answers[q.id] = val;
+}
+function checkFill() {
+  if (finished) return;
+  const q = questions[currentQ];
+  if (revealed[q.id]) return;
+  const val = (answers[q.id] || '').trim();
+  if (!val) { showToast('Type an answer first.', 'warning'); return; }
+  revealed[q.id] = true;
+  playFeedbackSound(fillCorrect(q));
+  renderQuestion();
 }
 function selectTerm(stmtIdx, termIdx) {
   if (finished) return;
-  const qid = questions[currentQ].id;
+  const q = questions[currentQ];
+  const qid = q.id;
   if (!answers[qid] || typeof answers[qid] !== 'object') answers[qid] = {};
+  if (immediate && answers[qid][stmtIdx] !== undefined) return;   // statement locked
   answers[qid][stmtIdx] = termIdx;
+  if (immediate) {
+    const correctIdx = q.statements[stmtIdx].correct_index;
+    playFeedbackSound(termIdx === correctIdx);
+  }
   renderQuestion();
 }
 function goQ(idx) {
@@ -385,6 +486,20 @@ function renderResult(correct, total, pct, passed) {
         <div class="result-badge badge ${passed?'badge-success':'badge-danger'}">${passed ? 'Passed ✓' : 'Not Passed'}</div>
         <div class="email-note" id="email-note">Sending parent notification…</div>
       </div>
+      ${test.pdf_url ? `
+      <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--bg);display:flex;align-items:center;gap:14px">
+        <div style="width:42px;height:42px;border-radius:10px;background:#fef2f2;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="width:22px;height:22px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.88rem;font-weight:700;color:var(--text)">PDF version of this test</div>
+          <div style="font-size:.74rem;color:var(--muted)">${escHtml(test.pdf_name || 'Download a copy to review or print.')}</div>
+        </div>
+        <a class="btn btn-primary btn-sm" href="${escHtml(test.pdf_url)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Open PDF
+        </a>
+      </div>` : ''}
       <div style="margin-top:26px">
         <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:14px">Review Answers</div>
         ${reviewHtml}

@@ -3,11 +3,40 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Recordings | Student Portal</title>
+<title>Lessons | Student Portal</title>
 <link rel="stylesheet" href="/css/portal.css">
 <style>
 .module-block { margin-bottom: 32px; }
 .module-title { font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border); }
+
+/* Lesson accordion (each lesson is a dropdown of video / pdf / test) */
+.lesson-acc { background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden; }
+.lesson-acc-head { display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;user-select:none; }
+.lesson-acc-head:hover { background:var(--bg); }
+.lesson-acc-icon { width:42px;height:42px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.95rem;font-weight:800; }
+.lesson-acc-info { flex:1;min-width:0; }
+.lesson-acc-title { font-size:.96rem;font-weight:700;color:var(--text); }
+.lesson-acc-sub { font-size:.74rem;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap; }
+.lesson-acc-sub .pill { background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:1px 9px;font-weight:600; }
+.lesson-acc-chev { flex-shrink:0;color:var(--muted);transition:transform .22s cubic-bezier(.4,0,.2,1); }
+.lesson-acc.open .lesson-acc-chev { transform:rotate(90deg); }
+.lesson-acc-body { display:none;padding:4px 16px 16px; }
+.lesson-acc.open .lesson-acc-body { display:block; }
+.sec-label { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:14px 0 8px; }
+.res-row { display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:7px;cursor:pointer;transition:border-color .15s; }
+.res-row:hover { border-color:var(--primary); }
+.res-row.done { background:#f0fdf4;border-color:#bbf7d0; }
+.res-row.soon { opacity:.55;cursor:default; }
+.res-row.soon:hover { border-color:var(--border); }
+.res-ic { width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center; }
+.res-ic svg { width:16px;height:16px; }
+.res-ic.vid { background:#eff6ff;color:#1d4ed8; }
+.res-ic.pdf { background:#fef2f2;color:#dc2626; }
+.res-ic.test { background:#faf5ff;color:#7c3aed; }
+.res-name { flex:1;min-width:0;font-size:.86rem;font-weight:600;color:var(--text); }
+.res-meta { font-size:.72rem;color:var(--muted);font-weight:500; }
+.res-tag { font-size:.6rem;padding:3px 8px;border:1px solid var(--border);border-radius:6px;color:var(--muted);flex-shrink:0;font-weight:600; }
+.res-empty { font-size:.78rem;color:var(--muted);padding:4px 2px; }
 .lesson-row { display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s; }
 .lesson-row:hover { border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.08); }
 .lesson-row.done { background:#f0fdf4; border-color:#bbf7d0; }
@@ -40,7 +69,7 @@
     <div class="nav-section">Main</div>
     <a href="/portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
     <a href="/portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>My Courses</a>
-    <a href="/portal/lessons.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Recordings</a>
+    <a href="/portal/lessons.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Lessons</a>
     <a href="/portal/pdfs.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lesson PDFs</a>
     <div class="nav-section">Practice</div>
     <a href="/portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
@@ -66,7 +95,7 @@
   <header class="topbar">
     <div class="topbar-left">
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <span class="page-title">Recordings</span>
+      <span class="page-title">Lessons</span>
     </div>
   </header>
 
@@ -102,6 +131,9 @@ let profile = null;
 let allData  = [];
 let completedSet = new Set();
 let activeCourse = null;
+let pdfsByModule = {};      // module_id -> [{id, title, src}]
+let testsByModule = {};     // module_id -> [{id, title, time_limit_min, ...}]
+let attemptsByTest = {};    // test_id -> best %
 
 (async () => {
   profile = await requireAuth('student');
@@ -134,13 +166,38 @@ let activeCourse = null;
     return;
   }
 
-  const { data: modules } = await sb
-    .from('modules')
-    .select('id, title, order_index, course_id, lessons(id, title, youtube_id, video_provider, video_id, order_index, duration_min)')
-    .in('course_id', courseIds)
-    .order('order_index');
+  const [{ data: modules }, { data: mPdfs }, { data: lPdfs }, { data: tests }, { data: attempts }] = await Promise.all([
+    sb.from('modules')
+      .select('id, title, order_index, course_id, lessons(id, title, youtube_id, video_provider, video_id, order_index, duration_min)')
+      .in('course_id', courseIds)
+      .order('order_index'),
+    sb.from('module_pdfs').select('id, title, module_id, created_at').order('created_at', { ascending: false }),
+    sb.from('lesson_pdfs').select('id, title, created_at, lessons(module_id)').order('created_at', { ascending: false }),
+    sb.from('practice_tests').select('id, title, module_id, course_id, time_limit_min, is_active, is_mock, open_at, close_at')
+      .in('course_id', courseIds).eq('is_active', true).eq('is_mock', false).order('created_at'),
+    sb.from('test_attempts').select('test_id, percentage').eq('student_id', profile.id),
+  ]);
 
   allData = modules || [];
+
+  // Index PDFs by module (module-level + legacy lesson-level)
+  pdfsByModule = {};
+  (mPdfs || []).forEach(p => { (pdfsByModule[p.module_id] ||= []).push({ id: p.id, title: p.title, src: 'module' }); });
+  (lPdfs || []).forEach(p => {
+    const mid = p.lessons?.module_id;
+    if (mid) (pdfsByModule[mid] ||= []).push({ id: p.id, title: p.title, src: 'lesson' });
+  });
+
+  // Index practice tests by module
+  testsByModule = {};
+  (tests || []).forEach(t => { (testsByModule[t.module_id || '__none__'] ||= []).push(t); });
+
+  // Best attempt % per test
+  attemptsByTest = {};
+  (attempts || []).forEach(a => {
+    const pct = a.percentage || 0;
+    if (attemptsByTest[a.test_id] === undefined || pct > attemptsByTest[a.test_id]) attemptsByTest[a.test_id] = pct;
+  });
 
   // Build course chips
   const chipsEl = document.getElementById('course-chips');
@@ -174,43 +231,106 @@ function switchCourse(courseId, chip) {
   renderLessons();
 }
 
+const ACC_GRADIENTS = [
+  'linear-gradient(135deg,#2563eb,#1d4ed8)',
+  'linear-gradient(135deg,#7c3aed,#5b21b6)',
+  'linear-gradient(135deg,#0891b2,#0e7490)',
+  'linear-gradient(135deg,#16a34a,#15803d)',
+  'linear-gradient(135deg,#ea580c,#c2410c)',
+  'linear-gradient(135deg,#db2777,#9d174d)',
+];
+
 function renderLessons() {
   const container = document.getElementById('lessons-body');
-  const mods = allData.filter(m => m.course_id === activeCourse);
+  const mods = allData.filter(m => m.course_id === activeCourse).sort((a,b) => a.order_index - b.order_index);
   if (mods.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="empty-title">No Lessons Yet</div><div class="empty-sub">Lessons will appear here once your instructor adds them.</div></div>';
     return;
   }
-  let html = '';
-  let globalIdx = 0;
-  mods.sort((a,b) => a.order_index - b.order_index).forEach(mod => {
+
+  container.innerHTML = mods.map((mod, mi) => {
     const lessons = (mod.lessons || []).sort((a,b) => a.order_index - b.order_index);
-    html += `<div class="module-block"><div class="module-title">${escHtml(mod.title)}</div>`;
-    lessons.forEach(lesson => {
-      globalIdx++;
+    const pdfs  = pdfsByModule[mod.id]  || [];
+    const tests = testsByModule[mod.id] || [];
+    const vidCount = lessons.filter(l => l.video_id || l.youtube_id).length;
+
+    // ── Videos ──
+    const videosHtml = lessons.length ? lessons.map(lesson => {
       const done = completedSet.has(lesson.id);
       const vid = lesson.video_id || lesson.youtube_id;
       const provider = lesson.video_provider || 'youtube';
       const isSoon = !vid;
-      const rowClass = `lesson-row${done?' done':''}${isSoon?' soon':''}`;
-      const onclickAttr = !isSoon ? `onclick="openPlayer('${lesson.id}','${escHtml(lesson.title)}','${provider}','${escHtml(vid)}')"` : '';
-      html += `
-        <div class="${rowClass}" ${onclickAttr}>
-          <div class="lesson-num">${globalIdx}</div>
-          <div class="lesson-info">
-            <div class="lesson-name">${escHtml(lesson.title)}</div>
-            <div class="lesson-meta">${lesson.duration_min ? lesson.duration_min + ' min' : ''}</div>
-          </div>
-          ${done
-            ? `<svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
-            : isSoon
-              ? `<span class="soon-tag">Coming Soon</span>`
-              : `<button class="lesson-play" title="Watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>`}
+      const click = !isSoon ? `onclick="openPlayer('${lesson.id}','${escAttr(lesson.title)}','${provider}','${escAttr(vid)}')"` : '';
+      return `
+        <div class="res-row${done?' done':''}${isSoon?' soon':''}" ${click}>
+          <div class="res-ic vid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></div>
+          <div class="res-name">${escHtml(lesson.title)}</div>
+          ${lesson.duration_min ? `<span class="res-meta">${lesson.duration_min} min</span>` : ''}
+          ${done ? '<svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : isSoon ? '<span class="res-tag">Coming Soon</span>' : ''}
         </div>`;
-    });
-    html += '</div>';
-  });
-  container.innerHTML = html;
+    }).join('') : '<div class="res-empty">No recordings yet.</div>';
+
+    // ── PDFs ──
+    const pdfsHtml = pdfs.length ? pdfs.map(p => `
+        <div class="res-row" onclick="location.href='/portal/viewer.html?id=${encodeURIComponent(p.id)}&src=${p.src}'">
+          <div class="res-ic pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="res-name">${escHtml(p.title)}</div>
+          <span class="res-tag">View</span>
+        </div>`).join('') : '<div class="res-empty">No PDFs yet.</div>';
+
+    // ── Practice tests ──
+    const testsHtml = tests.length ? tests.map(t => {
+      const best = attemptsByTest[t.id];
+      const now = Date.now();
+      const notYet = t.open_at && new Date(t.open_at).getTime() > now;
+      const closed = t.close_at && new Date(t.close_at).getTime() < now;
+      const locked = notYet || closed;
+      const click = locked ? '' : `onclick="location.href='/portal/take-test.html?id=${encodeURIComponent(t.id)}'"`;
+      const meta = locked ? (notYet ? 'Opens ' + fmtDate(t.open_at) : 'Closed')
+                          : (best !== undefined ? 'Best: ' + best + '%' : (t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'));
+      return `
+        <div class="res-row${locked?' soon':''}" ${click}>
+          <div class="res-ic test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
+          <div class="res-name">${escHtml(t.title)}</div>
+          <span class="res-meta">${meta}</span>
+          ${locked ? '' : '<span class="res-tag" style="color:var(--primary);border-color:var(--primary)">' + (best !== undefined ? 'Retake' : 'Start') + '</span>'}
+        </div>`;
+    }).join('') : '<div class="res-empty">No practice tests yet.</div>';
+
+    return `
+      <div class="lesson-acc${mi === 0 ? ' open' : ''}" id="acc-${mod.id}">
+        <div class="lesson-acc-head" onclick="toggleAcc('${mod.id}')">
+          <div class="lesson-acc-icon" style="background:${ACC_GRADIENTS[mi % ACC_GRADIENTS.length]}">${mi + 1}</div>
+          <div class="lesson-acc-info">
+            <div class="lesson-acc-title">${escHtml(mod.title)}</div>
+            <div class="lesson-acc-sub">
+              <span class="pill">${vidCount} video${vidCount!==1?'s':''}</span>
+              <span class="pill">${pdfs.length} PDF${pdfs.length!==1?'s':''}</span>
+              <span class="pill">${tests.length} test${tests.length!==1?'s':''}</span>
+            </div>
+          </div>
+          <svg class="lesson-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="lesson-acc-body">
+          <div class="sec-label">📹 Recordings</div>
+          ${videosHtml}
+          <div class="sec-label">📄 PDFs</div>
+          ${pdfsHtml}
+          <div class="sec-label">📝 Practice Tests</div>
+          ${testsHtml}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleAcc(modId) {
+  document.getElementById('acc-' + modId).classList.toggle('open');
+}
+
+// escHtml is for text nodes; this variant is safe inside a double-quoted JS
+// string passed to an inline onclick attribute.
+function escAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/'/g,'\\&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function openPlayer(lessonId, title, provider, videoId) {

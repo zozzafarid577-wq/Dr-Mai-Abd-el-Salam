@@ -100,27 +100,20 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/auth.js"></script>
 <script>
-// ── ACT trial schedule (blue) ──────────────────────────────────
+// ── ACT test days (blue) ───────────────────────────────────────
 const ACT = [
-  { month:'September 2026', open:'2026-06-01', close:'2026-09-10', test:'2026-09-19', am:'Math 1', pm:'Chemistry, English 1, English 2' },
-  { month:'October 2026',   open:'2026-06-01', close:'2026-10-22', test:'2026-10-31', am:'Math 1', pm:'Biology, Math 2' },
-  { month:'November 2026',  open:'2026-06-01', close:'2026-11-19', test:'2026-11-28', am:'Math 1', pm:'Biology, Math 2' },
-  { month:'February 2027',  open:'2026-06-08', close:'2027-02-11', test:'2027-02-20', am:'Math 1', pm:'Chemistry, English 1' },
-  { month:'April 2027',     open:'2026-06-08', close:'2027-04-01', test:'2027-04-10', am:'Math 1', pm:'Biology, Math 2, English 2' },
-  { month:'June 2027',      open:'2026-06-08', close:'2027-06-10', test:'2027-06-19', am:'Math 1', pm:'English 2' },
-  { month:'July 2027',      open:'2026-06-08', close:'2027-07-08', test:'2027-07-18', am:'Math 1', pm:'Biology, English 1' },
+  { test:'2026-07-18' },
+  { test:'2026-10-31' },
+  { test:'2026-11-28' },
+  { test:'2027-02-20' },
+  { test:'2027-04-10' },
+  { test:'2027-06-19' },
 ];
-// Official registration links (replace with Dr Mai's exact links if different).
-const ACT_REG_URL = 'https://www.act.org/content/act/en/products-and-services/the-act/registration.html';
-const EST_REG_URL = 'https://www.estegypt.org/';
 // ── EST test days (yellow) ─────────────────────────────────────
 const EST = [
-  { round:'January 2026',  test:'2026-01-23' }, { round:'January 2026',  test:'2026-01-24' },
-  { round:'March 2026',    test:'2026-03-27' }, { round:'March 2026',    test:'2026-03-28' },
-  { round:'May 2026',      test:'2026-05-15' }, { round:'May 2026',      test:'2026-05-16' },
-  { round:'July 2026',     test:'2026-07-03' }, { round:'July 2026',     test:'2026-07-04' },
-  { round:'October 2026',  test:'2026-10-09' }, { round:'October 2026',  test:'2026-10-10' },
-  { round:'December 2026', test:'2026-12-11' }, { round:'December 2026', test:'2026-12-12' },
+  { test:'2026-07-04' },
+  { test:'2026-10-10' },
+  { test:'2026-12-12' },
 ];
 
 let activeTab = 'act';

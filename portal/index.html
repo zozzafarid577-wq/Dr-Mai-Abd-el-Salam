@@ -263,23 +263,27 @@
 <script>
 let profile = null;
 
-// ── Exam countdown clocks (ACT & EST) ───────────────────────────
-const EXAM_CLOCKS = [
-  { name: 'ACT Exam', date: '2027-07-18', grad: 'linear-gradient(135deg,#1d4ed8,#0e2a82)' },
-  { name: 'EST Exam', date: '2026-07-03', grad: 'linear-gradient(135deg,#f4c20d,#b88600)', dark: true },
-];
+// ── Exam countdown clocks (ACT & EST) — revision students only ──
+const ACT_DATES = ['2026-07-18','2026-10-31','2026-11-28','2027-02-20','2027-04-10','2027-06-19'];
+const EST_DATES = ['2026-07-04','2026-10-10','2026-12-12'];
+function nextExamDate(list) {
+  const now = Date.now();
+  return list.filter(d => new Date(d+'T00:00:00').getTime() > now).sort()[0] || list[list.length - 1];
+}
 function renderExamClocks() {
   const el = document.getElementById('exam-countdowns');
   if (!el) return;
   const now = Date.now();
-  el.innerHTML = EXAM_CLOCKS.map(c => {
+  const clocks = [
+    { name: 'ACT Exam', date: nextExamDate(ACT_DATES), grad: 'linear-gradient(135deg,#1d4ed8,#0e2a82)' },
+    { name: 'EST Exam', date: nextExamDate(EST_DATES), grad: 'linear-gradient(135deg,#ca8a04,#854d0e)' },
+  ];
+  el.innerHTML = clocks.map(c => {
     const diff = new Date(c.date + 'T00:00:00').getTime() - now;
-    const fg = c.dark ? '#3a2f00' : '#fff';
-    const sub = c.dark ? 'rgba(58,47,0,.7)' : 'rgba(255,255,255,.8)';
-    const cell = (v, u) => `<div style="background:rgba(255,255,255,.16);border-radius:9px;padding:7px 10px;min-width:52px;text-align:center"><div style="font-size:1.25rem;font-weight:900;line-height:1">${String(v).padStart(2,'0')}</div><div style="font-size:.55rem;text-transform:uppercase;letter-spacing:.06em;color:${sub}">${u}</div></div>`;
+    const cell = (v, u) => `<div style="background:rgba(255,255,255,.18);border-radius:9px;padding:7px 10px;min-width:52px;text-align:center"><div style="font-size:1.25rem;font-weight:900;line-height:1;color:#fff">${String(v).padStart(2,'0')}</div><div style="font-size:.55rem;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.82)">${u}</div></div>`;
     let body;
     if (diff <= 0) {
-      body = `<div style="font-size:.95rem;font-weight:800;color:${fg}">It's exam time — good luck! 🎉</div>`;
+      body = `<div style="font-size:.95rem;font-weight:800;color:#fff">It's exam time — good luck! 🎉</div>`;
     } else {
       const d = Math.floor(diff/86400000), h = Math.floor(diff%86400000/3600000), m = Math.floor(diff%3600000/60000), s = Math.floor(diff%60000/1000);
       body = `<div style="display:flex;gap:8px;flex-wrap:wrap">${cell(d,'Days')}${cell(h,'Hrs')}${cell(m,'Min')}${cell(s,'Sec')}</div>`;
@@ -287,14 +291,12 @@ function renderExamClocks() {
     const nice = new Date(c.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     return `<div style="background:${c.grad};border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-md)">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
-          <div style="font-size:.95rem;font-weight:900;color:${fg}">${c.name}</div>
-          <div style="font-size:.72rem;font-weight:700;color:${sub}">${nice}</div>
+          <div style="font-size:.95rem;font-weight:900;color:#fff">${c.name}</div>
+          <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.82)">${nice}</div>
         </div>${body}
       </div>`;
   }).join('');
 }
-renderExamClocks();
-setInterval(renderExamClocks, 1000);
 
 (async () => {
   profile = await requireAuth('student');
@@ -303,6 +305,13 @@ setInterval(renderExamClocks, 1000);
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
   document.getElementById('wname').textContent  = profile.full_name.split(' ')[0];
+
+  // Exam countdowns only show for students enrolled in a Revision course.
+  const { data: enr } = await sb.from('enrollments').select('courses(title)').eq('student_id', profile.id);
+  const isRevision = (enr || []).some(e => /revision/i.test(e.courses?.title || ''));
+  const cd = document.getElementById('exam-countdowns');
+  if (isRevision) { renderExamClocks(); setInterval(renderExamClocks, 1000); }
+  else if (cd) { cd.remove(); }
 
   await Promise.all([loadStats(), loadCourses(), loadAnnouncements(), loadUpcoming()]);
 })();

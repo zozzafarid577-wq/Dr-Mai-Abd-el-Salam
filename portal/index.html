@@ -171,6 +171,9 @@
       <a href="/portal/tests.html" class="btn btn-white btn-sm">Take a Test</a>
     </div>
 
+    <!-- Exam countdown clocks -->
+    <div id="exam-countdowns" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px"></div>
+
     <!-- Stats -->
     <div class="stats-grid mb24">
       <div class="stat-card">
@@ -259,6 +262,39 @@
 <script src="/js/auth.js"></script>
 <script>
 let profile = null;
+
+// ── Exam countdown clocks (ACT & EST) ───────────────────────────
+const EXAM_CLOCKS = [
+  { name: 'ACT Exam', date: '2027-07-18', grad: 'linear-gradient(135deg,#1d4ed8,#0e2a82)' },
+  { name: 'EST Exam', date: '2026-07-03', grad: 'linear-gradient(135deg,#f4c20d,#b88600)', dark: true },
+];
+function renderExamClocks() {
+  const el = document.getElementById('exam-countdowns');
+  if (!el) return;
+  const now = Date.now();
+  el.innerHTML = EXAM_CLOCKS.map(c => {
+    const diff = new Date(c.date + 'T00:00:00').getTime() - now;
+    const fg = c.dark ? '#3a2f00' : '#fff';
+    const sub = c.dark ? 'rgba(58,47,0,.7)' : 'rgba(255,255,255,.8)';
+    const cell = (v, u) => `<div style="background:rgba(255,255,255,.16);border-radius:9px;padding:7px 10px;min-width:52px;text-align:center"><div style="font-size:1.25rem;font-weight:900;line-height:1">${String(v).padStart(2,'0')}</div><div style="font-size:.55rem;text-transform:uppercase;letter-spacing:.06em;color:${sub}">${u}</div></div>`;
+    let body;
+    if (diff <= 0) {
+      body = `<div style="font-size:.95rem;font-weight:800;color:${fg}">It's exam time — good luck! 🎉</div>`;
+    } else {
+      const d = Math.floor(diff/86400000), h = Math.floor(diff%86400000/3600000), m = Math.floor(diff%3600000/60000), s = Math.floor(diff%60000/1000);
+      body = `<div style="display:flex;gap:8px;flex-wrap:wrap">${cell(d,'Days')}${cell(h,'Hrs')}${cell(m,'Min')}${cell(s,'Sec')}</div>`;
+    }
+    const nice = new Date(c.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    return `<div style="background:${c.grad};border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-md)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+          <div style="font-size:.95rem;font-weight:900;color:${fg}">${c.name}</div>
+          <div style="font-size:.72rem;font-weight:700;color:${sub}">${nice}</div>
+        </div>${body}
+      </div>`;
+  }).join('');
+}
+renderExamClocks();
+setInterval(renderExamClocks, 1000);
 
 (async () => {
   profile = await requireAuth('student');

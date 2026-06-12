@@ -90,7 +90,11 @@
       </div>
       <div class="form-group">
         <label class="form-label">Course *</label>
-        <select class="form-input" id="test-course"><option value="">Select course…</option></select>
+        <select class="form-input" id="test-course" onchange="fillModuleSelect('test-course','test-module')"><option value="">Select course…</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lesson (the test appears under this lesson for students)</label>
+        <select class="form-input" id="test-module"><option value="">Select a course first…</option></select>
       </div>
       <div class="form-group">
         <label class="form-label">Time Limit (minutes, leave blank for untimed)</label>
@@ -126,6 +130,76 @@
   </div>
 </div>
 
+<!-- Edit Test Modal -->
+<div class="modal-overlay" id="edit-test-modal">
+  <div class="modal" style="max-width:520px;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title">Edit Test</div>
+      <button class="modal-close" onclick="closeEditTestModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto">
+      <input type="hidden" id="edit-test-id">
+      <div class="form-group">
+        <label class="form-label">Test Title *</label>
+        <input type="text" class="form-input" id="edit-test-title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Course *</label>
+        <select class="form-input" id="edit-test-course" onchange="fillModuleSelect('edit-test-course','edit-test-module')"><option value="">Select course…</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lesson (the test appears under this lesson for students)</label>
+        <select class="form-input" id="edit-test-module"><option value="">No lesson</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Time Limit (minutes, leave blank for untimed)</label>
+        <input type="number" class="form-input" id="edit-test-time" min="1">
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" id="edit-test-is-mock" style="width:16px;height:16px;accent-color:var(--primary)">
+          <span class="form-label" style="margin:0">This is a Mock Exam</span>
+        </label>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+      <div class="form-group">
+        <label class="form-label">PDF version (attached at the end of the test for the student)</label>
+        <div id="edit-test-pdf-current" style="font-size:.78rem;color:var(--muted);margin-bottom:8px"></div>
+        <input type="file" class="form-input" id="edit-test-pdf-file" accept="application/pdf" style="padding:8px">
+        <div style="font-size:.72rem;color:var(--muted);margin:6px 0 4px">…or paste a link (Google Drive / Dropbox / any URL):</div>
+        <input type="text" class="form-input" id="edit-test-pdf-url" placeholder="https://…">
+        <div style="font-size:.72rem;color:var(--muted);margin-top:4px">Max 10 MB if uploading a file.</div>
+      </div>
+    </div>
+    <div class="modal-footer" style="flex-shrink:0;justify-content:space-between">
+      <button class="btn btn-ghost btn-sm" id="edit-test-pdf-remove" style="color:#dc2626;display:none" onclick="removeTestPdf()">Remove PDF</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-outline" onclick="closeEditTestModal()">Cancel</button>
+        <button class="btn btn-primary" id="edit-test-save-btn" onclick="saveEditTest()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Question Modal -->
+<div class="modal-overlay" id="edit-q-modal">
+  <div class="modal" style="max-width:560px;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title">Edit Question</div>
+      <button class="modal-close" onclick="closeEditQModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto" id="edit-q-body">
+      <input type="hidden" id="edit-q-id">
+      <input type="hidden" id="edit-q-test-id">
+      <input type="hidden" id="edit-q-type">
+    </div>
+    <div class="modal-footer" style="flex-shrink:0">
+      <button class="btn btn-outline" onclick="closeEditQModal()">Cancel</button>
+      <button class="btn btn-primary" id="edit-q-save-btn" onclick="saveEditQuestion()">Save Question</button>
+    </div>
+  </div>
+</div>
+
 <!-- Upload PDF Quiz Modal -->
 <div class="modal-overlay" id="pdf-modal">
   <div class="modal" style="max-width:520px">
@@ -141,7 +215,11 @@
       </div>
       <div class="form-group">
         <label class="form-label">Course *</label>
-        <select class="form-input" id="pdf-course"><option value="">Select course…</option></select>
+        <select class="form-input" id="pdf-course" onchange="fillModuleSelect('pdf-course','pdf-module')"><option value="">Select course…</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lesson (the test appears under this lesson for students)</label>
+        <select class="form-input" id="pdf-module"><option value="">Select a course first…</option></select>
       </div>
       <div class="form-group">
         <label class="form-label">Time Limit (minutes, leave blank for untimed)</label>
@@ -259,6 +337,8 @@ Terms: Osmosis, Diffusion, Mitosis
 <script>
 let tests = [];
 let questionsMap = {};
+let modulesByCourse = {};   // course_id -> [{id, title}]
+let moduleTitleById = {};   // module_id -> title
 const LETTERS = ['A','B','C','D','E'];
 
 (async () => {
@@ -268,8 +348,13 @@ const LETTERS = ['A','B','C','D','E'];
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
 
-  const { data: courses } = await sb.from('courses').select('id, title').eq('is_active', true).order('title');
-  [document.getElementById('test-course'), document.getElementById('pdf-course')].forEach(sel => {
+  const [{ data: courses }, { data: mods }] = await Promise.all([
+    sb.from('courses').select('id, title').eq('is_active', true).order('title'),
+    sb.from('modules').select('id, title, course_id, order_index').order('order_index'),
+  ]);
+
+  ['test-course', 'pdf-course', 'edit-test-course'].forEach(id => {
+    const sel = document.getElementById(id);
     (courses || []).forEach(c => {
       const o = document.createElement('option');
       o.value = c.id; o.textContent = c.title;
@@ -277,11 +362,27 @@ const LETTERS = ['A','B','C','D','E'];
     });
   });
 
+  modulesByCourse = {};
+  moduleTitleById = {};
+  (mods || []).forEach(m => {
+    (modulesByCourse[m.course_id] ||= []).push(m);
+    moduleTitleById[m.id] = m.title;
+  });
+
   await loadTests();
 })();
 
+// Populate a lesson/module <select> based on the chosen course.
+function fillModuleSelect(courseSelId, moduleSelId, selectedId) {
+  const courseId = document.getElementById(courseSelId).value;
+  const sel = document.getElementById(moduleSelId);
+  const mods = modulesByCourse[courseId] || [];
+  sel.innerHTML = '<option value="">No lesson (shows ungrouped)</option>' +
+    mods.map(m => `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${escHtml(m.title)}</option>`).join('');
+}
+
 async function loadTests() {
-  const { data } = await sb.from('practice_tests').select('id, title, course_id, time_limit_min, is_active, is_mock, created_at, courses(title)').order('created_at', { ascending: false });
+  const { data } = await sb.from('practice_tests').select('id, title, course_id, module_id, time_limit_min, is_active, is_mock, pdf_url, pdf_name, open_at, close_at, created_at, courses(title)').order('created_at', { ascending: false });
   tests = data || [];
 
   if (tests.length > 0) {
@@ -305,14 +406,16 @@ function renderTests() {
 
   body.innerHTML = tests.map(t => {
     const qs = questionsMap[t.id] || [];
+    const lessonName = t.module_id ? moduleTitleById[t.module_id] : null;
     return `
       <div class="test-card">
         <div class="test-card-header">
           <div>
-            <div class="test-card-title">${escHtml(t.title)} <span class="badge ${t.is_active ? 'badge-success' : 'badge-danger'}" style="font-size:.62rem">${t.is_active ? 'Active' : 'Hidden'}</span>${t.is_mock ? ' <span class="badge badge-warning" style="font-size:.62rem">Mock</span>' : ''}</div>
-            <div class="test-card-meta">${escHtml(t.courses?.title || '—')} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${qs.length} question${qs.length!==1?'s':''}</div>
+            <div class="test-card-title">${escHtml(t.title)} <span class="badge ${t.is_active ? 'badge-success' : 'badge-danger'}" style="font-size:.62rem">${t.is_active ? 'Active' : 'Hidden'}</span>${t.is_mock ? ' <span class="badge badge-warning" style="font-size:.62rem">Mock</span>' : ''}${t.pdf_url ? ' <span class="badge badge-info" style="font-size:.62rem">PDF</span>' : ''}</div>
+            <div class="test-card-meta">${escHtml(t.courses?.title || '—')}${lessonName ? ' · <strong style="color:var(--primary)">' + escHtml(lessonName) + '</strong>' : ' · <span style="color:#dc2626">No lesson</span>'} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${qs.length} question${qs.length!==1?'s':''}</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="openEditTestModal('${t.id}')">Edit</button>
             <button class="btn btn-ghost btn-sm" onclick="toggleTestVis('${t.id}', ${t.is_active})">${t.is_active ? 'Hide' : 'Show'}</button>
             <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteTest('${t.id}')">Delete</button>
           </div>
@@ -363,6 +466,7 @@ function renderQuestionRow(q, i) {
         ${answersHtml}
       </div>
       <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-items:flex-end">
+        <button class="q-row-btn" style="color:var(--primary)" onclick="openEditQModal('${q.id}','${q.test_id}')" title="Edit this question">✎ Edit</button>
         <button class="q-row-btn danger" onclick="deleteQuestion('${q.id}','${q.test_id}')" title="Remove this question from the test">✕ Remove</button>
         <button class="q-row-btn" onclick="pickQImage('${q.id}')" title="${q.image_url ? 'Replace the image' : 'Attach an image'}">🖼 ${q.image_url ? 'Replace' : 'Image'}</button>
         ${q.image_url ? `<button class="q-row-btn danger" onclick="removeQImage('${q.id}')" title="Remove the image">🖼 ✕</button>` : ''}
@@ -370,12 +474,16 @@ function renderQuestionRow(q, i) {
     </div>`;
 }
 
-function openTestModal() { document.getElementById('test-modal').classList.add('show'); }
+function openTestModal() {
+  document.getElementById('test-module').innerHTML = '<option value="">Select a course first…</option>';
+  document.getElementById('test-modal').classList.add('show');
+}
 function closeTestModal() { document.getElementById('test-modal').classList.remove('show'); }
 
 async function saveTest() {
   const title    = document.getElementById('test-title').value.trim();
   const courseId = document.getElementById('test-course').value;
+  const moduleId = document.getElementById('test-module').value || null;
   const timeLim  = parseInt(document.getElementById('test-time').value) || null;
   const isMock   = document.getElementById('test-is-mock').checked;
   if (!title || !courseId) { showToast('Title and course are required.', 'warning'); return; }
@@ -387,14 +495,17 @@ async function saveTest() {
     if (openAt && closeAt && new Date(closeAt) <= new Date(openAt)) { showToast('Close time must be after open time.', 'warning'); return; }
   }
 
-  const { error } = await sb.from('practice_tests').insert({ title, course_id: courseId, time_limit_min: timeLim, is_active: true, is_mock: isMock, open_at: openAt, close_at: closeAt });
+  const { error } = await sb.from('practice_tests').insert({ title, course_id: courseId, module_id: moduleId, time_limit_min: timeLim, is_active: true, is_mock: isMock, open_at: openAt, close_at: closeAt });
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
   closeTestModal();
   await loadTests();
   showToast('Test created!', 'success');
 }
 
-function openPdfModal() { document.getElementById('pdf-modal').classList.add('show'); }
+function openPdfModal() {
+  document.getElementById('pdf-module').innerHTML = '<option value="">Select a course first…</option>';
+  document.getElementById('pdf-modal').classList.add('show');
+}
 function closePdfModal() {
   document.getElementById('pdf-modal').classList.remove('show');
   document.getElementById('pdf-alert').style.display = 'none';
@@ -410,6 +521,7 @@ function closePdfModal() {
 async function submitPdfQuiz() {
   const title    = document.getElementById('pdf-title').value.trim();
   const courseId = document.getElementById('pdf-course').value;
+  const moduleId = document.getElementById('pdf-module').value || null;
   const timeLim  = document.getElementById('pdf-time').value;
   const isMock   = document.getElementById('pdf-is-mock').checked;
   const fileEl   = document.getElementById('pdf-file');
@@ -437,7 +549,7 @@ async function submitPdfQuiz() {
       const resp = await fetch('/api/parse-quiz-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ pdf_base64: base64, title, course_id: courseId, is_mock: isMock, time_limit_min: timeLim || null })
+        body: JSON.stringify({ pdf_base64: base64, title, course_id: courseId, module_id: moduleId, is_mock: isMock, time_limit_min: timeLim || null })
       });
       const data = await resp.json();
       if (!resp.ok) { showAlert(data.error || 'Failed to parse PDF.', 'error'); btn.textContent = 'Parse & Create Test'; btn.disabled = false; return; }
@@ -464,6 +576,214 @@ async function deleteTest(id) {
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
   await loadTests();
   showToast('Test deleted.', 'success');
+}
+
+// ── Edit Test (title, lesson, time, mock, PDF) ──────────────────
+
+function openEditTestModal(testId) {
+  const t = tests.find(x => x.id === testId);
+  if (!t) return;
+  document.getElementById('edit-test-id').value      = t.id;
+  document.getElementById('edit-test-title').value   = t.title || '';
+  document.getElementById('edit-test-course').value  = t.course_id || '';
+  fillModuleSelect('edit-test-course', 'edit-test-module', t.module_id || '');
+  document.getElementById('edit-test-time').value    = t.time_limit_min || '';
+  document.getElementById('edit-test-is-mock').checked = !!t.is_mock;
+  document.getElementById('edit-test-pdf-file').value = '';
+  document.getElementById('edit-test-pdf-url').value  = '';
+  renderEditTestPdfState(t);
+  document.getElementById('edit-test-modal').classList.add('show');
+}
+
+function renderEditTestPdfState(t) {
+  const cur = document.getElementById('edit-test-pdf-current');
+  const rm  = document.getElementById('edit-test-pdf-remove');
+  if (t.pdf_url) {
+    cur.innerHTML = `Current: <a href="${escHtml(t.pdf_url)}" target="_blank" style="color:var(--primary);font-weight:600">${escHtml(t.pdf_name || 'View PDF')}</a>`;
+    rm.style.display = '';
+  } else {
+    cur.innerHTML = 'No PDF attached yet.';
+    rm.style.display = 'none';
+  }
+}
+
+function closeEditTestModal() { document.getElementById('edit-test-modal').classList.remove('show'); }
+
+async function saveEditTest() {
+  const id       = document.getElementById('edit-test-id').value;
+  const title    = document.getElementById('edit-test-title').value.trim();
+  const courseId = document.getElementById('edit-test-course').value;
+  const moduleId = document.getElementById('edit-test-module').value || null;
+  const timeLim  = parseInt(document.getElementById('edit-test-time').value) || null;
+  const isMock   = document.getElementById('edit-test-is-mock').checked;
+  const urlInput = document.getElementById('edit-test-pdf-url').value.trim();
+  const fileEl   = document.getElementById('edit-test-pdf-file');
+  if (!title || !courseId) { showToast('Title and course are required.', 'warning'); return; }
+
+  const btn = document.getElementById('edit-test-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const update = { title, course_id: courseId, module_id: moduleId, time_limit_min: timeLim, is_mock: isMock };
+
+  // Optional PDF: an uploaded file takes priority, else a pasted URL.
+  try {
+    if (fileEl.files[0]) {
+      const file = fileEl.files[0];
+      if (file.type !== 'application/pdf') throw new Error('Please choose a PDF file.');
+      if (file.size > 10 * 1024 * 1024) throw new Error('PDF must be under 10 MB.');
+      btn.textContent = 'Uploading PDF…';
+      const path = `${id}/${Date.now()}-${file.name.replace(/[^a-z0-9.\-_]/gi, '_')}`;
+      const { error: upErr } = await sb.storage.from('test-pdfs').upload(path, file, { contentType: 'application/pdf', cacheControl: '3600', upsert: true });
+      if (upErr) throw new Error(upErr.message + ' (has migration v16 — the test-pdfs bucket — been run?)');
+      update.pdf_url  = sb.storage.from('test-pdfs').getPublicUrl(path).data.publicUrl;
+      update.pdf_name = file.name;
+    } else if (urlInput) {
+      update.pdf_url  = urlInput;
+      update.pdf_name = 'Test PDF';
+    }
+  } catch (e) {
+    showToast(e.message, 'error');
+    btn.disabled = false; btn.textContent = 'Save Changes';
+    return;
+  }
+
+  const { error } = await sb.from('practice_tests').update(update).eq('id', id);
+  btn.disabled = false; btn.textContent = 'Save Changes';
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeEditTestModal();
+  await loadTests();
+  showToast('Test updated!', 'success');
+}
+
+async function removeTestPdf() {
+  const id = document.getElementById('edit-test-id').value;
+  if (!confirm('Remove the attached PDF from this test?')) return;
+  const { error } = await sb.from('practice_tests').update({ pdf_url: null, pdf_name: null }).eq('id', id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  const t = tests.find(x => x.id === id);
+  if (t) { t.pdf_url = null; t.pdf_name = null; renderEditTestPdfState(t); }
+  showToast('PDF removed.', 'success');
+}
+
+// ── Edit a single question ──────────────────────────────────────
+
+function openEditQModal(qId, testId) {
+  const q = (questionsMap[testId] || []).find(x => x.id === qId);
+  if (!q) return;
+  const type = q.question_type || 'mcq';
+  document.getElementById('edit-q-id').value      = qId;
+  document.getElementById('edit-q-test-id').value = testId;
+  document.getElementById('edit-q-type').value    = type;
+
+  const body = document.getElementById('edit-q-body');
+  let fields = `
+    <input type="hidden" id="edit-q-id" value="${qId}">
+    <input type="hidden" id="edit-q-test-id" value="${testId}">
+    <input type="hidden" id="edit-q-type" value="${type}">
+    <div class="form-group">
+      <label class="form-label">Question text *</label>
+      <textarea class="form-input" id="eq-text" rows="3" style="resize:vertical">${escHtml(q.question_text || '')}</textarea>
+    </div>`;
+
+  if (type === 'fill_blank') {
+    fields += `
+      <div class="form-group">
+        <label class="form-label">Correct answer *</label>
+        <input type="text" class="form-input" id="eq-answer" value="${escHtml(q.correct_answer || '')}">
+      </div>`;
+  } else if (type === 'terms') {
+    const terms = q.options || [];
+    fields += `
+      <div class="form-group">
+        <label class="form-label">Terms (one per line)</label>
+        <textarea class="form-input" id="eq-terms" rows="3" style="resize:vertical">${escHtml(terms.join('\n'))}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Statements — write the correct term letter after each (e.g. "Water moves across a membrane = A")</label>
+        <textarea class="form-input" id="eq-statements" rows="4" style="resize:vertical">${escHtml((q.statements || []).map(s => `${s.text} = ${LETTERS[s.correct_index] || 'A'}`).join('\n'))}</textarea>
+      </div>`;
+  } else {
+    // MCQ / true_false: editable options with a correct-answer radio
+    const opts = q.options || [];
+    fields += `
+      <div class="form-group">
+        <label class="form-label">Options — tick the correct one</label>
+        <div id="eq-opts">
+          ${opts.map((o, i) => eqOptionRow(o, i, i === q.correct_index)).join('')}
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px" onclick="eqAddOption()">+ Add option</button>
+      </div>`;
+  }
+
+  fields += `
+    <div class="form-group">
+      <label class="form-label">Explanation (optional — shown after the test)</label>
+      <textarea class="form-input" id="eq-explanation" rows="2" style="resize:vertical">${escHtml(q.explanation || '')}</textarea>
+    </div>`;
+
+  body.innerHTML = fields;
+  document.getElementById('edit-q-modal').classList.add('show');
+}
+
+function eqOptionRow(value, idx, checked) {
+  return `
+    <div class="eq-opt-row" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <input type="radio" name="eq-correct" value="${idx}" ${checked ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--primary);flex-shrink:0">
+      <input type="text" class="form-input eq-opt-input" value="${escHtml(value)}" style="flex:1" placeholder="Option text">
+      <button type="button" class="q-row-btn danger" onclick="this.parentElement.remove()" title="Remove option">✕</button>
+    </div>`;
+}
+
+function eqAddOption() {
+  const wrap = document.getElementById('eq-opts');
+  const idx  = wrap.querySelectorAll('.eq-opt-row').length;
+  wrap.insertAdjacentHTML('beforeend', eqOptionRow('', idx, false));
+}
+
+function closeEditQModal() { document.getElementById('edit-q-modal').classList.remove('show'); }
+
+async function saveEditQuestion() {
+  const id   = document.getElementById('edit-q-id').value;
+  const type = document.getElementById('edit-q-type').value;
+  const text = document.getElementById('eq-text').value.trim();
+  if (!text) { showToast('Question text is required.', 'warning'); return; }
+
+  const update = { question_text: text, explanation: document.getElementById('eq-explanation').value.trim() || null };
+
+  if (type === 'fill_blank') {
+    const ans = document.getElementById('eq-answer').value.trim();
+    if (!ans) { showToast('A correct answer is required.', 'warning'); return; }
+    update.correct_answer = ans;
+  } else if (type === 'terms') {
+    const terms = document.getElementById('eq-terms').value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (terms.length < 2) { showToast('Add at least two terms.', 'warning'); return; }
+    const statements = document.getElementById('eq-statements').value.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+      const m = line.match(/^(.*)=\s*([A-Za-z])\s*$/);
+      const txt = m ? m[1].trim() : line;
+      const ci  = m ? LETTERS.indexOf(m[2].toUpperCase()) : 0;
+      return { text: txt, correct_index: ci < 0 ? 0 : ci };
+    });
+    if (!statements.length) { showToast('Add at least one statement.', 'warning'); return; }
+    update.options = terms;
+    update.statements = statements;
+  } else {
+    const rows = Array.from(document.querySelectorAll('#eq-opts .eq-opt-row'));
+    const opts = rows.map(r => r.querySelector('.eq-opt-input').value.trim());
+    if (opts.some(o => !o) || opts.length < 2) { showToast('Fill in at least two options (no blanks).', 'warning'); return; }
+    const checked = document.querySelector('input[name="eq-correct"]:checked');
+    if (!checked) { showToast('Tick which option is correct.', 'warning'); return; }
+    update.options = opts;
+    update.correct_index = parseInt(checked.value);
+  }
+
+  const btn = document.getElementById('edit-q-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const { error } = await sb.from('test_questions').update(update).eq('id', id);
+  btn.disabled = false; btn.textContent = 'Save Question';
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  closeEditQModal();
+  await loadTests();
+  showToast('Question updated!', 'success');
 }
 
 // ── Add Questions (bulk, all types) ─────────────────────────────

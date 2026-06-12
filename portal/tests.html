@@ -16,6 +16,21 @@
 .test-actions { display:flex;gap:8px;margin-top:12px;flex-wrap:wrap; }
 .attempt-row { font-size:.75rem;padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;display:inline-flex;align-items:center;gap:6px;color:var(--text-2); }
 
+/* Lesson (module) accordion */
+.lesson-group { background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden; }
+.lesson-head { display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none; }
+.lesson-head:hover { background:var(--bg); }
+.lesson-head-icon { width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#1a56db,#0e38b1);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.lesson-head-icon svg { width:20px;height:20px;color:#fff; }
+.lesson-head-info { flex:1;min-width:0; }
+.lesson-head-title { font-size:.95rem;font-weight:700;color:var(--text); }
+.lesson-head-sub { font-size:.74rem;color:var(--muted);margin-top:2px; }
+.lesson-chevron { flex-shrink:0;color:var(--muted);transition:transform .22s cubic-bezier(.4,0,.2,1); }
+.lesson-group.open .lesson-chevron { transform:rotate(90deg); }
+.lesson-body { display:none;padding:0 14px 14px; }
+.lesson-group.open .lesson-body { display:block; }
+.lesson-body .test-card { box-shadow:none; }
+
 /* Test runner modal */
 .runner-modal { max-width:700px;width:100%; }
 .runner-header { display:flex;align-items:center;gap:12px;margin-bottom:20px; }
@@ -49,7 +64,7 @@
     <div class="nav-section">Main</div>
     <a href="/portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
     <a href="/portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>My Courses</a>
-    <a href="/portal/lessons.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Recordings</a>
+    <a href="/portal/lessons.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Lessons</a>
     <a href="/portal/pdfs.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Lesson PDFs</a>
     <div class="nav-section">Practice</div>
     <a href="/portal/tests.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
@@ -158,21 +173,47 @@ function renderTests() {
     return;
   }
 
-  // Group by module_id
+  // Group by module_id (the lesson the test belongs to)
   const byModule = {};
   tests.forEach(t => { (byModule[t.module_id || '__none__'] ||= []).push(t); });
 
-  // Render in module order, then unassigned at end
+  // Render each lesson as a collapsible dropdown, in module order,
+  // then any tests without a lesson at the end.
   let html = '';
+  let idx = 0;
   modulesData.forEach(m => {
     if (!byModule[m.id]) return;
-    html += `<div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:6px 2px 8px">${escHtml(m.title)}</div>`;
-    html += byModule[m.id].map(t => renderTestCard(t)).join('');
+    html += renderLessonGroup(m.title, byModule[m.id], 'lg-' + idx++);
   });
   if (byModule['__none__']) {
-    html += byModule['__none__'].map(t => renderTestCard(t)).join('');
+    html += renderLessonGroup('Other Practice Tests', byModule['__none__'], 'lg-' + idx++);
   }
   body.innerHTML = html;
+}
+
+function renderLessonGroup(title, groupTests, gid) {
+  // Count attempts done across this lesson's tests for the subtitle.
+  const taken = groupTests.filter(t => (attemptsMap[t.id] || []).length).length;
+  return `
+    <div class="lesson-group" id="${gid}">
+      <div class="lesson-head" onclick="toggleLesson('${gid}')">
+        <div class="lesson-head-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        </div>
+        <div class="lesson-head-info">
+          <div class="lesson-head-title">${escHtml(title)}</div>
+          <div class="lesson-head-sub">${groupTests.length} test${groupTests.length!==1?'s':''}${taken ? ' · ' + taken + ' attempted' : ''}</div>
+        </div>
+        <svg class="lesson-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="lesson-body">
+        ${groupTests.map(t => renderTestCard(t)).join('')}
+      </div>
+    </div>`;
+}
+
+function toggleLesson(gid) {
+  document.getElementById(gid).classList.toggle('open');
 }
 
 function renderTestCard(t) {

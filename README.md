@@ -15,15 +15,21 @@ Vercel serverless functions in `api/`.
 | `api/_lib/`           | Dependency-free helpers shared by the functions (unit-tested)     |
 | `css/portal.css`      | Shared portal design system                                       |
 | `js/`                 | Client helpers (`auth.js`, `portal-nav.js`)                       |
-| `supabase-*.sql`      | Database setup + ordered migrations (`v2` … `v13`)                |
+| `supabase-*.sql`      | Database setup + ordered migrations (`v2` … `v16`)                |
 | `tests/`              | Vitest test suite for the API handlers + portal static checks     |
 
 ## Database setup
 
 Run `supabase-setup.sql` first, then each `supabase-migration-vN.sql` in
-order (v2 → v13) in the Supabase SQL editor.
+order (v2 → v16) in the Supabase SQL editor.
 
-The latest migration (`v13`) adds:
+The latest migration (`v16`) adds a PDF attachment to practice tests
+(`pdf_url` / `pdf_name` on `practice_tests`) plus a public `test-pdfs`
+storage bucket, so a test can carry a printable/answer-key PDF that the
+student can open at the end of the test. (Tests are linked to a lesson via
+the existing `practice_tests.module_id` column.)
+
+Earlier migration (`v13`) added:
 
 - **Scheduled tests** — `open_at` / `close_at` on `practice_tests`. The
   `test_questions` read policy enforces `open_at` at the database level, so

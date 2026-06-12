@@ -443,7 +443,10 @@ html[data-theme="dark"] .bio-bg svg { opacity: .10; }
   100% { transform: translateY(20px) rotate(360deg); }
 }
 /* Lift the app above the floating layer. */
-body > .main, body > .sidebar, body > .sidebar-overlay { position: relative; z-index: 1; }
+/* Lift the scrolling content above the floating layer. The sidebar and
+   overlay are already position:fixed with their own high z-index, so they
+   must NOT be touched here (forcing position:relative collapsed the page). */
+.main { position: relative; z-index: 1; }
 
 /* ── Floating theme toggle ─────────────────────────────────────── */
 .theme-toggle {

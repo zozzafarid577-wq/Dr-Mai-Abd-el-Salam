@@ -141,7 +141,7 @@ const LETTERS = ['A','B','C','D','E'];
 
   const [{ data: mods }, { data: testsData }, { data: attempts }] = await Promise.all([
     sb.from('modules').select('id, title, course_id, order_index').in('course_id', courseIds).order('order_index'),
-    sb.from('practice_tests').select('id, title, module_id, course_id, time_limit_min, is_active, open_at, close_at').in('course_id', courseIds).eq('is_active', true).eq('is_mock', false).order('created_at'),
+    sb.from('practice_tests').select('id, title, module_id, module_ids, course_id, time_limit_min, is_active, open_at, close_at').in('course_id', courseIds).eq('is_active', true).eq('is_mock', false).order('created_at'),
     sb.from('test_attempts').select('id, test_id, percentage, passed, completed_at').eq('student_id', profile.id).order('completed_at', { ascending: false })
   ]);
 
@@ -173,9 +173,14 @@ function renderTests() {
     return;
   }
 
-  // Group by module_id (the lesson the test belongs to)
+  // Group by lesson. A test can belong to several lessons, so it appears
+  // under each of them.
   const byModule = {};
-  tests.forEach(t => { (byModule[t.module_id || '__none__'] ||= []).push(t); });
+  tests.forEach(t => {
+    const ids = (t.module_ids && t.module_ids.length) ? t.module_ids : (t.module_id ? [t.module_id] : []);
+    if (!ids.length) { (byModule['__none__'] ||= []).push(t); return; }
+    ids.forEach(mid => { (byModule[mid] ||= []).push(t); });
+  });
 
   // Render each lesson as a collapsible dropdown, in module order,
   // then any tests without a lesson at the end.

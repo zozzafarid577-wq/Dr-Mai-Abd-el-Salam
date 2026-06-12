@@ -32,10 +32,15 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not configured in Vercel environment variables.' });
   }
 
-  const { pdf_base64, title, course_id, module_id, is_mock, time_limit_min } = req.body;
+  const { pdf_base64, title, course_id, module_id, module_ids, is_mock, time_limit_min } = req.body;
   if (!pdf_base64 || !title || !course_id) {
     return res.status(400).json({ error: 'pdf_base64, title, and course_id are required' });
   }
+  // A test can belong to several lessons. Accept an array; fall back to the
+  // single module_id for older callers.
+  const lessonIds = Array.isArray(module_ids) && module_ids.length
+    ? module_ids.filter(Boolean)
+    : (module_id ? [module_id] : []);
 
   // Parse PDF with Claude
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -89,7 +94,8 @@ Rules:
     .insert({
       title,
       course_id,
-      module_id: module_id || null,
+      module_id: lessonIds[0] || null,
+      module_ids: lessonIds,
       is_active: true,
       is_mock: !!is_mock,
       time_limit_min: time_limit_min ? parseInt(time_limit_min) : null,

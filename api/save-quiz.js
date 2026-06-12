@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   }
   if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
 
-  const { title, course_id, module_id, is_mock, time_limit_min, questions, test_id, open_at, close_at } = req.body;
+  const { title, course_id, module_id, module_ids, is_mock, time_limit_min, questions, test_id, open_at, close_at } = req.body;
   if (!title || !course_id || !Array.isArray(questions) || questions.length === 0) {
     return res.status(400).json({ error: 'title, course_id, and questions[] are required' });
   }
@@ -35,10 +35,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'close_at must be after open_at' });
   }
 
+  // A test can belong to several lessons. Accept an array; fall back to the
+  // single module_id for older callers.
+  const lessonIds = Array.isArray(module_ids) && module_ids.length
+    ? module_ids.filter(Boolean)
+    : (module_id ? [module_id] : []);
+
   const testFields = {
     title,
     course_id,
-    module_id: module_id || null,
+    module_id: lessonIds[0] || null,
+    module_ids: lessonIds,
     is_mock: !!is_mock,
     time_limit_min: time_limit_min ? parseInt(time_limit_min) : null,
     open_at: open_at || null,

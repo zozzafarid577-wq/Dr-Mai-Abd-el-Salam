@@ -11,6 +11,11 @@
 .test-card-header { display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px; }
 .test-card-title { font-size:.9rem;font-weight:700; }
 .test-card-meta { font-size:.74rem;color:var(--muted);margin-bottom:10px; }
+.lesson-cb-list { border:1px solid var(--border);border-radius:9px;max-height:160px;overflow-y:auto;padding:4px; }
+.lesson-cb-list .hint { font-size:.78rem;color:var(--muted);padding:8px 10px; }
+.lesson-cb { display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500;color:var(--text); }
+.lesson-cb:hover { background:var(--bg); }
+.lesson-cb input { width:15px;height:15px;accent-color:var(--primary);flex-shrink:0; }
 .q-toggle { display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);border-radius:9px;cursor:pointer;user-select:none;font-size:.8rem;font-weight:700;color:var(--text-2);transition:border-color .12s; }
 .q-toggle:hover { border-color:var(--primary);color:var(--text); }
 .q-toggle-chev { width:15px;height:15px;flex-shrink:0;color:var(--muted);transition:transform .2s cubic-bezier(.4,0,.2,1); }
@@ -98,8 +103,8 @@
         <select class="form-input" id="test-course" onchange="fillModuleSelect('test-course','test-module')"><option value="">Select course…</option></select>
       </div>
       <div class="form-group">
-        <label class="form-label">Lesson (the test appears under this lesson for students)</label>
-        <select class="form-input" id="test-module"><option value="">Select a course first…</option></select>
+        <label class="form-label">Lessons (tick one or more — the test appears under each for students)</label>
+        <div class="lesson-cb-list" id="test-module"><div class="hint">Select a course first…</div></div>
       </div>
       <div class="form-group">
         <label class="form-label">Time Limit (minutes, leave blank for untimed)</label>
@@ -153,8 +158,8 @@
         <select class="form-input" id="edit-test-course" onchange="fillModuleSelect('edit-test-course','edit-test-module')"><option value="">Select course…</option></select>
       </div>
       <div class="form-group">
-        <label class="form-label">Lesson (the test appears under this lesson for students)</label>
-        <select class="form-input" id="edit-test-module"><option value="">No lesson</option></select>
+        <label class="form-label">Lessons (tick one or more — the test appears under each for students)</label>
+        <div class="lesson-cb-list" id="edit-test-module"><div class="hint">Select a course first…</div></div>
       </div>
       <div class="form-group">
         <label class="form-label">Time Limit (minutes, leave blank for untimed)</label>
@@ -223,8 +228,8 @@
         <select class="form-input" id="pdf-course" onchange="fillModuleSelect('pdf-course','pdf-module')"><option value="">Select course…</option></select>
       </div>
       <div class="form-group">
-        <label class="form-label">Lesson (the test appears under this lesson for students)</label>
-        <select class="form-input" id="pdf-module"><option value="">Select a course first…</option></select>
+        <label class="form-label">Lessons (tick one or more — the test appears under each for students)</label>
+        <div class="lesson-cb-list" id="pdf-module"><div class="hint">Select a course first…</div></div>
       </div>
       <div class="form-group">
         <label class="form-label">Time Limit (minutes, leave blank for untimed)</label>
@@ -377,17 +382,28 @@ const LETTERS = ['A','B','C','D','E'];
   await loadTests();
 })();
 
-// Populate a lesson/module <select> based on the chosen course.
-function fillModuleSelect(courseSelId, moduleSelId, selectedId) {
+// Populate a lesson checkbox list based on the chosen course. A test can
+// belong to several lessons, so this renders one checkbox per lesson.
+function fillModuleSelect(courseSelId, containerId, selectedIds) {
   const courseId = document.getElementById(courseSelId).value;
-  const sel = document.getElementById(moduleSelId);
+  const box = document.getElementById(containerId);
   const mods = modulesByCourse[courseId] || [];
-  sel.innerHTML = '<option value="">No lesson (shows ungrouped)</option>' +
-    mods.map(m => `<option value="${m.id}"${m.id === selectedId ? ' selected' : ''}>${escHtml(m.title)}</option>`).join('');
+  const selected = new Set(selectedIds || []);
+  if (!mods.length) { box.innerHTML = '<div class="hint">This course has no lessons yet.</div>'; return; }
+  box.innerHTML = mods.map(m => `
+    <label class="lesson-cb">
+      <input type="checkbox" value="${m.id}"${selected.has(m.id) ? ' checked' : ''}>
+      <span>${escHtml(m.title)}</span>
+    </label>`).join('');
+}
+
+// Read the ticked lesson ids out of a checkbox list container.
+function getCheckedModules(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`)).map(c => c.value);
 }
 
 async function loadTests() {
-  const { data } = await sb.from('practice_tests').select('id, title, course_id, module_id, time_limit_min, is_active, is_mock, pdf_url, pdf_name, open_at, close_at, created_at, courses(title)').order('created_at', { ascending: false });
+  const { data } = await sb.from('practice_tests').select('id, title, course_id, module_id, module_ids, time_limit_min, is_active, is_mock, pdf_url, pdf_name, open_at, close_at, created_at, courses(title)').order('created_at', { ascending: false });
   tests = data || [];
 
   if (tests.length > 0) {
@@ -411,13 +427,17 @@ function renderTests() {
 
   body.innerHTML = tests.map(t => {
     const qs = questionsMap[t.id] || [];
-    const lessonName = t.module_id ? moduleTitleById[t.module_id] : null;
+    const lessonIds = (t.module_ids && t.module_ids.length) ? t.module_ids : (t.module_id ? [t.module_id] : []);
+    const lessonNames = lessonIds.map(id => moduleTitleById[id]).filter(Boolean);
+    const lessonLabel = lessonNames.length
+      ? ' · <strong style="color:var(--primary)">' + lessonNames.map(escHtml).join(', ') + '</strong>'
+      : ' · <span style="color:#dc2626">No lesson</span>';
     return `
       <div class="test-card">
         <div class="test-card-header">
           <div>
             <div class="test-card-title">${escHtml(t.title)} <span class="badge ${t.is_active ? 'badge-success' : 'badge-danger'}" style="font-size:.62rem">${t.is_active ? 'Active' : 'Hidden'}</span>${t.is_mock ? ' <span class="badge badge-warning" style="font-size:.62rem">Mock</span>' : ''}${t.pdf_url ? ' <span class="badge badge-info" style="font-size:.62rem">PDF</span>' : ''}</div>
-            <div class="test-card-meta">${escHtml(t.courses?.title || '—')}${lessonName ? ' · <strong style="color:var(--primary)">' + escHtml(lessonName) + '</strong>' : ' · <span style="color:#dc2626">No lesson</span>'} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${qs.length} question${qs.length!==1?'s':''}</div>
+            <div class="test-card-meta">${escHtml(t.courses?.title || '—')}${lessonLabel} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${qs.length} question${qs.length!==1?'s':''}</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="openEditTestModal('${t.id}')">Edit</button>
@@ -499,7 +519,7 @@ function renderQuestionRow(q, i) {
 }
 
 function openTestModal() {
-  document.getElementById('test-module').innerHTML = '<option value="">Select a course first…</option>';
+  document.getElementById('test-module').innerHTML = '<div class="hint">Select a course first…</div>';
   document.getElementById('test-modal').classList.add('show');
 }
 function closeTestModal() { document.getElementById('test-modal').classList.remove('show'); }
@@ -507,7 +527,7 @@ function closeTestModal() { document.getElementById('test-modal').classList.remo
 async function saveTest() {
   const title    = document.getElementById('test-title').value.trim();
   const courseId = document.getElementById('test-course').value;
-  const moduleId = document.getElementById('test-module').value || null;
+  const moduleIds = getCheckedModules('test-module');
   const timeLim  = parseInt(document.getElementById('test-time').value) || null;
   const isMock   = document.getElementById('test-is-mock').checked;
   if (!title || !courseId) { showToast('Title and course are required.', 'warning'); return; }
@@ -519,7 +539,7 @@ async function saveTest() {
     if (openAt && closeAt && new Date(closeAt) <= new Date(openAt)) { showToast('Close time must be after open time.', 'warning'); return; }
   }
 
-  const { error } = await sb.from('practice_tests').insert({ title, course_id: courseId, module_id: moduleId, time_limit_min: timeLim, is_active: true, is_mock: isMock, open_at: openAt, close_at: closeAt });
+  const { error } = await sb.from('practice_tests').insert({ title, course_id: courseId, module_id: moduleIds[0] || null, module_ids: moduleIds, time_limit_min: timeLim, is_active: true, is_mock: isMock, open_at: openAt, close_at: closeAt });
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
   closeTestModal();
   await loadTests();
@@ -527,7 +547,7 @@ async function saveTest() {
 }
 
 function openPdfModal() {
-  document.getElementById('pdf-module').innerHTML = '<option value="">Select a course first…</option>';
+  document.getElementById('pdf-module').innerHTML = '<div class="hint">Select a course first…</div>';
   document.getElementById('pdf-modal').classList.add('show');
 }
 function closePdfModal() {
@@ -545,7 +565,7 @@ function closePdfModal() {
 async function submitPdfQuiz() {
   const title    = document.getElementById('pdf-title').value.trim();
   const courseId = document.getElementById('pdf-course').value;
-  const moduleId = document.getElementById('pdf-module').value || null;
+  const moduleIds = getCheckedModules('pdf-module');
   const timeLim  = document.getElementById('pdf-time').value;
   const isMock   = document.getElementById('pdf-is-mock').checked;
   const fileEl   = document.getElementById('pdf-file');
@@ -573,7 +593,7 @@ async function submitPdfQuiz() {
       const resp = await fetch('/api/parse-quiz-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ pdf_base64: base64, title, course_id: courseId, module_id: moduleId, is_mock: isMock, time_limit_min: timeLim || null })
+        body: JSON.stringify({ pdf_base64: base64, title, course_id: courseId, module_ids: moduleIds, is_mock: isMock, time_limit_min: timeLim || null })
       });
       const data = await resp.json();
       if (!resp.ok) { showAlert(data.error || 'Failed to parse PDF.', 'error'); btn.textContent = 'Parse & Create Test'; btn.disabled = false; return; }
@@ -610,7 +630,8 @@ function openEditTestModal(testId) {
   document.getElementById('edit-test-id').value      = t.id;
   document.getElementById('edit-test-title').value   = t.title || '';
   document.getElementById('edit-test-course').value  = t.course_id || '';
-  fillModuleSelect('edit-test-course', 'edit-test-module', t.module_id || '');
+  const lessonIds = (t.module_ids && t.module_ids.length) ? t.module_ids : (t.module_id ? [t.module_id] : []);
+  fillModuleSelect('edit-test-course', 'edit-test-module', lessonIds);
   document.getElementById('edit-test-time').value    = t.time_limit_min || '';
   document.getElementById('edit-test-is-mock').checked = !!t.is_mock;
   document.getElementById('edit-test-pdf-file').value = '';
@@ -637,7 +658,7 @@ async function saveEditTest() {
   const id       = document.getElementById('edit-test-id').value;
   const title    = document.getElementById('edit-test-title').value.trim();
   const courseId = document.getElementById('edit-test-course').value;
-  const moduleId = document.getElementById('edit-test-module').value || null;
+  const moduleIds = getCheckedModules('edit-test-module');
   const timeLim  = parseInt(document.getElementById('edit-test-time').value) || null;
   const isMock   = document.getElementById('edit-test-is-mock').checked;
   const urlInput = document.getElementById('edit-test-pdf-url').value.trim();
@@ -647,7 +668,7 @@ async function saveEditTest() {
   const btn = document.getElementById('edit-test-save-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
-  const update = { title, course_id: courseId, module_id: moduleId, time_limit_min: timeLim, is_mock: isMock };
+  const update = { title, course_id: courseId, module_id: moduleIds[0] || null, module_ids: moduleIds, time_limit_min: timeLim, is_mock: isMock };
 
   // Optional PDF: an uploaded file takes priority, else a pasted URL.
   try {

@@ -173,7 +173,7 @@ let attemptsByTest = {};    // test_id -> best %
       .order('order_index'),
     sb.from('module_pdfs').select('id, title, module_id, created_at').order('created_at', { ascending: false }),
     sb.from('lesson_pdfs').select('id, title, created_at, lessons(module_id)').order('created_at', { ascending: false }),
-    sb.from('practice_tests').select('id, title, module_id, course_id, time_limit_min, is_active, is_mock, open_at, close_at')
+    sb.from('practice_tests').select('id, title, module_id, module_ids, course_id, time_limit_min, is_active, is_mock, open_at, close_at')
       .in('course_id', courseIds).eq('is_active', true).eq('is_mock', false).order('created_at'),
     sb.from('test_attempts').select('test_id, percentage').eq('student_id', profile.id),
   ]);
@@ -188,9 +188,14 @@ let attemptsByTest = {};    // test_id -> best %
     if (mid) (pdfsByModule[mid] ||= []).push({ id: p.id, title: p.title, src: 'lesson' });
   });
 
-  // Index practice tests by module
+  // Index practice tests by lesson. A test can belong to several lessons,
+  // so it shows under each of them.
   testsByModule = {};
-  (tests || []).forEach(t => { (testsByModule[t.module_id || '__none__'] ||= []).push(t); });
+  (tests || []).forEach(t => {
+    const ids = (t.module_ids && t.module_ids.length) ? t.module_ids : (t.module_id ? [t.module_id] : []);
+    if (!ids.length) { (testsByModule['__none__'] ||= []).push(t); return; }
+    ids.forEach(mid => { (testsByModule[mid] ||= []).push(t); });
+  });
 
   // Best attempt % per test
   attemptsByTest = {};

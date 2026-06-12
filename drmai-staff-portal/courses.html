@@ -380,14 +380,20 @@
       <div class="form-group">
         <label class="form-label">Where is the video? *</label>
         <select class="form-input" id="rec-provider" onchange="recProviderHint()">
+          <option value="upload">Upload a video file</option>
           <option value="youtube">YouTube</option>
           <option value="gdrive">Google Drive</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="rec-link-group">
         <label class="form-label">Video link or ID *</label>
         <input type="text" class="form-input" id="rec-vid" placeholder="Paste the YouTube link or ID" style="font-family:monospace">
         <div class="form-hint" id="rec-hint">Paste the full YouTube link, or just the ID.</div>
+      </div>
+      <div class="form-group" id="rec-file-group">
+        <label class="form-label">Video file *</label>
+        <input type="file" class="form-input" id="rec-file" accept="video/*" style="padding:8px">
+        <div class="form-hint">MP4 works best. Max size depends on your Supabase storage limit (default ~50 MB). For long lectures, use YouTube.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Duration (minutes)</label>
@@ -416,9 +422,14 @@
         <input type="text" class="form-input" id="pdf-title-input" placeholder="e.g. Animal Behavior Worksheet">
       </div>
       <div class="form-group">
-        <label class="form-label">Public URL * <span style="color:var(--muted);font-weight:400">(Google Drive, Dropbox, etc.)</span></label>
+        <label class="form-label">Upload a PDF <span style="color:var(--muted);font-weight:400">(recommended)</span></label>
+        <input type="file" class="form-input" id="pdf-file-input" accept="application/pdf" style="padding:8px">
+        <div class="form-hint">Uploads straight to the portal — no Google Drive sharing needed.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">…or paste a public URL <span style="color:var(--muted);font-weight:400">(Drive, Dropbox, etc.)</span></label>
         <input type="url" class="form-input" id="pdf-url-input" placeholder="https://drive.google.com/file/d/…">
-        <div class="form-hint">Make sure the link is publicly accessible (Anyone with link can view)</div>
+        <div class="form-hint">If pasting a Drive link, set it to “Anyone with the link → Viewer”.</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -669,7 +680,7 @@ function renderModuleDetail(m) {
       <div class="recording-row">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#dc2626;flex-shrink:0"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
         <div class="recording-title-txt">${escHtml(r.title)}</div>
-        <div class="recording-yt" style="color:var(--muted)">${(r.video_id || r.youtube_id) ? ((r.video_provider === 'gdrive' ? 'drive: ' : 'yt: ') + escHtml(r.video_id || r.youtube_id)) : 'No video'}</div>
+        <div class="recording-yt" style="color:var(--muted)">${(r.video_id || r.youtube_id) ? (r.video_provider === 'upload' ? '📹 Uploaded video' : (r.video_provider === 'gdrive' ? 'drive: ' : 'yt: ') + escHtml(r.video_id || r.youtube_id)) : 'No video'}</div>
         ${r.duration_min ? `<span style="font-size:.7rem;color:var(--muted)">${r.duration_min}m</span>` : ''}
         <button class="icon-btn" style="color:#dc2626" onclick="deleteRecording('${r.id}','${m.id}')" title="Delete">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -822,7 +833,8 @@ function openAddRecordingModal(moduleId) {
   document.getElementById('rec-title').value = '';
   document.getElementById('rec-vid').value   = '';
   document.getElementById('rec-dur').value   = '';
-  document.getElementById('rec-provider').value = 'youtube';
+  document.getElementById('rec-file').value  = '';
+  document.getElementById('rec-provider').value = 'upload';
   recProviderHint();
   document.getElementById('add-recording-modal').classList.add('show');
 }
@@ -832,10 +844,13 @@ function recProviderHint() {
   const p = document.getElementById('rec-provider').value;
   const input = document.getElementById('rec-vid');
   const hint  = document.getElementById('rec-hint');
+  // Toggle the link field vs the file picker depending on the source.
+  document.getElementById('rec-link-group').style.display = p === 'upload' ? 'none' : '';
+  document.getElementById('rec-file-group').style.display = p === 'upload' ? '' : 'none';
   if (p === 'gdrive') {
     input.placeholder = 'Paste the Google Drive share link';
-    hint.innerHTML = "In Drive, set the file to <strong>Anyone with the link → Viewer</strong>, and turn OFF “viewers can download”. Then paste the share link here.";
-  } else {
+    hint.innerHTML = "In Drive, set the file to <strong>Anyone with the link → Viewer</strong>. Drive links sometimes block playback — uploading the file is more reliable.";
+  } else if (p === 'youtube') {
     input.placeholder = 'Paste the YouTube link or ID';
     hint.innerHTML = 'Paste the full YouTube link, or just the ID.';
   }
@@ -844,19 +859,36 @@ function recProviderHint() {
 async function saveRecording() {
   const title    = document.getElementById('rec-title').value.trim();
   const provider = document.getElementById('rec-provider').value;
-  const raw      = document.getElementById('rec-vid').value.trim();
   const dur      = parseInt(document.getElementById('rec-dur').value) || null;
   if (!title) { showToast('Title is required.', 'warning'); return; }
 
-  const vid = raw ? Video.parseVideoId(provider, raw) : null;
-  if (raw && !vid) { showToast("Couldn't read that video link/ID — check it and try again.", 'warning'); return; }
+  let videoProvider = provider, vid = null;
+
+  if (provider === 'upload') {
+    const file = document.getElementById('rec-file').files[0];
+    if (!file) { showToast('Please choose a video file.', 'warning'); return; }
+    if (!file.type.startsWith('video/')) { showToast('Please choose a video file.', 'warning'); return; }
+    showToast('Uploading video… this can take a moment.', 'info');
+    try {
+      const ext  = (file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+      const path = `videos/${activeModuleId}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+      const { error: upErr } = await sb.storage.from('lesson-media').upload(path, file, { contentType: file.type, cacheControl: '3600' });
+      if (upErr) throw new Error(upErr.message + ' (has migration v19 — the lesson-media bucket — been run? Is the file under your storage size limit?)');
+      vid = sb.storage.from('lesson-media').getPublicUrl(path).data.publicUrl;
+      videoProvider = 'upload';
+    } catch (e) { showToast('Upload failed: ' + e.message, 'error'); return; }
+  } else {
+    const raw = document.getElementById('rec-vid').value.trim();
+    vid = raw ? Video.parseVideoId(provider, raw) : null;
+    if (raw && !vid) { showToast("Couldn't read that video link/ID — check it and try again.", 'warning'); return; }
+  }
 
   const existing = recordingMap[activeModuleId] || [];
   const { data, error } = await sb.from('lessons')
     .insert({
       module_id: activeModuleId, title,
-      video_provider: provider, video_id: vid,
-      youtube_id: provider === 'youtube' ? vid : null, // keep legacy column in sync
+      video_provider: videoProvider, video_id: vid,
+      youtube_id: videoProvider === 'youtube' ? vid : null, // keep legacy column in sync
       duration_min: dur, order_index: existing.length,
     })
     .select().single();
@@ -881,14 +913,30 @@ function openAddPdfModal(moduleId) {
   activeModuleId = moduleId;
   document.getElementById('pdf-title-input').value = '';
   document.getElementById('pdf-url-input').value   = '';
+  document.getElementById('pdf-file-input').value  = '';
   document.getElementById('add-pdf-modal').classList.add('show');
 }
 function closeAddPdfModal() { document.getElementById('add-pdf-modal').classList.remove('show'); }
 
 async function savePdf() {
   const title = document.getElementById('pdf-title-input').value.trim();
-  const url   = document.getElementById('pdf-url-input').value.trim();
-  if (!title || !url) { showToast('Title and URL are required.', 'warning'); return; }
+  const file  = document.getElementById('pdf-file-input').files[0];
+  let   url   = document.getElementById('pdf-url-input').value.trim();
+  if (!title) { showToast('Title is required.', 'warning'); return; }
+  if (!file && !url) { showToast('Upload a PDF or paste a URL.', 'warning'); return; }
+
+  // Uploaded file takes priority over a pasted link.
+  if (file) {
+    if (file.type !== 'application/pdf') { showToast('Please choose a PDF file.', 'warning'); return; }
+    showToast('Uploading PDF…', 'info');
+    try {
+      const path = `pdfs/${activeModuleId}/${Date.now()}-${file.name.replace(/[^a-z0-9.\-_]/gi,'_')}`;
+      const { error: upErr } = await sb.storage.from('lesson-media').upload(path, file, { contentType: 'application/pdf', cacheControl: '3600' });
+      if (upErr) throw new Error(upErr.message + ' (has migration v19 — the lesson-media bucket — been run?)');
+      url = sb.storage.from('lesson-media').getPublicUrl(path).data.publicUrl;
+    } catch (e) { showToast('Upload failed: ' + e.message, 'error'); return; }
+  }
+
   const { data, error } = await sb.from('module_pdfs')
     .insert({ module_id: activeModuleId, title, file_url: url })
     .select().single();

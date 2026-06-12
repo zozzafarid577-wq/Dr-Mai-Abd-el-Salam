@@ -146,8 +146,8 @@ function fmt(d) {
 function pickCountdown() {
   const now = Date.now();
   const events = [];
-  ACT.forEach(e => events.push({ date:new Date(e.test+'T00:00:00').getTime(), label:`ACT ${e.month} exam`, type:'act' }));
-  EST.forEach(e => events.push({ date:new Date(e.to+'T23:59:59').getTime(), label:`EST registration closes (${e.subjects})`, type:'est' }));
+  ACT.forEach(e => events.push({ date:new Date(e.test+'T00:00:00').getTime(), label:`Next ACT test · ${fmt(e.test)}`, type:'act', key:e.month }));
+  EST.forEach(e => { const d = e.test || e.to; events.push({ date:new Date(d+'T00:00:00').getTime(), label:`Next EST test · ${fmt(d)}`, type:'est', key:e.subjects }); });
   const upcoming = events.filter(e => e.date > now).sort((a,b) => a.date - b.date);
   countdownTarget = upcoming[0] || null;
 }
@@ -181,47 +181,22 @@ function setTab(t) {
 function render() {
   const body = document.getElementById('tt-body');
   const now = Date.now();
-  if (activeTab === 'act') {
-    body.innerHTML = ACT.map(e => {
-      const past = new Date(e.test+'T00:00:00').getTime() < now;
-      const isNext = countdownTarget && countdownTarget.type==='act' && countdownTarget.label.includes(e.month);
-      return `
-        <div class="exam-card act${past?' past':''}">
-          <div class="exam-head">
-            <span class="type-pill act">ACT</span>
-            <span class="exam-title">${e.month}</span>
-            ${isNext ? '<span class="next-pill">Next up</span>' : ''}
-          </div>
-          <div class="exam-grid">
-            <div class="exam-field"><div class="ef-label">Registration opens</div><div class="ef-val">${fmt(e.open)}</div></div>
-            <div class="exam-field"><div class="ef-label">Registration closes</div><div class="ef-val">${fmt(e.close)}</div></div>
-            <div class="exam-field"><div class="ef-label">Test day</div><div class="ef-val">${fmt(e.test)}</div></div>
-            <div class="exam-field"><div class="ef-label">Morning</div><div class="ef-val sub">${e.am}</div></div>
-            <div class="exam-field"><div class="ef-label">Afternoon</div><div class="ef-val sub">${e.pm}</div></div>
-          </div>
-          <a href="${ACT_REG_URL}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="margin-top:12px">Register for ACT →</a>
-        </div>`;
-    }).join('');
-  } else {
-    body.innerHTML = EST.map(e => {
-      const past = new Date(e.to+'T23:59:59').getTime() < now;
-      const isNext = countdownTarget && countdownTarget.type==='est' && countdownTarget.label.includes(e.subjects);
-      return `
-        <div class="exam-card est${past?' past':''}">
-          <div class="exam-head">
-            <span class="type-pill est">EST</span>
-            <span class="exam-title">${fmt(e.from)} → ${fmt(e.to)}</span>
-            ${isNext ? '<span class="next-pill">Next up</span>' : ''}
-          </div>
-          <div class="exam-grid">
-            <div class="exam-field"><div class="ef-label">Registration opens</div><div class="ef-val">${fmt(e.from)}</div></div>
-            <div class="exam-field"><div class="ef-label">Registration closes</div><div class="ef-val">${fmt(e.to)}</div></div>
-            <div class="exam-field" style="grid-column:1/-1"><div class="ef-label">Subjects</div><div class="ef-val sub">${e.subjects}</div></div>
-          </div>
-          <a href="${EST_REG_URL}" target="_blank" rel="noopener" class="btn btn-sm" style="margin-top:12px;background:#f4c20d;color:#3a2f00;border:none">Register for EST →</a>
-        </div>`;
-    }).join('');
-  }
+  const rows = activeTab === 'act'
+    ? ACT.map(e => ({ type:'act', date:e.test, key:e.month }))
+    : EST.map(e => ({ type:'est', date:e.test || e.to, key:e.subjects }));
+
+  body.innerHTML = rows.map(r => {
+    const past = new Date(r.date+'T00:00:00').getTime() < now;
+    const isNext = countdownTarget && countdownTarget.type===r.type && countdownTarget.key===r.key;
+    return `
+      <div class="exam-card ${r.type}${past?' past':''}">
+        <div class="exam-head" style="margin-bottom:0">
+          <span class="type-pill ${r.type}">${r.type.toUpperCase()}</span>
+          <span class="exam-title">${fmt(r.date)}</span>
+          ${isNext ? '<span class="next-pill">Next up</span>' : ''}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 function toggleSidebar() {

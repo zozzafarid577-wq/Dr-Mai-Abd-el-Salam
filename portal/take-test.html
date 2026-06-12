@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Test | Student Portal</title>
 <link rel="stylesheet" href="/css/portal.css">
+<script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <style>
 body { background:var(--bg); }
 .exam-wrap { max-width:760px;margin:0 auto;padding:24px 20px 60px; }
@@ -55,6 +56,7 @@ body { background:var(--bg); }
   <div class="exam-top">
     <button class="btn btn-outline btn-sm" onclick="goBack()">← Exit</button>
     <div class="exam-title" id="exam-title">Loading…</div>
+    <button id="sound-btn" class="btn btn-outline btn-sm" onclick="toggleSound()" title="Sound" style="display:none;padding:6px 10px"></button>
     <div class="exam-timer" id="exam-timer" style="display:none"></div>
   </div>
   <div id="exam-body">
@@ -82,40 +84,48 @@ let isMock = false;
 let immediate = false;        // practice tests reveal right/wrong per question with a sound
 const revealed = {};          // question id -> true once its answer is locked & shown
 let audioCtx = null;
+let soundOn = true;
+try { soundOn = localStorage.getItem('test_sound') !== 'off'; } catch (_) {}
 const LETTERS = ['A','B','C','D','E','F'];
 
-// Synthesise a short cheerful "ding" (correct) or a soft "buzz" (incorrect)
-// using the Web Audio API — no audio files to host, works offline.
+// Soft, gentle feedback tones via the Web Audio API (no files to host).
+// A mellow two-note rise for correct; a soft low two-note fall for wrong.
 function playFeedbackSound(correct) {
+  if (!soundOn) return;
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
-    if (correct) {
-      // Two rising notes — a pleasant confirmation chime.
-      [[880, 0], [1318.5, 0.12]].forEach(([freq, t]) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.0001, now + t);
-        gain.gain.exponentialRampToValueAtTime(0.25, now + t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.22);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(now + t); osc.stop(now + t + 0.24);
-      });
-    } else {
-      // A low, short "wrong" buzz.
-      const osc = audioCtx.createOscillator();
+    const notes = correct ? [[587.33, 0], [880, 0.10]]   // D5 → A5, bright but soft
+                          : [[392, 0], [311.13, 0.12]];  // G4 → E♭4, gentle "aw"
+    notes.forEach(([freq, t]) => {
+      const osc  = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'square'; osc.frequency.setValueAtTime(196, now);
-      osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+      osc.type = 'triangle';            // softer/rounder than sine+square
+      osc.frequency.value = freq;
+      const peak = correct ? 0.14 : 0.11;
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.exponentialRampToValueAtTime(peak, now + t + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.34);
       osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(now); osc.stop(now + 0.32);
-    }
+      osc.start(now + t); osc.stop(now + t + 0.36);
+    });
   } catch (_) { /* audio not available — silently ignore */ }
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  try { localStorage.setItem('test_sound', soundOn ? 'on' : 'off'); } catch (_) {}
+  updateSoundBtn();
+  if (soundOn) playFeedbackSound(true);   // little preview when turning on
+}
+function updateSoundBtn() {
+  const btn = document.getElementById('sound-btn');
+  if (!btn) return;
+  btn.title = soundOn ? 'Sound on — click to mute' : 'Sound off — click to unmute';
+  btn.innerHTML = soundOn
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
 }
 
 const params  = new URLSearchParams(location.search);
@@ -140,6 +150,7 @@ const testId  = params.get('id');
   isMock    = !!t.is_mock;
   immediate = !isMock;   // mock exams stay exam-style (feedback only at the end)
   document.getElementById('exam-title').textContent = t.title;
+  if (immediate) { document.getElementById('sound-btn').style.display = ''; updateSoundBtn(); }
 
   const { data: qs, error: qErr } = await sb
     .from('test_questions')

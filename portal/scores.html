@@ -3,18 +3,19 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Announcements | Student Portal</title>
+<title>My Scores & Notes | Student Portal</title>
 <link rel="stylesheet" href="/css/portal.css">
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <style>
-.ann-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px;transition:border-color .15s; }
-.ann-card.urgent { border-left:4px solid #dc2626; }
-.ann-card.normal { border-left:4px solid var(--primary); }
-.ann-top { display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px; }
-.ann-title { font-size:.92rem;font-weight:700; }
-.ann-date { font-size:.72rem;color:var(--muted);white-space:nowrap; }
-.ann-body { font-size:.84rem;color:var(--text-2);line-height:1.65;white-space:pre-wrap; }
-.ann-course { display:inline-block;margin-top:8px;padding:3px 10px;border-radius:20px;background:rgba(26,86,219,.08);color:var(--primary);font-size:.7rem;font-weight:700; }
+.score-row { display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:11px;margin-bottom:9px; }
+.score-pct { width:54px;text-align:center;font-size:1.1rem;font-weight:900;flex-shrink:0; }
+.score-info { flex:1;min-width:0; }
+.score-name { font-size:.9rem;font-weight:700;color:var(--text); }
+.score-meta { font-size:.74rem;color:var(--muted);margin-top:2px; }
+.notes-card { background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:24px; }
+.notes-area { width:100%;box-sizing:border-box;min-height:160px;resize:vertical;padding:13px 15px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9rem;line-height:1.6;background:var(--bg);color:var(--text);outline:none; }
+.notes-area:focus { border-color:var(--primary); }
+.section-h { font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:6px 0 12px; }
 </style>
 </head>
 <body>
@@ -35,9 +36,9 @@
     <a href="/portal/flashcards.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="15" height="13" rx="2"/><path d="M6 4h13a2 2 0 0 1 2 2v11"/></svg>Flashcards</a>
     <div class="nav-section">More</div>
     <a href="/portal/leaderboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>Leaderboard</a>
-    <a href="/portal/announcements.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+    <a href="/portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
     <a href="/portal/progress.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>My Progress</a>
-    <a href="/portal/scores.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>My Scores &amp; Notes</a>
+    <a href="/portal/scores.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>My Scores &amp; Notes</a>
     <a href="/portal/settings.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
   </div>
   <div class="sidebar-foot">
@@ -53,15 +54,27 @@
   <header class="topbar">
     <div class="topbar-left">
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <span class="page-title">Announcements</span>
+      <span class="page-title">My Scores &amp; Notes</span>
     </div>
   </header>
 
-  <main class="content" style="max-width:680px">
-    <div id="ann-body">
-      <div class="skeleton" style="height:100px;border-radius:12px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:100px;border-radius:12px"></div>
+  <main class="content">
+
+    <div class="notes-card">
+      <div class="section-h">📝 My Notes</div>
+      <textarea class="notes-area" id="notes" placeholder="Write anything you want to remember — key facts, mistakes to review, reminders…"></textarea>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+        <button class="btn btn-primary btn-sm" onclick="saveNotes()" id="save-notes-btn">Save Notes</button>
+        <span id="notes-status" style="font-size:.76rem;color:var(--muted)"></span>
+      </div>
     </div>
+
+    <div class="section-h">🏁 Saved Scores</div>
+    <div id="scores-body">
+      <div class="skeleton" style="height:78px;border-radius:11px;margin-bottom:9px"></div>
+      <div class="skeleton" style="height:78px;border-radius:11px;margin-bottom:9px"></div>
+    </div>
+
   </main>
 </div>
 
@@ -70,43 +83,72 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/auth.js"></script>
 <script>
+let profile = null;
+
 (async () => {
-  const profile = await requireAuth('student');
+  profile = await requireAuth('student');
   if (!profile) return;
 
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
 
-  const { data: enrollments } = await sb.from('enrollments').select('course_id').eq('student_id', profile.id);
-  const courseIds = (enrollments || []).map(e => e.course_id);
+  const [{ data: attempts }, { data: note }] = await Promise.all([
+    sb.from('test_attempts')
+      .select('id, test_id, score, max_score, percentage, passed, completed_at, practice_tests(title, is_mock)')
+      .eq('student_id', profile.id)
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false }),
+    sb.from('student_notes').select('content').eq('student_id', profile.id).maybeSingle(),
+  ]);
 
-  // Global announcements + course-specific ones the student is enrolled in
-  const { data: anns } = await sb
-    .from('announcements')
-    .select('id, title, body, priority, course_id, created_at, courses(title)')
-    .or(`course_id.is.null,course_id.in.(${courseIds.join(',') || 'null'})`)
-    .order('created_at', { ascending: false });
-
-  const body = document.getElementById('ann-body');
-  if (!anns || anns.length === 0) {
-    body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="empty-title">No Announcements</div><div class="empty-sub">Check back later for updates from your instructor.</div></div>';
-    return;
-  }
-
-  body.innerHTML = anns.map(a => `
-    <div class="ann-card ${a.priority || 'normal'}">
-      <div class="ann-top">
-        <div>
-          ${a.priority === 'urgent' ? '<span class="badge badge-danger" style="margin-bottom:6px;display:inline-block">Urgent</span><br>' : ''}
-          <div class="ann-title">${escHtml(a.title)}</div>
-        </div>
-        <div class="ann-date">${timeAgo(a.created_at)}</div>
-      </div>
-      <div class="ann-body">${escHtml(a.body)}</div>
-      ${a.courses?.title ? `<span class="ann-course">${escHtml(a.courses.title)}</span>` : ''}
-    </div>`).join('');
+  if (note && typeof note.content === 'string') document.getElementById('notes').value = note.content;
+  renderScores(attempts || []);
 })();
 
+function renderScores(attempts) {
+  const body = document.getElementById('scores-body');
+  if (!attempts.length) {
+    body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:46px;height:46px;color:var(--muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="empty-title">No results yet</div><div class="empty-sub">Take a practice test and your scores will be saved here.</div></div>';
+    return;
+  }
+  body.innerHTML = attempts.map(a => {
+    const pct = a.percentage != null ? Math.round(a.percentage) : 0;
+    const color = a.passed ? '#16a34a' : (pct >= 40 ? 'var(--warning)' : '#dc2626');
+    return `
+      <div class="score-row">
+        <div class="score-pct" style="color:${color}">${pct}%</div>
+        <div class="score-info">
+          <div class="score-name">${escHtml(a.practice_tests?.title || 'Test')}${a.practice_tests?.is_mock ? ' <span class="badge badge-warning" style="font-size:.6rem">Mock</span>' : ''}</div>
+          <div class="score-meta">${a.score ?? '—'} / ${a.max_score ?? '—'} correct · ${fmtDate(a.completed_at)} · <span style="color:${a.passed ? '#16a34a' : '#dc2626'};font-weight:700">${a.passed ? 'Passed' : 'Not passed'}</span></div>
+        </div>
+        <a class="btn btn-outline btn-sm" href="/portal/attempt.html?id=${encodeURIComponent(a.id)}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          Review &amp; Print
+        </a>
+      </div>`;
+  }).join('');
+}
+
+async function saveNotes() {
+  const btn = document.getElementById('save-notes-btn');
+  const status = document.getElementById('notes-status');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const content = document.getElementById('notes').value;
+  const { error } = await sb.from('student_notes')
+    .upsert({ student_id: profile.id, content, updated_at: new Date().toISOString() }, { onConflict: 'student_id' });
+  btn.disabled = false; btn.textContent = 'Save Notes';
+  if (error) { status.textContent = 'Could not save: ' + error.message; status.style.color = '#dc2626'; return; }
+  status.textContent = '✓ Saved'; status.style.color = 'var(--muted)';
+  setTimeout(() => { status.textContent = ''; }, 2500);
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');

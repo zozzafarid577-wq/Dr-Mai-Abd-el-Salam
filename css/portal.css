@@ -469,41 +469,50 @@ html[data-theme="dark"] .bio-bg svg { opacity: .10; }
 
 /* ═══════════════════════════════════════════════════════════════
    White, icon-only sidebar that expands to show labels on hover.
+   Stays white in BOTH light and dark themes (explicit colours, not
+   theme variables) — so the icons read clearly on any background.
    ═══════════════════════════════════════════════════════════════ */
 .sidebar {
-  background: var(--surface);
+  background: #ffffff;
   background-image: none;
-  border-right: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  border-right: 1px solid #e6e9f2;
+  box-shadow: 0 2px 12px rgba(15,23,42,.06);
 }
-.sidebar-brand { color: var(--text); border-bottom-color: var(--border); }
-.sidebar-brand span { color: var(--primary); }
-.nav-section { color: var(--muted); }
-.nav-item { color: var(--text-2); }
-.nav-item:hover { background: var(--bg); color: var(--text); }
-.nav-item.active { background: var(--accent-lt); color: var(--primary); }
+.sidebar-brand { color: #0d1117; border-bottom-color: #eceff5; }
+.sidebar-brand span { color: #2563eb; }
+.sidebar-brand .b-dot { background: linear-gradient(135deg,#2563eb,#60a5fa); }
+.nav-section { color: #9aa6bb; }
+.nav-item { color: #4a5568; }
+.nav-item:hover { background: #f1f4f9; color: #0d1117; }
+.nav-item.active { background: #eff6ff; color: #2563eb; }
 .nav-item.active svg, .nav-item:hover svg { opacity: 1; }
-.nav-item svg { opacity: .7; }
-.sidebar-foot { border-top-color: var(--border); }
-.user-name { color: var(--text); }
-.user-role { color: var(--muted); }
-.logout-btn { color: var(--muted); }
-.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+.nav-item svg { opacity: .72; }
+.nav-item.active::before { background: linear-gradient(180deg,#60a5fa,#2563eb); }
+.sidebar-foot { border-top-color: #eceff5; }
+.user-name { color: #0d1117; }
+.user-role { color: #9aa6bb; }
+.logout-btn { color: #9aa6bb; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: #e1e5ee; }
 
-/* Desktop: collapse to a 72px icon rail; widen on hover to reveal text. */
+/* Desktop: collapse to a 74px icon-only rail; widen on hover to reveal text.
+   Icons keep their left position in both states (no horizontal jump), and
+   the labels snap in only after the rail has finished widening (no flicker). */
 @media (min-width: 769px) {
-  .main { margin-left: 72px; }
-  .sidebar { width: 72px; overflow: hidden;
-    transition: width .22s cubic-bezier(.4,0,.2,1), box-shadow .2s; }
-  .sidebar:hover { width: var(--side); box-shadow: var(--shadow-lg); }
+  .main { margin-left: 74px; }
+  .sidebar { width: 74px;
+    transition: width .25s cubic-bezier(.4,0,.2,1), box-shadow .25s; }
+  .sidebar:hover { width: var(--side); box-shadow: 0 12px 40px rgba(15,23,42,.16); }
 
-  .sidebar:not(:hover) .sidebar-scroll { overflow: hidden; }
-  .sidebar:not(:hover) .nav-item { justify-content: center; font-size: 0; padding-left: 0; padding-right: 0; }
-  .sidebar:not(:hover) .nav-item svg { opacity: .85; }
-  .sidebar:not(:hover) .nav-section { font-size: 0; padding: 12px 0 2px; text-align: center; }
-  .sidebar:not(:hover) .nav-section::after { content: '•'; font-size: .7rem; color: var(--border); }
-  .sidebar:not(:hover) .sidebar-brand { justify-content: center; padding: 0; font-size: 0; }
-  .sidebar:not(:hover) .user-row { justify-content: center; padding: 10px 0; }
-  .sidebar:not(:hover) .user-info,
-  .sidebar:not(:hover) .logout-btn { display: none; }
+  .sidebar .nav-item, .sidebar .sidebar-brand, .sidebar .nav-section,
+  .sidebar .user-info {
+    white-space: nowrap; overflow: hidden;
+    transition: font-size 0s .15s;          /* label appears after the widen */
+  }
+  .sidebar .logout-btn { transition: opacity .2s; }
+
+  .sidebar:not(:hover) .nav-item,
+  .sidebar:not(:hover) .nav-section,
+  .sidebar:not(:hover) .sidebar-brand,
+  .sidebar:not(:hover) .user-info { font-size: 0; }   /* hide text, keep icons */
+  .sidebar:not(:hover) .logout-btn { opacity: 0; pointer-events: none; }
 }

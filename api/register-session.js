@@ -24,8 +24,18 @@ export default async function handler(req, res) {
   const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
   if (!profile || profile.role !== 'student') return res.status(200).json({ session_token: null });
 
+  // Capture where/when this login came from (best-effort).
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+           || req.socket?.remoteAddress || null;
+  const ua = (req.headers['user-agent'] || '').slice(0, 300) || null;
+
   const sessionToken = crypto.randomUUID();
-  await supabaseAdmin.from('profiles').update({ session_token: sessionToken }).eq('id', user.id);
+  await supabaseAdmin.from('profiles').update({
+    session_token: sessionToken,
+    last_login_at: new Date().toISOString(),
+    last_login_ip: ip,
+    last_login_ua: ua,
+  }).eq('id', user.id);
 
   return res.status(200).json({ session_token: sessionToken });
 }

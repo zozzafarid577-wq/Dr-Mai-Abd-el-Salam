@@ -11,6 +11,11 @@
 .test-card-header { display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px; }
 .test-card-title { font-size:.9rem;font-weight:700; }
 .test-card-meta { font-size:.74rem;color:var(--muted);margin-bottom:10px; }
+.q-toggle { display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);border-radius:9px;cursor:pointer;user-select:none;font-size:.8rem;font-weight:700;color:var(--text-2);transition:border-color .12s; }
+.q-toggle:hover { border-color:var(--primary);color:var(--text); }
+.q-toggle-chev { width:15px;height:15px;flex-shrink:0;color:var(--muted);transition:transform .2s cubic-bezier(.4,0,.2,1); }
+.q-toggle.open .q-toggle-chev { transform:rotate(90deg); }
+.q-toggle-hint { margin-left:auto;font-size:.7rem;font-weight:600;color:var(--primary);text-transform:uppercase;letter-spacing:.04em; }
 .q-admin-row { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border); }
 .q-admin-row:last-child { border-bottom:none; }
 .q-num-badge { width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px; }
@@ -422,7 +427,12 @@ function renderTests() {
         </div>
 
         ${qs.length > 0 ? `
-          <div style="margin-bottom:10px">
+          <div class="q-toggle" onclick="toggleQuestions('${t.id}')">
+            <svg class="q-toggle-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>${qs.length} question${qs.length!==1?'s':''}</span>
+            <span class="q-toggle-hint">Show</span>
+          </div>
+          <div class="q-list" id="qlist-${t.id}" style="display:none;margin-bottom:10px">
             ${qs.map((q, i) => renderQuestionRow(q, i)).join('')}
           </div>` : ''}
 
@@ -433,6 +443,20 @@ function renderTests() {
         </button>
       </div>`;
   }).join('');
+}
+
+// Collapse / expand a test's question list.
+function toggleQuestions(testId) {
+  const list = document.getElementById('qlist-' + testId);
+  if (!list) return;
+  const open = list.style.display === 'none';
+  list.style.display = open ? 'block' : 'none';
+  const toggle = list.previousElementSibling;
+  if (toggle) {
+    toggle.classList.toggle('open', open);
+    const hint = toggle.querySelector('.q-toggle-hint');
+    if (hint) hint.textContent = open ? 'Hide' : 'Show';
+  }
 }
 
 function renderQuestionRow(q, i) {

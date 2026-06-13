@@ -107,37 +107,9 @@
 .ann-mini-body { font-size:.78rem;color:var(--text-2);margin-top:4px;line-height:1.5; }
 
 .mb16 { margin-bottom:16px; }
-
-/* ── Cute jumping biology icons (decorative) ── */
-.bio-fun { position:fixed; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
-.bio-fun span {
-  position:absolute; font-size:2.5rem; opacity:.38;
-  filter:drop-shadow(0 6px 10px rgba(15,23,42,.12));
-  animation:bioJump 3s ease-in-out infinite;
-  will-change:transform;
-}
-@keyframes bioJump {
-  0%,100% { transform:translateY(0) rotate(-5deg); }
-  50%     { transform:translateY(-24px) rotate(6deg); }
-}
-@media(max-width:768px){ .bio-fun span{ font-size:1.7rem; opacity:.28; } }
 </style>
 </head>
 <body>
-
-<!-- Cute jumping biology icons floating in the page margins -->
-<div class="bio-fun" aria-hidden="true">
-  <span style="top:9%;left:2.5%;animation-delay:0s">🧬</span>
-  <span style="top:16%;right:3%;font-size:2.9rem;animation-delay:.4s">🦠</span>
-  <span style="top:38%;left:1.8%;font-size:2.1rem;animation-delay:.9s">🔬</span>
-  <span style="top:52%;right:2.2%;animation-delay:1.3s">🧪</span>
-  <span style="top:70%;left:3.2%;font-size:2.2rem;animation-delay:.6s">🫀</span>
-  <span style="top:82%;right:4%;font-size:2.4rem;animation-delay:1.1s">🧫</span>
-  <span style="bottom:5%;left:12%;font-size:2rem;animation-delay:1.6s">🧠</span>
-  <span style="bottom:7%;right:14%;font-size:2rem;animation-delay:.2s">🌿</span>
-  <span style="top:26%;left:46%;font-size:1.8rem;animation-delay:1.9s">⚛️</span>
-  <span style="bottom:18%;right:30%;font-size:1.8rem;animation-delay:.8s">🩸</span>
-</div>
 
 <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
 

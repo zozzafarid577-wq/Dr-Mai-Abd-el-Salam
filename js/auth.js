@@ -70,7 +70,8 @@ async function requireAuth(role) {
   if (profile.role === 'student') {
     try { await setupStudentNav(profile.id); } catch (_) {}
     try { installContentGuard(profile); } catch (_) {}
-    try { installWatermark(profile); } catch (_) {}
+    // Watermark only on the PDF viewer and test pages — not the whole site.
+    try { if (/\/(viewer|take-test|attempt)\.html$/.test(location.pathname)) installWatermark(); } catch (_) {}
   }
 
   if (profile.role === 'admin') {
@@ -170,15 +171,13 @@ function setupAdminNav(profile) {
 }
 
 // ── Watermark ─────────────────────────────────────────────────────
-// Tiles a faint, diagonal "Dr Mai Abd El Salam · +20 112 305 6296 · <student>"
-// across the content so any screenshot/leak is branded and traceable back to
-// the student. Pointer-events:none so it never blocks the page.
-function installWatermark(profile) {
+// Tiles a faint, diagonal "Dr Mai Abd El Salam · +20 112 305 6296" across the
+// page so any screenshot of a PDF or test is branded. Used only on the PDF
+// viewer and test pages. Pointer-events:none so it never blocks the page.
+function installWatermark() {
   if (window.__wmInstalled) return;
   window.__wmInstalled = true;
-  const xmlEsc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const who  = profile && profile.full_name ? '  •  ' + xmlEsc(profile.full_name) : '';
-  const line = 'Dr Mai Abd El Salam  •  +20 112 305 6296' + who;
+  const line = 'Dr Mai Abd El Salam  •  +20 112 305 6296';
   const svg  = `<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320">`
     + `<text x="24" y="180" transform="rotate(-28 280 160)" fill="rgba(100,116,139,0.10)" `
     + `font-family="Inter, system-ui, sans-serif" font-size="19" font-weight="700">${line}</text></svg>`;

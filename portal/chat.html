@@ -117,7 +117,37 @@ const seen = new Set();     // message ids already rendered
 let channel = null;         // realtime channel (messages + typing)
 const SEL = 'id, sender_id, sender_name, sender_role, body, image_url, created_at';
 
+// Admin sidebar (used when an admin opens the chatroom so they don't land on
+// a student-looking page). auth.js then injects the Wayground/Notes/Team tabs.
+const ADMIN_NAV = `
+  <div class="nav-section">Overview</div>
+  <a href="/drmai-staff-portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+  <div class="nav-section">Management</div>
+  <a href="/drmai-staff-portal/students.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</a>
+  <a href="/drmai-staff-portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
+  <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/></svg>Question Bank</a>
+  <a href="/drmai-staff-portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+  <a href="/drmai-staff-portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+  <a href="/drmai-staff-portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+  <a href="/portal/chat.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Chatroom</a>
+  <a href="/drmai-staff-portal/security.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security</a>`;
+
 (async () => {
+  // Render the correct sidebar for this user BEFORE auth augments it, so an
+  // admin sees the admin menu (not the student preview) in the chatroom.
+  try {
+    const s = await getSession();
+    const pre = s ? await getProfile(s.user.id) : null;
+    if (pre && pre.role === 'admin') {
+      const brand = document.querySelector('.sidebar-brand');
+      if (brand) brand.innerHTML = '<div class="b-dot"></div>Dr Mai <span>Admin</span>';
+      const scroll = document.querySelector('.sidebar-scroll');
+      if (scroll) scroll.innerHTML = ADMIN_NAV;
+      const role = document.querySelector('.user-role');
+      if (role) role.textContent = 'Administrator';
+    }
+  } catch (_) {}
+
   profile = await requireAuth();   // students and admins both allowed
   if (!profile) return;
   isAdmin = profile.role === 'admin';

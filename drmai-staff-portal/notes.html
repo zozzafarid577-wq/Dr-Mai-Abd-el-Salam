@@ -102,7 +102,7 @@ let profile = null;
 
 async function loadNotes() {
   const list = document.getElementById('list');
-  const { data, error } = await sb.from('student_notes')
+  const { data, error } = await sb.from('shared_notes')
     .select('id, title, body, file_url, audience, is_active, created_at')
     .order('created_at', { ascending: false });
   if (error) { list.innerHTML = `<div style="color:#dc2626;font-size:.85rem">${escHtml(error.message)} (run migration v24?)</div>`; return; }
@@ -134,7 +134,7 @@ async function addNote() {
 
   const btn = document.getElementById('add-btn');
   btn.disabled = true; btn.textContent = 'Adding…';
-  const { error } = await sb.from('student_notes').insert({
+  const { error } = await sb.from('shared_notes').insert({
     title, body: body || null, file_url: file || null, audience,
     is_active: true, created_by: profile.id,
   });
@@ -150,14 +150,14 @@ async function addNote() {
 }
 
 async function toggleActive(id, isActive) {
-  const { error } = await sb.from('student_notes').update({ is_active: !isActive }).eq('id', id);
+  const { error } = await sb.from('shared_notes').update({ is_active: !isActive }).eq('id', id);
   if (error) { toast('Error: ' + error.message, 'error'); return; }
   await loadNotes();
 }
 
 async function deleteNote(id) {
   if (!confirm('Delete this note permanently?')) return;
-  const { error } = await sb.from('student_notes').delete().eq('id', id);
+  const { error } = await sb.from('shared_notes').delete().eq('id', id);
   if (error) { toast('Error: ' + error.message, 'error'); return; }
   toast('Note deleted.', 'success');
   await loadNotes();

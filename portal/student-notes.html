@@ -87,7 +87,7 @@
   document.getElementById('u-av').textContent   = initials(profile.full_name);
 
   const grid = document.getElementById('pdf-grid');
-  const { data: notes, error } = await sb.from('student_notes')
+  const { data: notes, error } = await sb.from('shared_notes')
     .select('id, title, body, file_url, audience, created_at')
     .eq('is_active', true)
     .order('created_at', { ascending: false });

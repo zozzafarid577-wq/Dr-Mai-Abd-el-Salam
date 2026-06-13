@@ -97,6 +97,14 @@ ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS is_active   BOOLEAN 
 ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS created_by  UUID;
 ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW();
 ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW();
+-- A test can be split into parts (0 = whole test, 1 = Part 1, 2 = Part 2, …).
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS part        INTEGER NOT NULL DEFAULT 0;
+
+-- Uniqueness is now per (test, version, part).
+ALTER TABLE public.wayground_tests DROP CONSTRAINT IF EXISTS wayground_tests_test_number_version_key;
+DROP INDEX IF EXISTS public.wayground_tests_unique;
+CREATE UNIQUE INDEX IF NOT EXISTS wayground_tests_unique
+  ON public.wayground_tests(test_number, version, part);
 
 ALTER TABLE public.wayground_tests ENABLE ROW LEVEL SECURITY;
 
@@ -113,8 +121,22 @@ CREATE TRIGGER wayground_updated_at
   BEFORE UPDATE ON public.wayground_tests
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- ── 3. General student notes (not tied to a test/lesson) ─────────
-CREATE TABLE IF NOT EXISTS public.student_notes (
+-- ── 3. General shared notes (admin-authored, not tied to a test/lesson) ──
+-- NOTE: a `student_notes` table already exists (migration v18) as each
+-- student's PRIVATE notes pad. We use a separate table, `shared_notes`, and
+-- undo any columns/policies a previous version of this migration may have
+-- accidentally added to student_notes (which would have exposed private notes).
+DROP POLICY IF EXISTS "student_notes_read"      ON public.student_notes;
+DROP POLICY IF EXISTS "student_notes_admin_all" ON public.student_notes;
+ALTER TABLE public.student_notes DROP COLUMN IF EXISTS title;
+ALTER TABLE public.student_notes DROP COLUMN IF EXISTS body;
+ALTER TABLE public.student_notes DROP COLUMN IF EXISTS file_url;
+ALTER TABLE public.student_notes DROP COLUMN IF EXISTS audience;
+ALTER TABLE public.student_notes DROP COLUMN IF EXISTS is_active;
+ALTER TABLE public.student_notes DROP COLUMN IF EXISTS created_by;
+ALTER TABLE public.student_notes DROP COLUMN IF EXISTS created_at;
+
+CREATE TABLE IF NOT EXISTS public.shared_notes (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title       TEXT NOT NULL,
   body        TEXT,                         -- free-text note
@@ -126,22 +148,22 @@ CREATE TABLE IF NOT EXISTS public.student_notes (
 );
 
 -- Guard: ensure every column exists even if an earlier/partial table is present.
-ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS title      TEXT;
-ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS body       TEXT;
-ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS file_url   TEXT;
-ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS audience   TEXT NOT NULL DEFAULT 'all';
-ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS is_active  BOOLEAN NOT NULL DEFAULT true;
-ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS created_by UUID;
-ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE public.shared_notes ADD COLUMN IF NOT EXISTS title      TEXT;
+ALTER TABLE public.shared_notes ADD COLUMN IF NOT EXISTS body       TEXT;
+ALTER TABLE public.shared_notes ADD COLUMN IF NOT EXISTS file_url   TEXT;
+ALTER TABLE public.shared_notes ADD COLUMN IF NOT EXISTS audience   TEXT NOT NULL DEFAULT 'all';
+ALTER TABLE public.shared_notes ADD COLUMN IF NOT EXISTS is_active  BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.shared_notes ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE public.shared_notes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
-ALTER TABLE public.student_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.shared_notes ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "student_notes_read" ON public.student_notes;
-CREATE POLICY "student_notes_read" ON public.student_notes
+DROP POLICY IF EXISTS "shared_notes_read" ON public.shared_notes;
+CREATE POLICY "shared_notes_read" ON public.shared_notes
   FOR SELECT TO authenticated USING (is_active = true);
 
-DROP POLICY IF EXISTS "student_notes_admin_all" ON public.student_notes;
-CREATE POLICY "student_notes_admin_all" ON public.student_notes
+DROP POLICY IF EXISTS "shared_notes_admin_all" ON public.shared_notes;
+CREATE POLICY "shared_notes_admin_all" ON public.shared_notes
   FOR ALL USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
-CREATE INDEX IF NOT EXISTS idx_student_notes_time ON public.student_notes(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_shared_notes_time ON public.shared_notes(created_at DESC);

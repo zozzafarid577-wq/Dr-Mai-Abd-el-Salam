@@ -15,7 +15,9 @@
 .wg-icon svg { width:22px;height:22px; }
 .wg-num { font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:20px;align-self:flex-start;background:#eef2ff;color:#4338ca; }
 .wg-name { font-size:.92rem;font-weight:800;color:var(--text);line-height:1.3; }
-.wg-versions { display:flex;gap:8px;flex-wrap:wrap;margin-top:auto; }
+.wg-part { margin-top:4px; }
+.wg-part-lbl { font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 4px; }
+.wg-versions { display:flex;gap:8px;flex-wrap:wrap; }
 .wg-link { flex:1;min-width:96px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;text-decoration:none; }
 .wg-link.v2 { background:#7c3aed; }
 .wg-link svg { width:14px;height:14px; }
@@ -82,31 +84,43 @@
 
   const grid = document.getElementById('wg-grid');
   const { data, error } = await sb.from('wayground_tests')
-    .select('test_number, version, title, url, is_active')
+    .select('test_number, version, part, title, url, is_active')
     .eq('is_active', true)
-    .order('test_number').order('version');
+    .order('test_number').order('part').order('version');
 
   if (error) { grid.innerHTML = errBox(error.message); return; }
   if (!data || !data.length) { grid.innerHTML = empty(); return; }
 
-  // Group by test number.
+  const linkHtml = r => `
+        <a class="wg-link ${r.version === 2 ? 'v2' : ''}" href="${escAttr(r.url)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Version ${r.version}
+        </a>`;
+
+  // Group by test number, then by part.
   const byTest = {};
   data.forEach(r => { (byTest[r.test_number] ||= []).push(r); });
 
   grid.innerHTML = Object.keys(byTest).sort((a,b) => a - b).map(num => {
     const rows = byTest[num];
     const title = rows.find(r => r.title)?.title || `Test ${num}`;
-    const links = rows.map(r => `
-        <a class="wg-link ${r.version === 2 ? 'v2' : ''}" href="${escAttr(r.url)}" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          Version ${r.version}
-        </a>`).join('');
+
+    const byPart = {};
+    rows.forEach(r => { (byPart[r.part || 0] ||= []).push(r); });
+    const parts = Object.keys(byPart).sort((a,b) => a - b);
+    const showLabels = parts.length > 1 || +parts[0] !== 0;
+
+    const partsHtml = parts.map(p => {
+      const lbl = showLabels ? `<div class="wg-part-lbl">${+p === 0 ? 'Whole test' : 'Part ' + p}</div>` : '';
+      return `<div class="wg-part">${lbl}<div class="wg-versions">${byPart[p].map(linkHtml).join('')}</div></div>`;
+    }).join('');
+
     return `
       <div class="wg-card">
         <div class="wg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
         <span class="wg-num">Test ${escHtml(num)}</span>
         <div class="wg-name">${escHtml(title)}</div>
-        <div class="wg-versions">${links}</div>
+        ${partsHtml}
       </div>`;
   }).join('');
 })();

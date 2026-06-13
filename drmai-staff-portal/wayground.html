@@ -9,11 +9,15 @@
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <link rel="stylesheet" href="/css/admin.css">
 <style>
-.wg-row { display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid var(--border); }
-.wg-row .tnum { font-weight:800;font-size:.95rem;color:var(--text);padding-bottom:8px; }
-.wg-row label { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);display:block;margin-bottom:4px; }
-.wg-head { display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:10px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-bottom:6px;border-bottom:2px solid var(--border); }
-@media(max-width:720px){ .wg-row,.wg-head{grid-template-columns:1fr} .wg-head{display:none} .wg-row .tnum{padding-bottom:0} }
+.wg-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.wg-form .full{grid-column:1/-1}
+.wg-test-block{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--surface)}
+.wg-test-block h4{margin:0 0 10px;font-size:.95rem}
+.wg-link-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:.84rem}
+.wg-link-row:first-of-type{border-top:0}
+.wg-tag{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:20px;background:#eef2ff;color:#4338ca;flex-shrink:0}
+.wg-tag.v2{background:#f5f3ff;color:#6d28d9}
+.wg-url{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -49,16 +53,45 @@
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <span class="page-title">Wayground Tests</span>
     </div>
-    <div class="topbar-right">
-      <button class="btn btn-primary btn-sm" id="save-btn" onclick="saveAll()">Save all links</button>
-    </div>
   </header>
   <main class="content">
-    <div style="font-size:.84rem;color:var(--muted);margin-bottom:16px">Add the Wayground (Quizizz) link for each of the 8 tests. Each test can have two versions. Leave a box empty to remove that link. Revision students see these under <strong>Wayground Tests</strong>.</div>
-    <div class="card">
-      <div class="wg-head"><div>Test</div><div>Title (optional)</div><div>Version 1 link</div><div>Version 2 link</div></div>
-      <div id="rows"><div style="padding:24px;text-align:center;color:var(--muted)">Loading…</div></div>
+    <div style="font-size:.84rem;color:var(--muted);margin-bottom:16px">Add a Wayground (Quizizz) link for each test. Pick a <strong>part</strong> if a test is split into pieces (Pt 1, Pt 2…), and a <strong>version</strong>. Adding the same test + part + version again updates that link. Revision students see these under <strong>Wayground Tests</strong>.</div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Add / update a link</span></div>
+      <div class="card-body">
+        <div id="add-alert" class="alert" style="display:none;margin-bottom:14px"></div>
+        <div class="wg-form">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Test</label>
+            <select class="form-input" id="f-test"></select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Part</label>
+            <select class="form-input" id="f-part"></select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Version</label>
+            <select class="form-input" id="f-version">
+              <option value="1">Version 1</option>
+              <option value="2">Version 2</option>
+            </select>
+          </div>
+          <div class="form-group full" style="margin:0">
+            <label class="form-label">Title (optional)</label>
+            <input type="text" class="form-input" id="f-title" placeholder="e.g. Genetics review">
+          </div>
+          <div class="form-group full" style="margin:0">
+            <label class="form-label">Wayground link</label>
+            <input type="url" class="form-input" id="f-url" placeholder="https://wayground.com/…">
+          </div>
+          <div class="full"><button class="btn btn-primary" id="add-btn" onclick="addLink()">Add / update link</button></div>
+        </div>
+      </div>
     </div>
+
+    <div class="card-title" style="margin-bottom:10px">Current links</div>
+    <div id="list"><div style="color:var(--muted);font-size:.85rem">Loading…</div></div>
   </main>
 </div>
 
@@ -67,68 +100,83 @@
 <script src="/js/auth.js"></script>
 <script>
 const NUM_TESTS = 8;
+const MAX_PARTS = 8;
 let profile = null;
+
+function partLabel(p){ return p === 0 ? 'Whole test' : 'Part ' + p; }
 
 (async () => {
   profile = await requireAuth('admin');
   if (!profile) return;
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
+
+  // Populate the Test + Part dropdowns.
+  const testSel = document.getElementById('f-test');
+  testSel.innerHTML = Array.from({length: NUM_TESTS}, (_, i) => `<option value="${i+1}">Test ${i+1}</option>`).join('');
+  const partSel = document.getElementById('f-part');
+  partSel.innerHTML = Array.from({length: MAX_PARTS + 1}, (_, p) => `<option value="${p}">${partLabel(p)}</option>`).join('');
+
   await load();
 })();
 
 async function load() {
-  const { data, error } = await sb.from('wayground_tests').select('test_number, version, title, url');
-  const map = {};
-  if (!error) (data || []).forEach(r => { map[`${r.test_number}_${r.version}`] = r; });
+  const list = document.getElementById('list');
+  const { data, error } = await sb.from('wayground_tests')
+    .select('id, test_number, version, part, title, url')
+    .order('test_number').order('part').order('version');
+  if (error) { list.innerHTML = `<div style="color:#dc2626;font-size:.85rem">${escHtml(error.message)} (run migration v24?)</div>`; return; }
+  if (!data || !data.length) { list.innerHTML = '<div style="color:var(--muted);font-size:.85rem">No links yet.</div>'; return; }
 
-  const rows = document.getElementById('rows');
-  let html = '';
-  for (let n = 1; n <= NUM_TESTS; n++) {
-    const t = map[`${n}_1`]?.title || map[`${n}_2`]?.title || '';
-    html += `
-      <div class="wg-row">
-        <div class="tnum">Test ${n}</div>
-        <div><label>Title</label><input class="form-input" id="title-${n}" placeholder="Test ${n}" value="${escAttr(t)}"></div>
-        <div><label>Version 1</label><input class="form-input" id="v1-${n}" placeholder="https://wayground.com/…" value="${escAttr(map[`${n}_1`]?.url || '')}"></div>
-        <div><label>Version 2</label><input class="form-input" id="v2-${n}" placeholder="https://wayground.com/…" value="${escAttr(map[`${n}_2`]?.url || '')}"></div>
-      </div>`;
-  }
-  rows.innerHTML = html;
+  const byTest = {};
+  data.forEach(r => { (byTest[r.test_number] ||= []).push(r); });
+
+  list.innerHTML = Object.keys(byTest).sort((a,b) => a - b).map(num => {
+    const rows = byTest[num].map(r => `
+      <div class="wg-link-row">
+        <span class="wg-tag">${escHtml(partLabel(r.part || 0))}</span>
+        <span class="wg-tag ${r.version === 2 ? 'v2' : ''}">V${r.version}</span>
+        ${r.title ? `<strong style="flex-shrink:0">${escHtml(r.title)}</strong>` : ''}
+        <a class="wg-url" href="${escAttr(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a>
+        <button class="btn btn-ghost btn-sm" style="color:#dc2626;flex-shrink:0" onclick="del('${r.id}')">Delete</button>
+      </div>`).join('');
+    return `<div class="wg-test-block"><h4>Test ${escHtml(num)}</h4>${rows}</div>`;
+  }).join('');
 }
 
-async function saveAll() {
-  const btn = document.getElementById('save-btn');
+async function addLink() {
+  const test_number = +document.getElementById('f-test').value;
+  const part        = +document.getElementById('f-part').value;
+  const version     = +document.getElementById('f-version').value;
+  const title       = document.getElementById('f-title').value.trim() || null;
+  const url         = document.getElementById('f-url').value.trim();
+  if (!url) { alertBox('Please paste the Wayground link.', 'error'); return; }
+
+  const btn = document.getElementById('add-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
+  const { error } = await sb.from('wayground_tests').upsert(
+    { test_number, version, part, title, url, is_active: true, created_by: profile.id },
+    { onConflict: 'test_number,version,part' }
+  );
+  btn.disabled = false; btn.textContent = 'Add / update link';
+  if (error) { alertBox(error.message, 'error'); return; }
 
-  const upserts = [];
-  const deletes = [];
-  for (let n = 1; n <= NUM_TESTS; n++) {
-    const title = document.getElementById(`title-${n}`).value.trim() || null;
-    [1, 2].forEach(v => {
-      const url = document.getElementById(`v${v}-${n}`).value.trim();
-      if (url) upserts.push({ test_number: n, version: v, url, title, is_active: true, created_by: profile.id });
-      else deletes.push({ n, v });
-    });
-  }
-
-  try {
-    if (upserts.length) {
-      const { error } = await sb.from('wayground_tests').upsert(upserts, { onConflict: 'test_number,version' });
-      if (error) throw error;
-    }
-    for (const d of deletes) {
-      await sb.from('wayground_tests').delete().eq('test_number', d.n).eq('version', d.v);
-    }
-    toast('Wayground links saved.', 'success');
-    await load();
-  } catch (e) {
-    toast('Error: ' + (e.message || e), 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Save all links';
-  }
+  document.getElementById('f-url').value = '';
+  document.getElementById('f-title').value = '';
+  document.getElementById('add-alert').style.display = 'none';
+  toast('Link saved.', 'success');
+  await load();
 }
 
+async function del(id) {
+  if (!confirm('Delete this link?')) return;
+  const { error } = await sb.from('wayground_tests').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast('Link deleted.', 'success');
+  await load();
+}
+
+function alertBox(msg, type){ const el = document.getElementById('add-alert'); el.textContent = msg; el.className = `alert alert-${type}`; el.style.display = 'flex'; }
 function escAttr(s){ const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML.replace(/"/g,'&quot;'); }
 function toast(msg, type='') {
   const wrap = document.getElementById('toasts');

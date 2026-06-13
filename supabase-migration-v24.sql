@@ -39,6 +39,13 @@ UPDATE public.profiles SET is_owner = true
  )
  AND NOT EXISTS (SELECT 1 FROM public.profiles WHERE is_owner = true);
 
+-- Any OTHER existing admins keep full access until the owner narrows them
+-- down on the Team & Access page — so nobody is locked out by this migration.
+UPDATE public.profiles
+   SET admin_perms = '["students","courses","questions","tests","assignments","announcements","wayground","notes","security","chat"]'::jsonb
+ WHERE role = 'admin' AND is_owner = false
+   AND (admin_perms IS NULL OR admin_perms = '[]'::jsonb);
+
 -- Helper: is the CURRENT signed-in user the owner? SECURITY DEFINER so
 -- it reads profiles without tripping the table's own RLS (no recursion).
 CREATE OR REPLACE FUNCTION public.auth_is_owner()
@@ -81,6 +88,16 @@ CREATE TABLE IF NOT EXISTS public.wayground_tests (
   UNIQUE (test_number, version)
 );
 
+-- Guard: ensure every column exists even if an earlier/partial table is present.
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS test_number INTEGER;
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS version     INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS title       TEXT;
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS url         TEXT;
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS is_active   BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS created_by  UUID;
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE public.wayground_tests ADD COLUMN IF NOT EXISTS updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
 ALTER TABLE public.wayground_tests ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "wayground_read" ON public.wayground_tests;
@@ -107,6 +124,15 @@ CREATE TABLE IF NOT EXISTS public.student_notes (
   created_by  UUID REFERENCES public.profiles(id),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Guard: ensure every column exists even if an earlier/partial table is present.
+ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS title      TEXT;
+ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS body       TEXT;
+ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS file_url   TEXT;
+ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS audience   TEXT NOT NULL DEFAULT 'all';
+ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS is_active  BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE public.student_notes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 ALTER TABLE public.student_notes ENABLE ROW LEVEL SECURITY;
 

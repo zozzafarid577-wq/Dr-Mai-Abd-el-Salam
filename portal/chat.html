@@ -19,6 +19,10 @@
 .bubble{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:9px 13px;font-size:.9rem;line-height:1.45;color:var(--text);white-space:pre-wrap;word-break:break-word}
 .msg.me .bubble{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-color:transparent}
 .msg.admin .bubble{border-color:#fcd34d;background:#fffbeb}
+/* An admin's own message is both .me and .admin — keep the yellow box but
+   use dark text so it stays readable (was white-on-yellow). */
+.msg.me.admin .bubble{background:#fffbeb;color:#7c5807;border-color:#fcd34d}
+html[data-theme="dark"] .msg.me.admin .bubble{background:#2a2410;color:#fde68a}
 html[data-theme="dark"] .msg.admin .bubble{background:#2a2410}
 .msg-time{font-size:.6rem;color:var(--muted);margin:3px 4px 0}
 .msg-del{font-size:.6rem;color:#dc2626;cursor:pointer;margin-left:6px}

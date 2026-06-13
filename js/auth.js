@@ -98,7 +98,8 @@ async function setupStudentNav(studentId) {
   // Inject the shared "Student Notes" tab (all students) + the revision tabs once.
   if (!scroll.querySelector('a[href="/portal/student-notes.html"]')) {
     scroll.insertAdjacentHTML('beforeend', `
-      <div class="nav-section nav-notes">Notes</div>
+      <div class="nav-section nav-notes">Community</div>
+      <a href="/portal/chat.html" class="nav-item nav-notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Chatroom</a>
       <a href="/portal/student-notes.html" class="nav-item nav-notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Student Notes</a>
       <div class="nav-section nav-rev">Revision</div>
       <a href="/portal/summaries.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Summaries &amp; Cheat Codes</a>
@@ -119,7 +120,7 @@ async function setupStudentNav(studentId) {
   // Revision: keep only the focused set.
   const ALLOW = ['/portal/', '/portal/lessons.html', '/portal/mock-tests.html',
                  '/portal/summaries.html', '/portal/retest.html', '/portal/student-notes.html',
-                 '/portal/scores.html', '/portal/settings.html'];
+                 '/portal/chat.html', '/portal/scores.html', '/portal/settings.html'];
   scroll.querySelectorAll('.nav-item').forEach(a => {
     if (!ALLOW.includes(a.getAttribute('href'))) a.style.display = 'none';
   });

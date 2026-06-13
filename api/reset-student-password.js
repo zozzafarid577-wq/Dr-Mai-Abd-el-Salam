@@ -56,11 +56,11 @@ export default async function handler(req, res) {
 
   const password = generatePassword();
 
-  const { error } = await supabaseAdmin.auth.admin.updateUserById(student_id, { password });
+  const { data: updated, error } = await supabaseAdmin.auth.admin.updateUserById(student_id, { password });
   if (error) return res.status(500).json({ error: error.message });
 
   // Force must_change_pw = true so student is prompted on next login
   await supabaseAdmin.from('profiles').update({ must_change_pw: true }).eq('id', student_id);
 
-  return res.status(200).json({ password });
+  return res.status(200).json({ password, email: updated?.user?.email || null });
 }

@@ -88,7 +88,10 @@
         <strong style="color:#166534">Admin created!</strong>
         <div>Email: <span class="cred-field" id="cred-email"></span></div>
         <div>Password: <span class="cred-field" id="cred-pw"></span></div>
-        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="copyCreds()">Copy credentials</button>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="copyCreds()">Copy credentials</button>
+          <button class="btn btn-primary btn-sm" id="email-cred-btn" onclick="emailAdminCreds(this)">Email credentials</button>
+        </div>
       </div>
     </div>
     <div class="modal-footer" id="add-footer" style="flex-shrink:0">
@@ -227,6 +230,27 @@ function copyCreds() {
   if (!lastCreated) return;
   navigator.clipboard.writeText(`Portal: ${location.origin}/login.html\nEmail: ${lastCreated.email}\nPassword: ${lastCreated.password}`);
   toast('Credentials copied!', 'success');
+}
+
+async function emailAdminCreds(btn) {
+  if (!lastCreated) return;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const session = await getSession();
+    const resp = await fetch('/api/send-parent-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ action: 'credentials', to_email: lastCreated.email, to_name: lastCreated.email, password: lastCreated.password, login_url: location.origin + '/login.html' }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Email failed');
+    toast('Credentials emailed.', 'success');
+    btn.textContent = 'Emailed ✓';
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = orig;
+  }
 }
 
 function addAlert(msg, type) {

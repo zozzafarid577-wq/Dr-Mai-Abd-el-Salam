@@ -326,7 +326,7 @@ function renderLessons() {
           ${videosHtml}
           <div class="sec-label">📄 PDFs</div>
           ${pdfsHtml}
-          ${isRevisionStudent() ? '' : `<div class="sec-label">📝 Practice Tests</div>${testsHtml}`}
+          ${isPureRevisionStudent() ? '' : `<div class="sec-label">📝 Practice Tests</div>${testsHtml}`}
         </div>
       </div>`;
   }).join('');

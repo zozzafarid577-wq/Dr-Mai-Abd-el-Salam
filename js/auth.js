@@ -67,9 +67,54 @@ async function requireAuth(role) {
     }
   }
 
-  if (profile.role === 'student') { try { await setupStudentNav(profile.id); } catch (_) {} }
+  if (profile.role === 'student') {
+    try { await setupStudentNav(profile.id); } catch (_) {}
+    try { installContentGuard(profile); } catch (_) {}
+  }
 
   return profile;
+}
+
+// ── Content guard ─────────────────────────────────────────────────
+// Warns students that copying protected content can get them terminated,
+// and logs the attempt to security_events so the admin can review it.
+function installContentGuard(profile) {
+  if (window.__guardInstalled) return;
+  window.__guardInstalled = true;
+  let lastWarn = 0;
+  const lastLog = {};
+
+  function warn() {
+    const now = Date.now();
+    if (now - lastWarn < 4000) return;
+    lastWarn = now;
+    let b = document.getElementById('guard-banner');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'guard-banner';
+      b.style.cssText = 'position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:99999;background:#7f1d1d;color:#fff;padding:11px 18px;border-radius:10px;font:600 13px/1.45 Inter,system-ui,sans-serif;box-shadow:0 10px 34px rgba(0,0,0,.35);max-width:92vw;text-align:center;pointer-events:none';
+      document.body.appendChild(b);
+    }
+    b.textContent = '⚠ This content is protected. Copying, downloading or sharing it is against the rules and may get your account terminated.';
+    b.style.display = 'block';
+    clearTimeout(b._t);
+    b._t = setTimeout(() => { b.style.display = 'none'; }, 4000);
+  }
+
+  function log(type, detail) {
+    const now = Date.now();
+    if (lastLog[type] && now - lastLog[type] < 15000) return;   // throttle
+    lastLog[type] = now;
+    try {
+      sb.from('security_events').insert({
+        student_id: profile.id, student_name: profile.full_name,
+        event_type: type, detail: detail || null, page: location.pathname,
+      });
+    } catch (_) {}
+  }
+
+  document.addEventListener('copy', () => { warn(); log('copy'); });
+  document.addEventListener('cut',  () => { warn(); log('cut'); });
 }
 
 // Enrolment flags, populated by setupStudentNav() (cached in sessionStorage).

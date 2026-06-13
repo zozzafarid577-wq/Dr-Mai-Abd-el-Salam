@@ -132,9 +132,10 @@
           <label class="form-label">Enrollment *</label>
           <select class="form-input" id="plan-select">
             <option value="">— Select enrollment —</option>
-            <option value="revision">Revision only</option>
-            <option value="basics_revision">Basics + Revision</option>
-            <option value="basics">Basics only</option>
+            <option value="act">ACT Revision only</option>
+            <option value="est">EST Revision only</option>
+            <option value="basics_act">Basics + ACT Revision</option>
+            <option value="basics_est">Basics + EST Revision</option>
           </select>
           <div class="form-hint" id="plan-hint" style="font-size:.72rem;color:var(--muted);margin-top:4px"></div>
         </div>
@@ -303,26 +304,28 @@ let lastCreated  = null;
   // Instead, show placeholder and note that email is in auth.users
 })();
 
-let basicsCourses = [], revisionCourses = [];
+let basicsCourses = [], actRevCourses = [], estRevCourses = [];
 function buildCourseSelect() {
-  basicsCourses   = courses.filter(c => /basics/i.test(c.title));
-  revisionCourses = courses.filter(c => /revision/i.test(c.title));
+  basicsCourses = courses.filter(c => /basics/i.test(c.title));
+  actRevCourses = courses.filter(c => /revision/i.test(c.title) && /\bact\b/i.test(c.title));
+  estRevCourses = courses.filter(c => /revision/i.test(c.title) && /\best\b/i.test(c.title));
   const opts = '<option value="">— Select a course —</option>' +
     courses.map(c => `<option value="${c.id}">${escHtml(c.title)}</option>`).join('');
   const bulk = document.getElementById('bulk-course');
   if (bulk) bulk.innerHTML = opts;
   const hint = document.getElementById('plan-hint');
-  if (hint && (!revisionCourses.length || !basicsCourses.length)) {
-    hint.textContent = `Found ${revisionCourses.length} revision and ${basicsCourses.length} basics course(s). Name courses with "Revision"/"Basics" so plans map correctly.`;
+  if (hint) {
+    hint.textContent = `Detected courses — Basics: ${basicsCourses.length}, ACT Revision: ${actRevCourses.length}, EST Revision: ${estRevCourses.length}. Course titles need "ACT"/"EST" + "Revision" (and "Basics") for plans to map.`;
   }
 }
 
 // Course IDs to enroll for a chosen plan (matched by course title).
 function planCourseIds(plan) {
-  if (plan === 'revision') return revisionCourses.map(c => c.id);
-  if (plan === 'basics')   return basicsCourses.map(c => c.id);
-  if (plan === 'basics_revision') return [...new Set([...basicsCourses, ...revisionCourses].map(c => c.id))];
-  return [];
+  const ids = new Set();
+  if (plan === 'act' || plan === 'basics_act') actRevCourses.forEach(c => ids.add(c.id));
+  if (plan === 'est' || plan === 'basics_est') estRevCourses.forEach(c => ids.add(c.id));
+  if (plan === 'basics_act' || plan === 'basics_est') basicsCourses.forEach(c => ids.add(c.id));
+  return [...ids];
 }
 
 // ── Bulk add ────────────────────────────────────────────────────

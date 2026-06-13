@@ -73,7 +73,9 @@
             <label class="form-label">Who sees it</label>
             <select class="form-input" id="n-audience">
               <option value="all">All students (general)</option>
-              <option value="revision">Revision / real-test students only</option>
+              <option value="revision">All revision students</option>
+              <option value="act">ACT revision only</option>
+              <option value="est">EST revision only</option>
             </select>
           </div>
         </div>
@@ -91,6 +93,9 @@
 <script src="/js/auth.js"></script>
 <script>
 let profile = null;
+function audienceLabel(a) {
+  return { all: 'All students', revision: 'All revision students', act: 'ACT revision only', est: 'EST revision only' }[a] || 'All students';
+}
 
 (async () => {
   profile = await requireAuth('admin');
@@ -112,7 +117,7 @@ async function loadNotes() {
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
         <div style="min-width:0">
           <h4>${escHtml(n.title)}</h4>
-          <div class="meta">${fmtDate(n.created_at)} · ${n.audience === 'revision' ? 'Revision students' : 'All students'}${n.is_active ? '' : ' · <span style="color:#dc2626">hidden</span>'}</div>
+          <div class="meta">${fmtDate(n.created_at)} · ${audienceLabel(n.audience)}${n.is_active ? '' : ' · <span style="color:#dc2626">hidden</span>'}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
           <button class="btn btn-ghost btn-sm" onclick="toggleActive('${n.id}', ${n.is_active})">${n.is_active ? 'Hide' : 'Show'}</button>

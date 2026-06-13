@@ -94,8 +94,15 @@
 
   if (error) { grid.innerHTML = errBox(error.message); return; }
 
-  // 'revision' notes are only for revision students; 'all' goes to everyone.
-  const visible = (notes || []).filter(n => n.audience !== 'revision' || isRevisionStudent());
+  // Audience filter: 'all' → everyone, 'revision' → any revision student,
+  // 'act'/'est' → that revision track only.
+  const canSee = a => {
+    if (a === 'act') return isActRevisionStudent();
+    if (a === 'est') return isEstRevisionStudent();
+    if (a === 'revision') return isRevisionStudent();
+    return true;
+  };
+  const visible = (notes || []).filter(n => canSee(n.audience));
   if (!visible.length) { grid.innerHTML = empty(); return; }
 
   grid.innerHTML = visible.map(n => {
@@ -112,14 +119,33 @@
           <div class="pdf-meta">${fmtDate(n.created_at)}</div>
         </div>
         ${n.body ? `<div class="note-body">${escHtml(n.body)}</div>` : ''}
-        ${hasFile ? `<a class="pdf-dl" href="${escAttr(n.file_url)}" target="_blank" rel="noopener">
+        ${hasFile ? `<button class="pdf-dl" style="border:none;cursor:pointer" data-url="${escAttr(n.file_url)}" onclick="openNoteFile(this.dataset.url)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
-          Open file</a>` : ''}
+          Open file</button>` : ''}
       </div>`;
   }).join('');
 })();
 
 function escAttr(s){ return escHtml(s).replace(/"/g,'&quot;'); }
+
+// Open a note's attachment INSIDE the portal (no redirect to Drive).
+function embedUrl(url) {
+  let m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (m) return `https://drive.google.com/file/d/${m[1]}/preview`;
+  m = url.match(/[?&]id=([^&]+)/);
+  if (m && /drive\.google\.com/.test(url)) return `https://drive.google.com/file/d/${m[1]}/preview`;
+  if (/docs\.google\.com\/document\/d\/([^/]+)/.test(url)) return url.replace(/\/(edit|view)[^]*$/, '/preview');
+  return url;
+}
+function openNoteFile(url) {
+  document.getElementById('file-frame').src = embedUrl(url);
+  document.getElementById('file-overlay').style.display = 'flex';
+}
+function closeNoteFile() {
+  document.getElementById('file-overlay').style.display = 'none';
+  document.getElementById('file-frame').src = 'about:blank';
+}
+
 function empty() {
   return '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="empty-title">No student notes yet</div><div class="empty-sub">Helpful notes will appear here once your instructor adds them.</div></div>';
 }
@@ -127,5 +153,13 @@ function errBox(msg){ return `<div class="empty-state" style="grid-column:1/-1">
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 </script>
+
+<!-- In-portal file viewer (opens note attachments without leaving the site) -->
+<div id="file-overlay" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(8,12,24,.9);flex-direction:column">
+  <div style="display:flex;justify-content:flex-end;padding:10px">
+    <button onclick="closeNoteFile()" style="background:#fff;border:none;border-radius:9px;padding:9px 16px;font-weight:800;cursor:pointer;font-size:.85rem">✕ Close</button>
+  </div>
+  <iframe id="file-frame" title="Attachment" style="flex:1;width:100%;border:none;background:#fff"></iframe>
+</div>
 </body>
 </html>

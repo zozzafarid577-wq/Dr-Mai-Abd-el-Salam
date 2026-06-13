@@ -185,7 +185,10 @@ Lina Hassan, lina@email.com, +201112223334, parent@email.com"></textarea>
       <div id="bulk-results" style="display:none"></div>
     </div>
     <div class="modal-footer" style="flex-shrink:0;justify-content:space-between">
-      <button class="btn btn-outline btn-sm" id="bulk-copy-btn" style="display:none" onclick="copyBulkResults()">Copy all credentials</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" id="bulk-copy-btn" style="display:none" onclick="copyBulkResults()">Copy all credentials</button>
+        <button class="btn btn-primary btn-sm" id="bulk-email-btn" style="display:none" onclick="emailBulkCredentials(this)" title="Email each student their login details via Brevo">Email all logins</button>
+      </div>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button class="btn btn-outline" onclick="closeBulkModal()">Close</button>
         <button class="btn btn-primary" id="bulk-btn" onclick="submitBulkStudents()">Create Accounts</button>
@@ -368,6 +371,7 @@ function openBulkModal() {
   document.getElementById('bulk-results').style.display = 'none';
   document.getElementById('bulk-results').innerHTML = '';
   document.getElementById('bulk-copy-btn').style.display = 'none';
+  document.getElementById('bulk-email-btn').style.display = 'none';
   const btn = document.getElementById('bulk-btn');
   btn.style.display = ''; btn.disabled = false; btn.textContent = 'Create Accounts';
   bulkCreated = [];
@@ -436,13 +440,45 @@ async function submitBulkStudents() {
       ).join('')}
     </div>`;
   btn.style.display = 'none';
-  if (bulkCreated.length) document.getElementById('bulk-copy-btn').style.display = '';
+  if (bulkCreated.length) {
+    document.getElementById('bulk-copy-btn').style.display = '';
+    document.getElementById('bulk-email-btn').style.display = '';
+  }
 }
 
 function copyBulkResults() {
   const text = bulkCreated.map(r => `${r.name}\nEmail: ${r.email}\nPassword: ${r.password}\n`).join('\n');
   navigator.clipboard.writeText(text);
   showToast('All credentials copied!', 'success');
+}
+
+// Email every bulk-created student their login details via Brevo (same
+// path the single-add "Email credentials" button uses).
+async function emailBulkCredentials(btn) {
+  if (!bulkCreated.length) return;
+  if (!confirm(`Email login details to ${bulkCreated.length} student${bulkCreated.length !== 1 ? 's' : ''} now?`)) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  let sent = 0;
+  const failures = [];
+  for (let i = 0; i < bulkCreated.length; i++) {
+    const r = bulkCreated[i];
+    btn.textContent = `Emailing ${i + 1} / ${bulkCreated.length}…`;
+    try {
+      await postCredentialsEmail({ to_email: r.email, to_name: r.name, password: r.password });
+      sent++;
+    } catch (e) {
+      failures.push(`${r.email}: ${e.message}`);
+    }
+  }
+  btn.disabled = false;
+  btn.textContent = failures.length ? orig : 'Emailed ✓';
+  if (failures.length) {
+    showToast(`Sent ${sent} · failed ${failures.length}. ${failures[0]}`, 'warning');
+    console.warn('Bulk credential email failures:', failures);
+  } else {
+    showToast(`Login details emailed to ${sent} student${sent !== 1 ? 's' : ''}.`, 'success');
+  }
 }
 
 function renderTable(students) {

@@ -94,14 +94,17 @@ async function setupStudentNav(studentId) {
   const scroll = document.querySelector('.sidebar .sidebar-scroll');
   if (!scroll) return;
 
-  // Determine basics/revision enrolment (cached for the session).
+  // Determine basics/revision enrolment. Cached per-user so switching
+  // students in the same tab never inherits the previous student's menu.
+  const cachedUid = sessionStorage.getItem('drmai_nav_uid');
   let rev = sessionStorage.getItem('drmai_is_revision');
   let bas = sessionStorage.getItem('drmai_is_basics');
-  if (rev === null || bas === null) {
+  if (cachedUid !== studentId || rev === null || bas === null) {
     const { data } = await sb.from('enrollments').select('courses(title)').eq('student_id', studentId);
     const titles = (data || []).map(e => e.courses?.title || '');
     rev = titles.some(t => /revision/i.test(t)) ? '1' : '0';
     bas = titles.some(t => /basics/i.test(t))   ? '1' : '0';
+    sessionStorage.setItem('drmai_nav_uid', studentId);
     sessionStorage.setItem('drmai_is_revision', rev);
     sessionStorage.setItem('drmai_is_basics', bas);
   }
@@ -159,6 +162,10 @@ async function setupStudentNav(studentId) {
 // ── Sign out ──────────────────────────────────────────────────────
 
 async function signOut() {
+  // Clear the cached sidebar type so the next person on this tab is classified fresh.
+  try {
+    ['drmai_nav_uid', 'drmai_is_revision', 'drmai_is_basics'].forEach(k => sessionStorage.removeItem(k));
+  } catch (_) {}
   await sb.auth.signOut();
   location.replace('/login.html');
 }

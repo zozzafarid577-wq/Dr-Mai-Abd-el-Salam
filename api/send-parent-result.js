@@ -43,6 +43,29 @@ async function sendBrevoEmail(key, { toEmail, toName, subject, html }) {
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// Email providers we can't reliably deliver to — students on these are asked
+// to switch to a Gmail address instead of being sent credentials.
+function isUnsupportedEmail(email) {
+  const domain = String(email || '').split('@')[1]?.toLowerCase() || '';
+  return domain.includes('yahoo') || domain.includes('hotmail');
+}
+
+function generatePassword(length = 12) {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '!@#$%&*';
+  const all = upper + lower + digits + special;
+  const pw = [
+    upper[Math.floor(Math.random() * upper.length)],
+    lower[Math.floor(Math.random() * lower.length)],
+    digits[Math.floor(Math.random() * digits.length)],
+    special[Math.floor(Math.random() * special.length)],
+  ];
+  for (let i = pw.length; i < length; i++) pw.push(all[Math.floor(Math.random() * all.length)]);
+  return pw.sort(() => Math.random() - 0.5).join('');
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -53,6 +76,7 @@ export default async function handler(req, res) {
 
   if (req.body?.action === 'evaluation')  return sendEvaluations(req, res, user);
   if (req.body?.action === 'credentials') return sendCredentials(req, res, user);
+  if (req.body?.action === 'bulk_logins') return sendBulkLogins(req, res, user);
   return sendTestResult(req, res, user);
 }
 
@@ -72,7 +96,18 @@ async function sendCredentials(req, res, user) {
   if (!key) return res.status(500).json({ error: 'No Brevo API key found (set BREVO_API_KEY in Vercel).' });
 
   const url = login_url || 'https://dr-mai-abd-el-salam.vercel.app/login.html';
-  const html = `<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#0d1117;background:#f4f6fb">
+  const html = credentialsHtml({ to_name, to_email, password, url });
+
+  try {
+    await sendBrevoEmail(key, { toEmail: to_email, toName: to_name || to_email, subject: 'Your Dr Mai Portal login details', html });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+  return res.status(200).json({ sent: true });
+}
+
+function credentialsHtml({ to_name, to_email, password, url }) {
+  return `<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#0d1117;background:#f4f6fb">
 <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:14px;padding:22px 26px;color:#fff;margin-bottom:18px">
   <div style="font-size:1.05rem;font-weight:800">Dr Mai Abd El Salam Portal</div>
   <div style="font-size:.82rem;opacity:.8;margin-top:3px">Your login details</div>
@@ -88,13 +123,97 @@ async function sendCredentials(req, res, user) {
   <p style="margin:0;font-size:.78rem;color:#8896ab">Please change your password after your first login.</p>
 </div>
 </body></html>`;
+}
 
-  try {
-    await sendBrevoEmail(key, { toEmail: to_email, toName: to_name || to_email, subject: 'Your Dr Mai Portal login details', html });
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
+// Sent to students whose email is on an unsupported provider (Yahoo/Hotmail):
+// we can't reliably deliver portal mail there, so ask them to switch to Gmail.
+function changeEmailHtml(to_name) {
+  return `<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#0d1117;background:#f4f6fb">
+<div style="background:linear-gradient(135deg,#b45309,#d97706);border-radius:14px;padding:22px 26px;color:#fff;margin-bottom:18px">
+  <div style="font-size:1.05rem;font-weight:800">Dr Mai Abd El Salam Portal</div>
+  <div style="font-size:.82rem;opacity:.85;margin-top:3px">Action needed — update your email</div>
+</div>
+<div style="background:#fff;border:1px solid #e4e7ef;border-radius:14px;padding:22px">
+  <p style="margin:0 0 12px;font-size:.92rem">Hello ${esc(to_name || '')},</p>
+  <p style="margin:0 0 14px;font-size:.88rem;color:#374151">We tried to send your portal login details, but we're unable to reliably deliver email to Yahoo or Hotmail addresses.</p>
+  <p style="margin:0 0 14px;font-size:.88rem;color:#374151"><strong>Please reply to us with a Gmail address</strong> (or let us know in class) so we can update your account and send you your login details.</p>
+  <p style="margin:0;font-size:.78rem;color:#8896ab">Thank you — Dr Mai's Student Portal team.</p>
+</div>
+</body></html>`;
+}
+
+// ── Admin bulk-emails login credentials to a batch of students ──
+// For each student we look up their auth email. Students on an unsupported
+// provider (Yahoo/Hotmail) are emailed a "please switch to Gmail" notice
+// instead of having their password reset. Everyone else gets a fresh
+// password and their login details. The client sends small batches of IDs
+// so a long roster never trips the serverless timeout.
+async function sendBulkLogins(req, res, user) {
+  let isAdmin = user.app_metadata?.role === 'admin';
+  if (!isAdmin) {
+    const { data: prof } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+    isAdmin = prof?.role === 'admin';
   }
-  return res.status(200).json({ sent: true });
+  if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
+
+  const key = resolveBrevoKey();
+  if (!key) return res.status(500).json({ error: 'No Brevo API key found (set BREVO_API_KEY in Vercel).' });
+
+  const ids = Array.isArray(req.body?.student_ids) ? req.body.student_ids.filter(Boolean) : [];
+  if (!ids.length) return res.status(400).json({ error: 'student_ids (array) is required' });
+  if (ids.length > 12) return res.status(400).json({ error: 'Send at most 12 students per request.' });
+
+  const loginUrl = req.body?.login_url || 'https://dr-mai-abd-el-salam.vercel.app/login.html';
+
+  const { data: profiles, error } = await supabaseAdmin
+    .from('profiles').select('id, full_name, is_owner').in('id', ids);
+  if (error) return res.status(500).json({ error: error.message });
+  const byId = new Map((profiles || []).map((p) => [p.id, p]));
+
+  const results = [];
+  for (const id of ids) {
+    const prof = byId.get(id);
+    const name = prof?.full_name || 'student';
+    try {
+      if (!prof) { results.push({ id, name, status: 'failed', error: 'Student not found' }); continue; }
+      if (prof.is_owner) { results.push({ id, name, status: 'skipped', error: 'Owner account' }); continue; }
+
+      const { data: u, error: getErr } = await supabaseAdmin.auth.admin.getUserById(id);
+      if (getErr) throw new Error(getErr.message);
+      const email = u?.user?.email;
+      if (!email) { results.push({ id, name, status: 'failed', error: 'No email on file' }); continue; }
+
+      if (isUnsupportedEmail(email)) {
+        await sendBrevoEmail(key, {
+          toEmail: email, toName: name,
+          subject: 'Please update your email address — Dr Mai Portal',
+          html: changeEmailHtml(name),
+        });
+        results.push({ id, name, email, status: 'notice' });
+        continue;
+      }
+
+      const password = generatePassword();
+      const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(id, { password });
+      if (updErr) throw new Error(updErr.message);
+      await supabaseAdmin.from('profiles').update({ must_change_pw: true }).eq('id', id);
+      await sendBrevoEmail(key, {
+        toEmail: email, toName: name,
+        subject: 'Your Dr Mai Portal login details',
+        html: credentialsHtml({ to_name: name, to_email: email, password, url: loginUrl }),
+      });
+      results.push({ id, name, email, status: 'sent' });
+    } catch (e) {
+      results.push({ id, name, status: 'failed', error: e.message });
+    }
+  }
+
+  const tally = (s) => results.filter((r) => r.status === s).length;
+  return res.status(200).json({
+    sent: tally('sent'), notice: tally('notice'),
+    skipped: tally('skipped'), failed: tally('failed'),
+    results,
+  });
 }
 
 // ── Existing flow: a student finishing a test emails their own parent ──

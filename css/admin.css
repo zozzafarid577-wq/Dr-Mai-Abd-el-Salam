@@ -143,3 +143,29 @@ body {
 
 @media (max-width: 1100px) { .qa-grid { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 600px)  { .qa-grid { grid-template-columns: 1fr; } .admin-hero h1 { font-size: 1.4rem; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   Dark theme overrides for the staff console.
+   admin.css is loaded after portal.css, and several nav/canvas rules
+   here hardcoded light colours with no dark counterpart — leaving a
+   white top bar (with invisible title text) and a light page canvas
+   behind the dark sidebar. These restore a coherent dark nav.
+   ═══════════════════════════════════════════════════════════════ */
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(99,102,241,.14), transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, rgba(37,99,235,.12), transparent 55%),
+    var(--bg);
+}
+/* Top nav bar: dark surface instead of the hardcoded translucent white. */
+html[data-theme="dark"] .topbar {
+  background: rgba(17,20,27,.82);
+  border-bottom-color: var(--border);
+}
+/* Side nav active item + brand: lighter indigo so it reads on the dark rail. */
+html[data-theme="dark"] .nav-item.active {
+  background: rgba(99,102,241,.22);
+  color: #a5b4fc;
+}
+html[data-theme="dark"] .sidebar-brand span { color: #a5b4fc; }
+html[data-theme="dark"] .menu-toggle:hover { background: rgba(255,255,255,.06); }

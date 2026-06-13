@@ -67,6 +67,10 @@ async function requireAuth(role) {
     }
   }
 
+  // Cache the role so pages (e.g. the chatroom) can render the correct
+  // sidebar instantly on next load — no flash of the wrong menu.
+  try { localStorage.setItem('drmai_role', profile.role); } catch (_) {}
+
   if (profile.role === 'student') {
     try { await setupStudentNav(profile.id); } catch (_) {}
     try { installContentGuard(profile); } catch (_) {}
@@ -371,6 +375,7 @@ async function signOut() {
   // Clear the cached sidebar type so the next person on this tab is classified fresh.
   try {
     ['drmai_nav_uid', 'drmai_is_revision', 'drmai_is_basics', 'drmai_is_act', 'drmai_is_est'].forEach(k => sessionStorage.removeItem(k));
+    try { localStorage.removeItem('drmai_role'); } catch (_) {}
   } catch (_) {}
   await sb.auth.signOut();
   location.replace('/login.html');

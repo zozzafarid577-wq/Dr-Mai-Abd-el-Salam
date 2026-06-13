@@ -49,5 +49,12 @@ export default async function handler(req, res) {
   // Best-effort cleanup of the profile row in case the cascade didn't fire
   await supabaseAdmin.from('profiles').delete().eq('id', student_id);
 
+  try {
+    await supabaseAdmin.from('security_events').insert({
+      student_id: user.id, student_name: user.email,
+      event_type: 'admin_action', detail: `Deleted student ${student_id}`, page: 'admin',
+    });
+  } catch (_) {}
+
   return res.status(200).json({ success: true });
 }

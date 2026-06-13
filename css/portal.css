@@ -428,6 +428,18 @@ html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
 html[data-theme="dark"] .q-opt.correct { background: rgba(22,163,74,.14); color: #86efac; }
 html[data-theme="dark"] .q-opt.wrong   { background: rgba(220,38,38,.14);  color: #fca5a5; }
 
+/* Top nav bar: it was hardcoded to a translucent white, which left it a
+   glaring white strip with near-white (invisible) title text in dark mode.
+   Give it a dark surface so the title and controls read clearly. */
+html[data-theme="dark"] .topbar {
+  background: rgba(17,20,27,.92);
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 0 var(--border), var(--shadow-xs);
+}
+html[data-theme="dark"] .menu-toggle:hover { background: rgba(255,255,255,.06); }
+/* Side nav brand accent: use the lighter dark-theme blue for contrast. */
+html[data-theme="dark"] .sidebar-brand span { color: var(--primary); }
+
 /* ── Floating biology icons background ─────────────────────────── */
 .bio-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .bio-bg svg {

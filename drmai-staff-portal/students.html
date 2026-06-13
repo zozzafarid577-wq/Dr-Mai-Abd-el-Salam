@@ -74,10 +74,18 @@
       </select>
     </div>
 
+    <!-- Bulk selection action bar — appears when one or more students are ticked -->
+    <div id="bulk-bar" style="display:none;align-items:center;gap:12px;margin-bottom:14px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
+      <span id="bulk-count" style="font-size:.84rem;font-weight:700"></span>
+      <button class="btn btn-primary btn-sm" id="bulk-login-btn" onclick="emailSelectedLogins()" title="Reset passwords and email login details to the selected students (Yahoo/Hotmail addresses are asked to switch to Gmail)">Email login credentials</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearSelection()" style="margin-left:auto">Clear</button>
+    </div>
+
     <div class="card" style="overflow-x:auto">
       <table class="student-table">
         <thead>
           <tr>
+            <th style="width:34px;text-align:center"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" title="Select all" style="width:15px;height:15px;cursor:pointer"></th>
             <th>Name</th>
             <th>Phone</th>
             <th>Parent Email</th>
@@ -89,7 +97,7 @@
           </tr>
         </thead>
         <tbody id="students-tbody">
-          <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
+          <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -484,11 +492,13 @@ async function emailBulkCredentials(btn) {
 function renderTable(students) {
   const tbody = document.getElementById('students-tbody');
   if (!students || students.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No students found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No students found</td></tr>';
+    updateBulkBar();
     return;
   }
   tbody.innerHTML = students.map(s => `
     <tr>
+      <td style="text-align:center"><input type="checkbox" class="row-check" value="${s.id}" data-name="${escHtml(s.full_name)}" onchange="updateBulkBar()" style="width:15px;height:15px;cursor:pointer"></td>
       <td><strong>${escHtml(s.full_name)}</strong>${s.must_change_pw ? ' <span class="badge" style="font-size:.62rem">Temp PW</span>' : ''}</td>
       <td>${escHtml(s.phone || '—')}</td>
       <td>${s.parent_email ? `<a href="mailto:${escHtml(s.parent_email)}" style="color:var(--primary)">${escHtml(s.parent_email)}</a>` : '<span style="color:var(--muted)">—</span>'}</td>
@@ -507,6 +517,7 @@ function renderTable(students) {
         <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="openDeleteModal('${s.id}', '${escHtml(s.full_name)}')">Delete</button>
       </td>
     </tr>`).join('');
+  updateBulkBar();
 }
 
 // ── Parent evaluation emails ─────────────────────────────────────
@@ -550,6 +561,95 @@ async function sendEvalAll() {
   } finally {
     btn.disabled = false; btn.innerHTML = original;
   }
+}
+
+// ── Bulk select + email login credentials ───────────────────────
+function toggleSelectAll(box) {
+  document.querySelectorAll('.row-check').forEach(c => { c.checked = box.checked; });
+  updateBulkBar();
+}
+function clearSelection() {
+  document.querySelectorAll('.row-check').forEach(c => { c.checked = false; });
+  const all = document.getElementById('select-all');
+  if (all) all.checked = false;
+  updateBulkBar();
+}
+function selectedRows() {
+  return [...document.querySelectorAll('.row-check:checked')].map(c => ({ id: c.value, name: c.dataset.name || 'student' }));
+}
+function updateBulkBar() {
+  const rows = selectedRows();
+  const bar = document.getElementById('bulk-bar');
+  const count = document.getElementById('bulk-count');
+  if (rows.length) {
+    bar.style.display = 'flex';
+    count.textContent = `${rows.length} student${rows.length !== 1 ? 's' : ''} selected`;
+  } else {
+    bar.style.display = 'none';
+  }
+  // Keep the header "select all" box in sync with the rows.
+  const checks = [...document.querySelectorAll('.row-check')];
+  const all = document.getElementById('select-all');
+  if (all) all.checked = checks.length > 0 && checks.every(c => c.checked);
+}
+
+function chunk(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+async function emailSelectedLogins() {
+  const rows = selectedRows();
+  if (!rows.length) return;
+  if (!confirm(`Email login details to ${rows.length} selected student${rows.length !== 1 ? 's' : ''}?\n\nThis resets each student's password to a new one (Yahoo/Hotmail addresses will instead be asked to switch to Gmail).`)) return;
+
+  const btn = document.getElementById('bulk-login-btn');
+  btn.disabled = true;
+  const batches = chunk(rows.map(r => r.id), 6);
+  let sent = 0, notice = 0, skipped = 0, failed = 0;
+  const noticeNames = [], failedNames = [];
+
+  let done = 0;
+  for (const batch of batches) {
+    btn.textContent = `Sending ${done + 1}–${Math.min(done + batch.length, rows.length)} / ${rows.length}…`;
+    try {
+      const token = await getFreshToken();
+      const resp = await fetch('/api/send-parent-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ action: 'bulk_logins', student_ids: batch, login_url: location.origin + '/login.html' }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Request failed');
+      sent += data.sent || 0; notice += data.notice || 0; skipped += data.skipped || 0; failed += data.failed || 0;
+      (data.results || []).forEach(r => {
+        if (r.status === 'notice') noticeNames.push(r.name);
+        if (r.status === 'failed') failedNames.push(`${r.name} (${r.error})`);
+      });
+    } catch (e) {
+      failed += batch.length;
+      failedNames.push(`batch: ${e.message}`);
+    }
+    done += batch.length;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Email login credentials';
+
+  let msg = `Sent ${sent}`;
+  if (notice) msg += ` · ${notice} asked to change email`;
+  if (skipped) msg += ` · ${skipped} skipped`;
+  if (failed) msg += ` · ${failed} failed`;
+  showToast(msg, failed ? 'warning' : 'success');
+  if (noticeNames.length) console.info('Asked to switch to Gmail (Yahoo/Hotmail):', noticeNames);
+  if (failedNames.length) console.warn('Failed login emails:', failedNames);
+
+  // Refresh so the "Temp PW" badges reflect the resets, and clear selection.
+  const { data: students } = await sb.from('profiles').select('id, full_name, phone, parent_email, parent_phone, is_active, created_at, must_change_pw, last_login_at, last_login_ip').eq('role','student').order('created_at', { ascending: false });
+  allStudents = students || [];
+  renderTable(allStudents);
+  clearSelection();
 }
 
 function filterTable() {

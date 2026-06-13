@@ -301,6 +301,17 @@ let resetTarget  = null;
 let deleteTarget = null;
 let lastCreated  = null;
 
+// Returns a valid access token, refreshing it if it's expired or about to —
+// prevents "Invalid token" errors during long sessions / bulk adds.
+async function getFreshToken() {
+  let s = (await sb.auth.getSession()).data.session;
+  if (!s || (s.expires_at && s.expires_at * 1000 - Date.now() < 120000)) {
+    try { const r = await sb.auth.refreshSession(); if (r.data?.session) s = r.data.session; } catch (_) {}
+  }
+  if (!s) { alert('Your session has expired. Please reload the page and sign in again.'); throw new Error('Session expired'); }
+  return s.access_token;
+}
+
 (async () => {
   adminProfile = await requireAuth('admin');
   if (!adminProfile) return;
@@ -386,7 +397,6 @@ async function submitBulkStudents() {
   const btn = document.getElementById('bulk-btn');
   btn.disabled = true;
   document.getElementById('bulk-alert').style.display = 'none';
-  const session = await getSession();
   bulkCreated = [];
   const results = [];
 
@@ -394,9 +404,10 @@ async function submitBulkStudents() {
     const r = rows[i];
     btn.textContent = `Creating ${i + 1} / ${rows.length}…`;
     try {
+      const token = await getFreshToken();   // refresh per row so long lists never hit token expiry
       const resp = await fetch('/api/create-student', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ full_name: r.name, email: r.email, phone: r.phone || null, parent_email: r.parentEmail || null, parent_phone: r.parentPhone || null, course_ids: [courseId] }),
       });
       const data = await resp.json();
@@ -549,10 +560,10 @@ async function submitAddStudent() {
   btn.textContent = 'Creating…';
   btn.disabled = true;
 
-  const session = await getSession();
+  const token = await getFreshToken();
   const resp = await fetch('/api/create-student', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
     body: JSON.stringify({ full_name: name, email, phone, parent_email: parentEmail || null, parent_phone: parentPhone || null, course_ids: courseIds })
   });
 

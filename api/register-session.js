@@ -21,13 +21,28 @@ export default async function handler(req, res) {
   if (error || !user) return res.status(401).json({ error: 'Invalid token' });
 
   // Only enforce single-session for students (admins can have multiple)
-  const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+  const { data: profile } = await supabaseAdmin
+    .from('profiles').select('role, full_name, session_token').eq('id', user.id).single();
   if (!profile || profile.role !== 'student') return res.status(200).json({ session_token: null });
 
   // Capture where/when this login came from (best-effort).
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
            || req.socket?.remoteAddress || null;
   const ua = (req.headers['user-agent'] || '').slice(0, 300) || null;
+
+  // If a session token already exists, this login is from a SECOND device
+  // while another is still active — flag it so the admin is notified.
+  if (profile.session_token) {
+    try {
+      await supabaseAdmin.from('security_events').insert({
+        student_id: user.id,
+        student_name: profile.full_name,
+        event_type: 'multi_device',
+        detail: `New sign-in from a different device${ip ? ' · IP ' + ip : ''}. The previous device was signed out.`,
+        page: '/login.html',
+      });
+    } catch (_) {}
+  }
 
   const sessionToken = crypto.randomUUID();
   await supabaseAdmin.from('profiles').update({

@@ -225,6 +225,20 @@
       <!-- RIGHT: Tests + Announcements -->
       <div>
 
+        <!-- Wayground tests (revision students only) -->
+        <a href="/portal/wayground.html" id="wg-card" class="card mb16" style="display:none;text-decoration:none;color:inherit">
+          <div style="display:flex;align-items:center;gap:12px;padding:4px 0">
+            <div style="width:42px;height:42px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6366f1,#4338ca)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:21px;height:21px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:.9rem;font-weight:800">Wayground Tests</div>
+              <div style="font-size:.74rem;color:var(--muted)" id="wg-sub">Open your assigned tests</div>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:18px;height:18px"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </a>
+
         <!-- Available Tests -->
         <div class="card mb16">
           <div class="card-header">
@@ -310,11 +324,23 @@ function renderExamClocks() {
   const { data: enr } = await sb.from('enrollments').select('courses(title)').eq('student_id', profile.id);
   const isRevision = (enr || []).some(e => /revision/i.test(e.courses?.title || ''));
   const cd = document.getElementById('exam-countdowns');
-  if (isRevision) { renderExamClocks(); setInterval(renderExamClocks, 1000); }
+  if (isRevision) { renderExamClocks(); setInterval(renderExamClocks, 1000); loadWayground(); }
   else if (cd) { cd.remove(); }
 
   await Promise.all([loadStats(), loadCourses(), loadAnnouncements(), loadUpcoming()]);
 })();
+
+async function loadWayground() {
+  const card = document.getElementById('wg-card');
+  if (!card) return;
+  const { data, error } = await sb.from('wayground_tests')
+    .select('test_number', { count: 'exact' }).eq('is_active', true);
+  if (error) return;                         // table may not exist yet — leave hidden
+  card.style.display = 'block';
+  const tests = new Set((data || []).map(r => r.test_number)).size;
+  const sub = document.getElementById('wg-sub');
+  if (sub) sub.textContent = tests ? `${tests} test${tests !== 1 ? 's' : ''} available` : 'Open your assigned tests';
+}
 
 async function loadStats() {
   const uid = profile.id;

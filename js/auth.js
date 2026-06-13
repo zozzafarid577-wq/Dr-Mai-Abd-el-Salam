@@ -70,12 +70,14 @@ async function requireAuth(role) {
   // Cache the role so pages (e.g. the chatroom) can render the correct
   // sidebar instantly on next load — no flash of the wrong menu.
   try { localStorage.setItem('drmai_role', profile.role); } catch (_) {}
+  // Attach the auth email (profiles has no email column) for watermarks.
+  try { profile.email = session.user?.email || profile.email || ''; } catch (_) {}
 
   if (profile.role === 'student') {
     try { await setupStudentNav(profile.id); } catch (_) {}
     try { installContentGuard(profile); } catch (_) {}
-    // Watermark only on the PDF viewer and test pages — not the whole site.
-    try { if (/\/(viewer|take-test|attempt)\.html$/.test(location.pathname)) installWatermark(profile); } catch (_) {}
+    // Watermark the test pages. (The PDF viewer adds its own watermark.)
+    try { if (/\/(take-test|attempt)\.html$/.test(location.pathname)) installWatermark(profile); } catch (_) {}
   }
 
   if (profile.role === 'admin') {
@@ -83,6 +85,7 @@ async function requireAuth(role) {
       const denied = setupAdminNav(profile);   // returns true if it redirected
       if (denied) return null;
     } catch (_) {}
+    try { if (!profile.is_owner) logAdminVisit(profile); } catch (_) {}
   }
 
   try { markChatUnread(profile); } catch (_) {}
@@ -134,6 +137,24 @@ const ADMIN_PAGE_PERM = {
   '/drmai-staff-portal/team.html':          '__owner__',
   '/portal/chat.html':                      'chat',
 };
+
+// Log a sub-admin's page visit (once per page per session) so the owner can
+// review where sub-admins go. Admin actions (create/delete/reset) are logged
+// server-side by the API endpoints.
+function logAdminVisit(profile) {
+  try {
+    const key = 'drmai_av_' + location.pathname.replace(/\/index\.html$/, '/');
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    sb.from('security_events').insert({
+      student_id: profile.id,
+      student_name: profile.full_name,
+      event_type: 'admin_visit',
+      detail: 'Sub-admin opened this page',
+      page: location.pathname,
+    });
+  } catch (_) {}
+}
 
 function adminHasPerm(profile, key) {
   if (!profile || profile.role !== 'admin') return false;
@@ -201,19 +222,16 @@ function setupAdminNav(profile) {
 }
 
 // ── Watermark ─────────────────────────────────────────────────────
-// Tiles a diagonal watermark across the PDF viewer and test pages so any
-// screenshot is branded and traceable. The student's name is shown
-// prominently (any leaked screenshot points back to them). Pointer-events:none.
+// Tiles a subtle dark-grey diagonal watermark with the student's email so a
+// leaked screenshot is traceable — light enough to study through.
 function installWatermark(profile) {
   if (window.__wmInstalled) return;
   window.__wmInstalled = true;
   const xmlEsc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const name = xmlEsc((profile && profile.full_name) || '');
-  const svg  = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="300">`
-    + `<text x="22" y="150" transform="rotate(-28 260 150)" fill="rgba(220,38,38,0.22)" `
-    + `font-family="Inter, system-ui, sans-serif" font-size="27" font-weight="900">${name}</text>`
-    + `<text x="22" y="184" transform="rotate(-28 260 150)" fill="rgba(71,85,105,0.20)" `
-    + `font-family="Inter, system-ui, sans-serif" font-size="15" font-weight="700">Dr Mai Abd El Salam  •  +20 112 305 6296</text></svg>`;
+  const label = xmlEsc((profile && (profile.email || profile.full_name)) || 'Dr Mai Portal');
+  const svg  = `<svg xmlns="http://www.w3.org/2000/svg" width="440" height="240">`
+    + `<text x="18" y="130" transform="rotate(-27 220 120)" fill="rgba(71,85,105,0.14)" `
+    + `font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="700">${label}</text></svg>`;
 
   function mount() {
     if (document.getElementById('wm-layer')) return;

@@ -62,5 +62,12 @@ export default async function handler(req, res) {
   // Force must_change_pw = true so student is prompted on next login
   await supabaseAdmin.from('profiles').update({ must_change_pw: true }).eq('id', student_id);
 
+  try {
+    await supabaseAdmin.from('security_events').insert({
+      student_id: user.id, student_name: user.email,
+      event_type: 'admin_action', detail: `Reset password for ${student_id}`, page: 'admin',
+    });
+  } catch (_) {}
+
   return res.status(200).json({ password, email: updated?.user?.email || null });
 }

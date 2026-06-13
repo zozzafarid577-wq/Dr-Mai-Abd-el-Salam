@@ -23,6 +23,16 @@ function cleanPerms(perms) {
   return [...new Set(perms.filter(p => VALID_PERMS.includes(p)))];
 }
 
+// Audit trail: record what an admin did so the owner can review it.
+async function logAdmin(actorId, actorName, detail) {
+  try {
+    await supabaseAdmin.from('security_events').insert({
+      student_id: actorId, student_name: actorName,
+      event_type: 'admin_action', detail, page: 'admin',
+    });
+  } catch (_) {}
+}
+
 function generatePassword(length = 12) {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const lower = 'abcdefghjkmnpqrstuvwxyz';
@@ -79,7 +89,7 @@ export default async function handler(req, res) {
     if (!isOwner) {
       return res.status(403).json({ error: 'Only the main host can manage admins.' });
     }
-    return handleAdminAction(adminAction, req, res, user.id);
+    return handleAdminAction(adminAction, req, res, user.id, user.email);
   }
 
   // ── Create a student (default behaviour) ───────────────────────
@@ -123,12 +133,13 @@ export default async function handler(req, res) {
     await supabaseAdmin.from('enrollments').insert(enrollments);
   }
 
+  await logAdmin(user.id, user.email, `Created student ${email}`);
   return res.status(200).json({ password });
 }
 
 // Owner-only operations on sub-admins. The owner ("main host") account is
 // never createable, editable, or deletable here.
-async function handleAdminAction(action, req, res, callerId) {
+async function handleAdminAction(action, req, res, callerId, callerEmail) {
   if (action === 'create') {
     const { full_name, email } = req.body;
     const perms = cleanPerms(req.body.perms);
@@ -157,6 +168,7 @@ async function handleAdminAction(action, req, res, callerId) {
       await supabaseAdmin.auth.admin.deleteUser(uid);
       return res.status(500).json({ error: profErr.message });
     }
+    await logAdmin(callerId, callerEmail, `Created admin ${email} [${perms.join(', ') || 'no perms'}]`);
     return res.status(200).json({ password, id: uid });
   }
 
@@ -176,6 +188,7 @@ async function handleAdminAction(action, req, res, callerId) {
 
     const { error } = await supabaseAdmin.from('profiles').update(patch).eq('id', admin_id);
     if (error) return res.status(500).json({ error: error.message });
+    await logAdmin(callerId, callerEmail, `Updated admin ${admin_id} ${JSON.stringify(patch)}`);
     return res.status(200).json({ success: true });
   }
 

@@ -26,9 +26,12 @@ html, body { height: 100%; }
 .wm-overlay {
   position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden;
   display: flex; flex-wrap: wrap; align-content: center; justify-content: center;
-  transform: rotate(-30deg) scale(1.4); opacity: .14;
+  transform: rotate(-28deg) scale(1.4); opacity: .9;
 }
-.wm-cell { width: 320px; text-align: center; color: #fff; font-size: .8rem; font-weight: 700; padding: 40px 0; user-select: none; }
+.wm-cell { width: 300px; text-align: center; color: rgba(71,85,105,.16); font-size: .78rem; font-weight: 700; padding: 46px 0; user-select: none; }
+.dl-btn { display:inline-flex; align-items:center; gap:6px; background:#2563eb; color:#fff; border:none; border-radius:8px; padding:7px 13px; font-size:.78rem; font-weight:700; cursor:pointer; }
+.dl-btn:disabled { opacity:.5; cursor:not-allowed; }
+.dl-btn svg { width:14px; height:14px; }
 
 .viewer-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #cbd5e1; flex-direction: column; gap: 10px; text-align: center; padding: 24px; }
 .viewer-msg .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,.18); border-top-color: #818cf8; border-radius: 50%; animation: spin .8s linear infinite; }
@@ -43,7 +46,10 @@ html, body { height: 100%; }
       Back
     </span>
     <span class="viewer-title" id="v-title">Loading…</span>
-    <span class="viewer-tag">View only</span>
+    <button class="dl-btn" id="dl-btn" onclick="downloadWatermarked()" style="display:none" title="Download a copy stamped with your email">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download
+    </button>
   </div>
   <div class="viewer-stage" id="stage">
     <div class="viewer-msg"><div class="spinner"></div><div>Preparing document…</div></div>
@@ -51,12 +57,15 @@ html, body { height: 100%; }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="/js/auth.js"></script>
 <script>
+let pdfUrl = null, pdfTitle = '', myEmail = '';
 (async () => {
   const profile = await requireAuth('student');
   if (!profile) return;
   if (!profile.email) { const s = await getSession(); profile.email = s?.user?.email || ''; }
+  myEmail = profile.email || '';
 
   const params = new URLSearchParams(location.search);
   const id  = params.get('id');
@@ -81,19 +90,52 @@ html, body { height: 100%; }
   }
 
   document.getElementById('v-title').textContent = data.title || 'Document';
+  pdfUrl = data.url; pdfTitle = data.title || 'document';
+  const dl = document.getElementById('dl-btn'); if (dl) dl.style.display = '';
 
   // Hide the browser PDF toolbar (download/print) where supported, and embed.
   const sep = data.url.includes('#') ? '&' : '#';
   const embedUrl = data.url + sep + 'toolbar=0&navpanes=0&scrollbar=0&view=FitH';
 
-  const wm = watermark(profile.full_name, profile.email || '');
+  const wm = watermark(profile.email || profile.full_name || '');
   stage.innerHTML = `<iframe src="${embedUrl.replace(/"/g, '&quot;')}" title="PDF"></iframe>${wm}`;
 })();
 
-function watermark(name, email) {
-  const stamp = `${name} · ${email} · ${new Date().toLocaleDateString('en-GB')}`;
-  const cells = Array.from({ length: 60 }, () => `<div class="wm-cell">${escHtml(stamp)}</div>`).join('');
+function watermark(label) {
+  const cells = Array.from({ length: 60 }, () => `<div class="wm-cell">${escHtml(label)}</div>`).join('');
   return `<div class="wm-overlay">${cells}</div>`;
+}
+
+// Download a copy of the PDF with the student's email stamped on every page.
+async function downloadWatermarked() {
+  const btn = document.getElementById('dl-btn');
+  if (!pdfUrl || !window.PDFLib) { alert('Download is not ready yet.'); return; }
+  const orig = btn.innerHTML; btn.disabled = true; btn.textContent = 'Preparing…';
+  try {
+    const bytes = await fetch(pdfUrl).then(r => { if (!r.ok) throw new Error('Could not fetch the file'); return r.arrayBuffer(); });
+    const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
+    const doc = await PDFDocument.load(bytes);
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const stamp = myEmail || 'Dr Mai Portal';
+    doc.getPages().forEach(p => {
+      const { width, height } = p.getSize();
+      for (let y = 30; y < height + 60; y += 150) {
+        for (let x = -60; x < width; x += 270) {
+          p.drawText(stamp, { x, y, size: 11, font, color: rgb(0.44, 0.5, 0.6), opacity: 0.18, rotate: degrees(-27) });
+        }
+      }
+    });
+    const out = await doc.save();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([out], { type: 'application/pdf' }));
+    a.download = (pdfTitle || 'document').replace(/[^\w\- ]+/g, '').trim() + '.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } catch (e) {
+    alert('Could not prepare the download: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
 }
 function msg(text) {
   return `<div class="viewer-msg"><div style="font-size:1rem;font-weight:700;color:#fff">Can't open this document</div><div style="font-size:.85rem">${escHtml(text)}</div></div>`;

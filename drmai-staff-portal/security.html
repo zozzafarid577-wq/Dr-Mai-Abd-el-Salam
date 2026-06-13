@@ -14,6 +14,7 @@
 .sec-table th{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg)}
 .evt-pill{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:20px;background:#fef2f2;color:#991b1b}
 .evt-pill.device{background:#eff6ff;color:#1d4ed8}
+.evt-pill.admin{background:#eef2ff;color:#4338ca}
 </style>
 </head>
 <body>
@@ -47,11 +48,11 @@
   <header class="topbar">
     <div class="topbar-left">
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <span class="page-title">Security &amp; Rule Breaks</span>
+      <span class="page-title">Security &amp; Activity</span>
     </div>
   </header>
   <main class="content">
-    <div style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Recent flagged actions (e.g. attempts to copy protected content). Most recent first.</div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Flagged student actions (copying, 2-device sign-ins) and sub-admin activity (page visits + actions like creating/deleting accounts). Most recent first.</div>
     <div class="card" style="overflow-x:auto">
       <table class="sec-table">
         <thead><tr><th>Student</th><th>Action</th><th>Page</th><th>When</th></tr></thead>
@@ -79,13 +80,15 @@
   const rows = document.getElementById('rows');
   if (error) { rows.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:#dc2626">${escHtml(error.message)} (run migration v23?)</td></tr>`; return; }
   if (!data || !data.length) { rows.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">No flagged activity. 👍</td></tr>'; return; }
+  const LABELS = { multi_device: '2 devices', admin_visit: 'admin visit', admin_action: 'admin action' };
   rows.innerHTML = data.map(e => {
-    const isDevice = e.event_type === 'multi_device';
-    const label = isDevice ? '2 devices' : e.event_type;
+    const t = e.event_type;
+    const cls = t === 'multi_device' ? ' device' : (t === 'admin_visit' || t === 'admin_action') ? ' admin' : '';
+    const label = LABELS[t] || t;
     return `
     <tr>
       <td><strong>${escHtml(e.student_name || '—')}</strong></td>
-      <td><span class="evt-pill${isDevice ? ' device' : ''}">${escHtml(label)}</span>${e.detail ? `<div style="font-size:.72rem;color:var(--muted);margin-top:3px">${escHtml(e.detail)}</div>` : ''}</td>
+      <td><span class="evt-pill${cls}">${escHtml(label)}</span>${e.detail ? `<div style="font-size:.72rem;color:var(--muted);margin-top:3px">${escHtml(e.detail)}</div>` : ''}</td>
       <td style="color:var(--muted)">${escHtml(e.page || '')}</td>
       <td style="color:var(--muted)">${fmtDate(e.created_at)} · ${timeAgo(e.created_at)}</td>
     </tr>`;

@@ -81,6 +81,10 @@
         <label class="form-label">Email *</label>
         <input type="email" class="form-input" id="a-email" placeholder="assistant@email.com">
       </div>
+      <div class="form-group">
+        <label class="form-label">Phone (for WhatsApp, optional)</label>
+        <input type="tel" class="form-input" id="a-phone" placeholder="+20 1xx xxx xxxx">
+      </div>
       <label class="form-label">Permissions — tick what they can access</label>
       <div class="perm-grid" id="perm-grid"></div>
 
@@ -91,6 +95,7 @@
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="copyCreds()">Copy credentials</button>
           <button class="btn btn-primary btn-sm" id="email-cred-btn" onclick="emailAdminCreds(this)">Email credentials</button>
+          <button class="btn btn-success btn-sm" id="wa-cred-btn" onclick="waAdminCreds()">Send via WhatsApp</button>
         </div>
       </div>
     </div>
@@ -126,7 +131,7 @@ const PERM_LABEL = Object.fromEntries(PERMS);
 async function load() {
   const list = document.getElementById('list');
   const { data, error } = await sb.from('profiles')
-    .select('id, full_name, is_owner, admin_perms, is_active, created_at, last_login_at')
+    .select('id, full_name, phone, is_owner, admin_perms, is_active, created_at, last_login_at')
     .eq('role', 'admin')
     .order('created_at', { ascending: true });
   if (error) { list.innerHTML = `<div style="color:#dc2626;font-size:.85rem">${escHtml(error.message)} (run migration v24?)</div>`; return; }
@@ -144,7 +149,8 @@ async function load() {
       <div class="adm-top">
         <div><div class="adm-name">${escHtml(a.full_name)}</div>
         <div class="adm-sub">${a.is_active ? 'Active' : '<span style="color:#dc2626">Disabled</span>'} · ${a.last_login_at ? 'last seen ' + timeAgo(a.last_login_at) : 'never signed in'}</div></div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="resendAdmin('${a.id}','${escHtml(a.full_name)}','${escHtml(a.phone || '')}')" title="Reset password and send the new login by email + WhatsApp">Resend login</button>
           <button class="btn btn-ghost btn-sm" onclick="setActive('${a.id}', ${!a.is_active})">${a.is_active ? 'Disable' : 'Enable'}</button>
           <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="removeAdmin('${a.id}','${escHtml(a.full_name)}')">Delete</button>
         </div>
@@ -161,6 +167,7 @@ function openAdd() {
   lastCreated = null;
   document.getElementById('a-name').value = '';
   document.getElementById('a-email').value = '';
+  document.getElementById('a-phone').value = '';
   document.getElementById('add-alert').style.display = 'none';
   document.getElementById('cred-box').style.display = 'none';
   document.getElementById('add-footer').style.display = 'flex';
@@ -175,14 +182,15 @@ function closeAdd() { document.getElementById('add-modal').classList.remove('sho
 async function createAdmin() {
   const full_name = document.getElementById('a-name').value.trim();
   const email = document.getElementById('a-email').value.trim();
+  const phone = document.getElementById('a-phone').value.trim();
   const perms = [...document.querySelectorAll('.new-perm:checked')].map(c => c.value);
   if (!full_name || !email) { addAlert('Name and email are required.', 'error'); return; }
 
   const btn = document.getElementById('create-btn');
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    const data = await api({ action: 'create', full_name, email, perms });
-    lastCreated = { email, password: data.password };
+    const data = await api({ action: 'create', full_name, email, phone, perms });
+    lastCreated = { email, password: data.password, phone };
     document.getElementById('cred-email').textContent = email;
     document.getElementById('cred-pw').textContent = data.password;
     document.getElementById('cred-box').style.display = 'block';
@@ -230,6 +238,44 @@ function copyCreds() {
   if (!lastCreated) return;
   navigator.clipboard.writeText(`Portal: ${location.origin}/login.html\nEmail: ${lastCreated.email}\nPassword: ${lastCreated.password}`);
   toast('Credentials copied!', 'success');
+}
+
+function waLink(phone, email, password) {
+  const ph = (phone || '').replace(/\D/g, '');
+  const msg = encodeURIComponent(`Your Dr Mai Abd El Salam Portal login:\n\nEmail: ${email}\nPassword: ${password}\n\nSign in: ${location.origin}/login.html\n\nPlease change your password after your first login.`);
+  return `https://wa.me/${ph}?text=${msg}`;
+}
+
+function waAdminCreds() {
+  if (!lastCreated) return;
+  if (!lastCreated.phone) { toast('No phone number was entered for this admin.', 'warning'); return; }
+  window.open(waLink(lastCreated.phone, lastCreated.email, lastCreated.password), '_blank');
+}
+
+// Reset an existing admin's password and send the new login by email + WhatsApp.
+async function resendAdmin(id, name, phone) {
+  if (!confirm(`Reset ${name}'s password and send them the new login?`)) return;
+  try {
+    const session = await getSession();
+    const r = await fetch('/api/reset-student-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ student_id: id }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Reset failed');
+    let via = [];
+    if (d.email) {
+      await fetch('/api/send-parent-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'credentials', to_email: d.email, to_name: name, password: d.password, login_url: location.origin + '/login.html' }),
+      });
+      via.push('email');
+    }
+    if (phone) { window.open(waLink(phone, d.email || '', d.password), '_blank'); via.push('WhatsApp'); }
+    toast('New login sent' + (via.length ? ' via ' + via.join(' + ') : '') + '.', 'success');
+  } catch (e) { toast('Error: ' + e.message, 'error'); }
 }
 
 async function emailAdminCreds(btn) {

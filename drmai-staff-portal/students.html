@@ -236,6 +236,25 @@ Lina Hassan, lina@email.com, +201112223334, parent@email.com"></textarea>
   </div>
 </div>
 
+<!-- Edit Courses Modal -->
+<div class="modal-overlay" id="courses-modal-overlay">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Edit Courses</div>
+      <button class="modal-close" onclick="closeCoursesModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="courses-alert" class="alert" style="display:none;margin-bottom:12px"></div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:12px" id="courses-for"></div>
+      <div id="courses-checks" style="display:flex;flex-direction:column;gap:9px">Loading…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCoursesModal()">Cancel</button>
+      <button class="btn btn-primary" id="courses-save-btn" onclick="saveCourses()">Save courses</button>
+    </div>
+  </div>
+</div>
+
 <!-- Reset PW Modal -->
 <div class="modal-overlay" id="reset-modal-overlay">
   <div class="modal" style="max-width:400px">
@@ -435,6 +454,7 @@ function renderTable(students) {
           ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="sendEval('${s.id}', this)" title="Email this parent a progress summary">Email Eval</button>`
           : `<button class="btn btn-ghost btn-sm" style="color:var(--muted)" disabled title="No parent email on file">Email Eval</button>`}
         <button class="btn btn-ghost btn-sm" onclick="openEditModal('${s.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="openCoursesModal('${s.id}', '${escHtml(s.full_name)}')">Courses</button>
         <button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="emailLogin('${s.id}', '${escHtml(s.full_name)}', this)" title="Reset password and email the new login">Email login</button>
         <button class="btn btn-ghost btn-sm" onclick="openResetModal('${s.id}', '${escHtml(s.full_name)}')">Reset PW</button>
         <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="openDeleteModal('${s.id}', '${escHtml(s.full_name)}')">Delete</button>
@@ -625,6 +645,51 @@ async function postCredentialsEmail({ to_email, to_name, password }) {
   const data = await resp.json();
   if (!resp.ok) throw new Error(data.error || 'Email failed');
   return data;
+}
+
+// ── Edit a student's course enrolments ───────────────────────────
+let coursesTarget = null;
+let coursesOriginal = new Set();
+async function openCoursesModal(studentId, name) {
+  coursesTarget = studentId;
+  coursesOriginal = new Set();
+  document.getElementById('courses-for').textContent = 'Tick the courses ' + name + ' is enrolled in.';
+  document.getElementById('courses-alert').style.display = 'none';
+  const box = document.getElementById('courses-checks');
+  box.innerHTML = 'Loading…';
+  document.getElementById('courses-modal-overlay').classList.add('show');
+  const { data: enr } = await sb.from('enrollments').select('course_id').eq('student_id', studentId);
+  coursesOriginal = new Set((enr || []).map(e => e.course_id));
+  box.innerHTML = courses.length
+    ? courses.map(c => `<label style="display:flex;align-items:center;gap:9px;font-size:.86rem;font-weight:600;cursor:pointer"><input type="checkbox" class="course-chk" value="${c.id}" ${coursesOriginal.has(c.id) ? 'checked' : ''} style="width:16px;height:16px">${escHtml(c.title)}</label>`).join('')
+    : '<div style="color:var(--muted);font-size:.85rem">No active courses.</div>';
+}
+function closeCoursesModal() { document.getElementById('courses-modal-overlay').classList.remove('show'); coursesTarget = null; }
+async function saveCourses() {
+  if (!coursesTarget) return;
+  const checked = new Set([...document.querySelectorAll('.course-chk:checked')].map(c => c.value));
+  const shown = new Set(courses.map(c => c.id));
+  const toAdd = [...checked].filter(id => !coursesOriginal.has(id));
+  const toRemove = [...coursesOriginal].filter(id => shown.has(id) && !checked.has(id));
+  const btn = document.getElementById('courses-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    if (toAdd.length) {
+      const { error } = await sb.from('enrollments').insert(toAdd.map(course_id => ({ student_id: coursesTarget, course_id })));
+      if (error) throw error;
+    }
+    for (const cid of toRemove) {
+      const { error } = await sb.from('enrollments').delete().eq('student_id', coursesTarget).eq('course_id', cid);
+      if (error) throw error;
+    }
+    showToast('Courses updated.', 'success');
+    closeCoursesModal();
+  } catch (e) {
+    const a = document.getElementById('courses-alert');
+    a.textContent = e.message; a.className = 'alert alert-error'; a.style.display = 'flex';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save courses';
+  }
 }
 
 function openEditModal(studentId) {

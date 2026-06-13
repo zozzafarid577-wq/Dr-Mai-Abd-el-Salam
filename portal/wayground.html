@@ -3,29 +3,22 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Student Notes | Student Portal</title>
+<title>Wayground Tests | Student Portal</title>
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="stylesheet" href="/css/portal.css">
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <style>
-.pdf-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px; }
-.pdf-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s,box-shadow .15s; }
-.pdf-card:hover { border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.08); }
-.pdf-icon { width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
-.pdf-icon svg { width:22px;height:22px; }
-.pdf-icon.summary { background:#eff6ff;color:#2563eb; }
-.pdf-icon.cheat { background:#fffbeb;color:#b45309; }
-.pdf-icon.retest { background:#f0fdf4;color:#16a34a; }
-.cat-pill.retest { background:#f0fdf4;color:#166534; }
-.pdf-icon.note { background:#faf5ff;color:#7c3aed; }
-.cat-pill.note { background:#faf5ff;color:#6d28d9; }
-.pdf-name { font-size:.88rem;font-weight:700;color:var(--text);line-height:1.35; }
-.pdf-meta { font-size:.72rem;color:var(--muted); }
-.cat-pill { font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:20px;align-self:flex-start; }
-.cat-pill.summary { background:#eff6ff;color:#2563eb; }
-.cat-pill.cheat { background:#fffbeb;color:#b45309; }
-.pdf-dl { margin-top:auto;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;text-decoration:none; }
-.note-body { font-size:.82rem;color:var(--text-2);line-height:1.55;white-space:pre-wrap;max-height:200px;overflow:auto; }
+.wg-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px; }
+.wg-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s,box-shadow .15s; }
+.wg-card:hover { border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.08); }
+.wg-icon { width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#eef2ff;color:#4f46e5; }
+.wg-icon svg { width:22px;height:22px; }
+.wg-num { font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:20px;align-self:flex-start;background:#eef2ff;color:#4338ca; }
+.wg-name { font-size:.92rem;font-weight:800;color:var(--text);line-height:1.3; }
+.wg-versions { display:flex;gap:8px;flex-wrap:wrap;margin-top:auto; }
+.wg-link { flex:1;min-width:96px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;text-decoration:none; }
+.wg-link.v2 { background:#7c3aed; }
+.wg-link svg { width:14px;height:14px; }
 </style>
 </head>
 <body>
@@ -65,13 +58,14 @@
   <header class="topbar">
     <div class="topbar-left">
       <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-      <span class="page-title">Student Notes</span>
+      <span class="page-title">Wayground Tests</span>
     </div>
   </header>
   <main class="content">
-    <div id="pdf-grid" class="pdf-grid">
-      <div class="skeleton" style="height:140px;border-radius:12px"></div>
-      <div class="skeleton" style="height:140px;border-radius:12px"></div>
+    <div style="font-size:.84rem;color:var(--muted);margin-bottom:16px">Open your assigned Wayground test. Each test has two versions — use whichever your instructor tells you.</div>
+    <div id="wg-grid" class="wg-grid">
+      <div class="skeleton" style="height:150px;border-radius:12px"></div>
+      <div class="skeleton" style="height:150px;border-radius:12px"></div>
     </div>
   </main>
 </div>
@@ -86,38 +80,42 @@
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
 
-  const grid = document.getElementById('pdf-grid');
-  const { data: notes, error } = await sb.from('student_notes')
-    .select('id, title, body, file_url, audience, created_at')
+  const grid = document.getElementById('wg-grid');
+  const { data, error } = await sb.from('wayground_tests')
+    .select('test_number, version, title, url, is_active')
     .eq('is_active', true)
-    .order('created_at', { ascending: false });
+    .order('test_number').order('version');
 
   if (error) { grid.innerHTML = errBox(error.message); return; }
+  if (!data || !data.length) { grid.innerHTML = empty(); return; }
 
-  // 'revision' notes are only for revision students; 'all' goes to everyone.
-  const visible = (notes || []).filter(n => n.audience !== 'revision' || isRevisionStudent());
-  if (!visible.length) { grid.innerHTML = empty(); return; }
+  // Group by test number.
+  const byTest = {};
+  data.forEach(r => { (byTest[r.test_number] ||= []).push(r); });
 
-  grid.innerHTML = visible.map(n => `
-      <div class="pdf-card">
-        <div class="pdf-icon note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
-        <span class="cat-pill note">Student note</span>
-        <div>
-          <div class="pdf-name">${escHtml(n.title)}</div>
-          <div class="pdf-meta">${fmtDate(n.created_at)}</div>
-        </div>
-        ${n.body ? `<div class="note-body">${escHtml(n.body)}</div>` : ''}
-        ${n.file_url ? `<a class="pdf-dl" href="${escAttr(n.file_url)}" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
-          Open attachment</a>` : ''}
-      </div>`).join('');
+  grid.innerHTML = Object.keys(byTest).sort((a,b) => a - b).map(num => {
+    const rows = byTest[num];
+    const title = rows.find(r => r.title)?.title || `Test ${num}`;
+    const links = rows.map(r => `
+        <a class="wg-link ${r.version === 2 ? 'v2' : ''}" href="${escAttr(r.url)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Version ${r.version}
+        </a>`).join('');
+    return `
+      <div class="wg-card">
+        <div class="wg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+        <span class="wg-num">Test ${escHtml(num)}</span>
+        <div class="wg-name">${escHtml(title)}</div>
+        <div class="wg-versions">${links}</div>
+      </div>`;
+  }).join('');
 })();
 
 function escAttr(s){ return escHtml(s).replace(/"/g,'&quot;'); }
 function empty() {
-  return '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="empty-title">No student notes yet</div><div class="empty-sub">Helpful notes will appear here once your instructor adds them.</div></div>';
+  return '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--muted)"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><div class="empty-title">No Wayground tests yet</div><div class="empty-sub">Your instructor will add the test links here.</div></div>';
 }
-function errBox(msg){ return `<div class="empty-state" style="grid-column:1/-1"><div class="empty-title">Couldn’t load notes</div><div class="empty-sub">${escHtml(msg)} (run migration v24?)</div></div>`; }
+function errBox(msg){ return `<div class="empty-state" style="grid-column:1/-1"><div class="empty-title">Couldn’t load tests</div><div class="empty-sub">${escHtml(msg)} (run migration v24?)</div></div>`; }
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 </script>

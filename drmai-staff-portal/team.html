@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Team &amp; Access | Admin</title>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="stylesheet" href="/css/portal.css">
+<script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
+<link rel="stylesheet" href="/css/admin.css">
+<style>
+.adm-item { border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface); }
+.adm-top { display:flex;justify-content:space-between;gap:10px;align-items:start;flex-wrap:wrap; }
+.adm-name { font-size:.95rem;font-weight:800; }
+.adm-sub { font-size:.72rem;color:var(--muted);margin-top:2px; }
+.owner-pill { font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:20px;background:#fef3c7;color:#92400e; }
+.perm-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:12px; }
+.perm-chk { display:flex;align-items:center;gap:7px;font-size:.8rem;font-weight:600;color:var(--text-2);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer; }
+.perm-chk input { width:15px;height:15px;cursor:pointer; }
+.cred-box { background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;margin-top:14px;font-size:.82rem; }
+.cred-field { font-family:monospace;background:#fff;border:1px solid #bbf7d0;border-radius:4px;padding:6px 10px;margin:4px 0;word-break:break-all; }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="b-dot"></div>Dr Mai <span>Admin</span></div>
+  <div class="sidebar-scroll">
+    <div class="nav-section">Overview</div>
+    <a href="/drmai-staff-portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
+    <div class="nav-section">Management</div>
+    <a href="/drmai-staff-portal/students.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</a>
+    <a href="/drmai-staff-portal/courses.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Courses</a>
+    <a href="/drmai-staff-portal/question-bank.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Question Bank</a>
+    <a href="/drmai-staff-portal/tests.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Practice Tests</a>
+    <a href="/drmai-staff-portal/assignments.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Assignments</a>
+    <a href="/drmai-staff-portal/announcements.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a>
+    <a href="/portal/chat.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Chatroom</a>
+    <a href="/drmai-staff-portal/security.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security</a>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="user-avatar" id="u-av">A</div>
+      <div class="user-info"><div class="user-name" id="u-name">Admin</div><div class="user-role">Administrator</div></div>
+      <button class="logout-btn" onclick="signOut()" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Team &amp; Access</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="openAdd()">+ Add admin</button>
+    </div>
+  </header>
+  <main class="content">
+    <div style="font-size:.84rem;color:var(--muted);margin-bottom:16px">Create extra admins with <strong>partial access</strong>. They only see the areas you tick — they can never touch the main host (you), and only you can manage this page.</div>
+    <div id="list"><div style="color:var(--muted);font-size:.85rem">Loading…</div></div>
+  </main>
+</div>
+
+<!-- Add admin modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal" style="max-width:560px;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header" style="flex-shrink:0">
+      <div class="modal-title">Add admin</div>
+      <button class="modal-close" onclick="closeAdd()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto">
+      <div id="add-alert" class="alert" style="display:none;margin-bottom:14px"></div>
+      <div class="form-group">
+        <label class="form-label">Full name *</label>
+        <input type="text" class="form-input" id="a-name" placeholder="Assistant name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-input" id="a-email" placeholder="assistant@email.com">
+      </div>
+      <label class="form-label">Permissions — tick what they can access</label>
+      <div class="perm-grid" id="perm-grid"></div>
+
+      <div id="cred-box" class="cred-box" style="display:none">
+        <strong style="color:#166534">Admin created!</strong>
+        <div>Email: <span class="cred-field" id="cred-email"></span></div>
+        <div>Password: <span class="cred-field" id="cred-pw"></span></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="copyCreds()">Copy credentials</button>
+      </div>
+    </div>
+    <div class="modal-footer" id="add-footer" style="flex-shrink:0">
+      <button class="btn btn-outline" onclick="closeAdd()">Cancel</button>
+      <button class="btn btn-primary" id="create-btn" onclick="createAdmin()">Create admin</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+let profile = null;
+let lastCreated = null;
+const PERMS = [
+  ['students', 'Manage Students'], ['courses', 'Courses'], ['questions', 'Question Bank'],
+  ['tests', 'Practice Tests'], ['assignments', 'Assignments'], ['announcements', 'Announcements'],
+  ['wayground', 'Wayground Tests'], ['notes', 'Student Notes'], ['security', 'Security Log'],
+  ['chat', 'Chatroom'],
+];
+const PERM_LABEL = Object.fromEntries(PERMS);
+
+(async () => {
+  profile = await requireAuth('admin');
+  if (!profile) return;   // non-owner admins are redirected away by auth.js
+  document.getElementById('u-name').textContent = profile.full_name;
+  document.getElementById('u-av').textContent   = initials(profile.full_name);
+  await load();
+})();
+
+async function load() {
+  const list = document.getElementById('list');
+  const { data, error } = await sb.from('profiles')
+    .select('id, full_name, is_owner, admin_perms, is_active, created_at, last_login_at')
+    .eq('role', 'admin')
+    .order('created_at', { ascending: true });
+  if (error) { list.innerHTML = `<div style="color:#dc2626;font-size:.85rem">${escHtml(error.message)} (run migration v24?)</div>`; return; }
+
+  list.innerHTML = (data || []).map(a => {
+    if (a.is_owner) {
+      return `<div class="adm-item">
+        <div class="adm-top">
+          <div><div class="adm-name">${escHtml(a.full_name)} <span class="owner-pill">Main host</span></div>
+          <div class="adm-sub">Full access · protected — cannot be edited or removed</div></div>
+        </div></div>`;
+    }
+    const perms = Array.isArray(a.admin_perms) ? a.admin_perms : [];
+    return `<div class="adm-item" id="adm-${a.id}">
+      <div class="adm-top">
+        <div><div class="adm-name">${escHtml(a.full_name)}</div>
+        <div class="adm-sub">${a.is_active ? 'Active' : '<span style="color:#dc2626">Disabled</span>'} · ${a.last_login_at ? 'last seen ' + timeAgo(a.last_login_at) : 'never signed in'}</div></div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" onclick="setActive('${a.id}', ${!a.is_active})">${a.is_active ? 'Disable' : 'Enable'}</button>
+          <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="removeAdmin('${a.id}','${escHtml(a.full_name)}')">Delete</button>
+        </div>
+      </div>
+      <div class="perm-grid">
+        ${PERMS.map(([k, label]) => `<label class="perm-chk"><input type="checkbox" data-admin="${a.id}" value="${k}" ${perms.includes(k) ? 'checked' : ''}>${label}</label>`).join('')}
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="savePerms('${a.id}')">Save permissions</button>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:.85rem">No admins.</div>';
+}
+
+function openAdd() {
+  lastCreated = null;
+  document.getElementById('a-name').value = '';
+  document.getElementById('a-email').value = '';
+  document.getElementById('add-alert').style.display = 'none';
+  document.getElementById('cred-box').style.display = 'none';
+  document.getElementById('add-footer').style.display = 'flex';
+  const btn = document.getElementById('create-btn');
+  btn.disabled = false; btn.textContent = 'Create admin';
+  document.getElementById('perm-grid').innerHTML =
+    PERMS.map(([k, label]) => `<label class="perm-chk"><input type="checkbox" class="new-perm" value="${k}">${label}</label>`).join('');
+  document.getElementById('add-modal').classList.add('show');
+}
+function closeAdd() { document.getElementById('add-modal').classList.remove('show'); }
+
+async function createAdmin() {
+  const full_name = document.getElementById('a-name').value.trim();
+  const email = document.getElementById('a-email').value.trim();
+  const perms = [...document.querySelectorAll('.new-perm:checked')].map(c => c.value);
+  if (!full_name || !email) { addAlert('Name and email are required.', 'error'); return; }
+
+  const btn = document.getElementById('create-btn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const data = await api({ action: 'create', full_name, email, perms });
+    lastCreated = { email, password: data.password };
+    document.getElementById('cred-email').textContent = email;
+    document.getElementById('cred-pw').textContent = data.password;
+    document.getElementById('cred-box').style.display = 'block';
+    document.getElementById('add-footer').style.display = 'none';
+    await load();
+  } catch (e) {
+    addAlert(e.message, 'error');
+    btn.disabled = false; btn.textContent = 'Create admin';
+  }
+}
+
+async function savePerms(id) {
+  const perms = [...document.querySelectorAll(`input[data-admin="${id}"]:checked`)].map(c => c.value);
+  try { await api({ action: 'update', admin_id: id, perms }); toast('Permissions saved.', 'success'); }
+  catch (e) { toast('Error: ' + e.message, 'error'); }
+}
+
+async function setActive(id, active) {
+  try { await api({ action: 'update', admin_id: id, is_active: active }); await load(); }
+  catch (e) { toast('Error: ' + e.message, 'error'); }
+}
+
+async function removeAdmin(id, name) {
+  if (!confirm(`Delete admin "${name}" permanently?`)) return;
+  try { await api({ action: 'delete', admin_id: id }); toast('Admin deleted.', 'success'); await load(); }
+  catch (e) { toast('Error: ' + e.message, 'error'); }
+}
+
+async function api(body) {
+  const session = await getSession();
+  // Admin management is folded into /api/create-student (admin_action) to
+  // stay within Vercel's serverless-function budget.
+  const { action, ...rest } = body;
+  const resp = await fetch('/api/create-student', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ admin_action: action, ...rest }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function copyCreds() {
+  if (!lastCreated) return;
+  navigator.clipboard.writeText(`Portal: ${location.origin}/login.html\nEmail: ${lastCreated.email}\nPassword: ${lastCreated.password}`);
+  toast('Credentials copied!', 'success');
+}
+
+function addAlert(msg, type) {
+  const el = document.getElementById('add-alert');
+  el.textContent = msg; el.className = `alert alert-${type}`; el.style.display = 'flex';
+}
+function toast(msg, type='') {
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div'); el.className = `toast-msg${type ? ' '+type : ''}`; el.textContent = msg;
+  wrap.appendChild(el); setTimeout(() => el.remove(), 3000);
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+</script>
+</body>
+</html>

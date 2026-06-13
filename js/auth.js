@@ -72,7 +72,97 @@ async function requireAuth(role) {
     try { installContentGuard(profile); } catch (_) {}
   }
 
+  if (profile.role === 'admin') {
+    try {
+      const denied = setupAdminNav(profile);   // returns true if it redirected
+      if (denied) return null;
+    } catch (_) {}
+  }
+
   return profile;
+}
+
+// ── Sub-admin permissions ─────────────────────────────────────────
+// The owner ("main host") always has every permission. A sub-admin only
+// has the keys stored in profiles.admin_perms.
+const ADMIN_PERMS = ['students','courses','questions','tests','assignments',
+                     'announcements','wayground','notes','security','chat'];
+
+// Which permission each admin page needs. The dashboard is always allowed;
+// '__owner__' means owner-only.
+const ADMIN_PAGE_PERM = {
+  '/drmai-staff-portal/students.html':      'students',
+  '/drmai-staff-portal/courses.html':       'courses',
+  '/drmai-staff-portal/question-bank.html': 'questions',
+  '/drmai-staff-portal/tests.html':         'tests',
+  '/drmai-staff-portal/assignments.html':   'assignments',
+  '/drmai-staff-portal/announcements.html': 'announcements',
+  '/drmai-staff-portal/security.html':      'security',
+  '/drmai-staff-portal/wayground.html':     'wayground',
+  '/drmai-staff-portal/notes.html':         'notes',
+  '/drmai-staff-portal/team.html':          '__owner__',
+  '/portal/chat.html':                      'chat',
+};
+
+function adminHasPerm(profile, key) {
+  if (!profile || profile.role !== 'admin') return false;
+  if (profile.is_owner) return true;
+  if (key === '__owner__') return false;
+  return Array.isArray(profile.admin_perms) && profile.admin_perms.includes(key);
+}
+
+// Injects the newer admin tabs (Wayground, Student Notes, Team), hides any
+// nav item the signed-in admin lacks permission for, and — if the admin
+// opened a page they're not allowed to see — redirects them to the
+// dashboard. Returns true when it redirects so requireAuth can bail out.
+function setupAdminNav(profile) {
+  const scroll = document.querySelector('.sidebar .sidebar-scroll');
+
+  if (scroll) {
+    // Inject the new tabs once (after the existing list).
+    if (!scroll.querySelector('a[href="/drmai-staff-portal/wayground.html"]')) {
+      scroll.insertAdjacentHTML('beforeend', `
+        <div class="nav-section nav-rev-admin">Revision</div>
+        <a href="/drmai-staff-portal/wayground.html" class="nav-item nav-rev-admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Wayground Tests</a>
+        <a href="/drmai-staff-portal/notes.html" class="nav-item nav-rev-admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Student Notes</a>`);
+    }
+    if (profile.is_owner && !scroll.querySelector('a[href="/drmai-staff-portal/team.html"]')) {
+      scroll.insertAdjacentHTML('beforeend', `
+        <div class="nav-section nav-owner">Owner</div>
+        <a href="/drmai-staff-portal/team.html" class="nav-item nav-owner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team &amp; Access</a>`);
+    }
+
+    // Highlight the current page (covers the injected tabs too).
+    const here = location.pathname.replace(/\/index\.html$/, '/');
+    scroll.querySelectorAll('a.nav-item').forEach(a => {
+      if (a.getAttribute('href') === here) a.classList.add('active');
+    });
+
+    // Hide any nav item this admin isn't allowed to use.
+    scroll.querySelectorAll('a.nav-item').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      const need = ADMIN_PAGE_PERM[href.replace(/\/index\.html$/, '/')];
+      if (need && !adminHasPerm(profile, need)) a.style.display = 'none';
+    });
+    // Hide section headers that have no visible items beneath them.
+    scroll.querySelectorAll('.nav-section').forEach(sec => {
+      let n = sec.nextElementSibling, visible = false;
+      while (n && !n.classList.contains('nav-section')) {
+        if (n.classList.contains('nav-item') && n.style.display !== 'none') visible = true;
+        n = n.nextElementSibling;
+      }
+      if (!visible) sec.style.display = 'none';
+    });
+  }
+
+  // Page-level guard: bounce sub-admins off pages they can't access.
+  const path = location.pathname.replace(/\/index\.html$/, '/');
+  const need = ADMIN_PAGE_PERM[path];
+  if (need && !adminHasPerm(profile, need)) {
+    location.replace('/drmai-staff-portal/');
+    return true;
+  }
+  return false;
 }
 
 // ── Content guard ─────────────────────────────────────────────────
@@ -164,6 +254,7 @@ async function setupStudentNav(studentId) {
       <a href="/portal/chat.html" class="nav-item nav-notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Chatroom</a>
       <a href="/portal/student-notes.html" class="nav-item nav-notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Student Notes</a>
       <div class="nav-section nav-rev">Revision</div>
+      <a href="/portal/wayground.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Wayground Tests</a>
       <a href="/portal/summaries.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Summaries &amp; Cheat Codes</a>
       <a href="/portal/retest.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Real Test</a>`);
   }
@@ -185,8 +276,9 @@ async function setupStudentNav(studentId) {
   if (!pureRevision) return;
 
   const ALLOW = ['/portal/', '/portal/lessons.html', '/portal/mock-tests.html',
-                 '/portal/summaries.html', '/portal/retest.html', '/portal/student-notes.html',
-                 '/portal/chat.html', '/portal/scores.html', '/portal/settings.html'];
+                 '/portal/summaries.html', '/portal/retest.html', '/portal/wayground.html',
+                 '/portal/student-notes.html', '/portal/chat.html', '/portal/scores.html',
+                 '/portal/settings.html'];
   scroll.querySelectorAll('.nav-item').forEach(a => {
     if (!ALLOW.includes(a.getAttribute('href'))) a.style.display = 'none';
   });

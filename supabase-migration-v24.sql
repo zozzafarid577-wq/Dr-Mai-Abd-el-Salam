@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS public.wayground_tests (
   title       TEXT,                        -- optional label
   url         TEXT NOT NULL,
   is_active   BOOLEAN NOT NULL DEFAULT true,
-  created_by  UUID REFERENCES public.profiles(id),
+  created_by  UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (test_number, version)
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS public.shared_notes (
   file_url    TEXT,                         -- optional attached file / link
   audience    TEXT NOT NULL DEFAULT 'all',  -- 'all' | 'revision'
   is_active   BOOLEAN NOT NULL DEFAULT true,
-  created_by  UUID REFERENCES public.profiles(id),
+  created_by  UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -84,6 +84,29 @@ a{text-decoration:none;color:inherit}
 }
 .lp-card-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
 
+/* laptop mockup showing the virus-particles background image
+   (drop the file at /assets/virus-particles-background.jpg) */
+.lp-laptop{position:relative;z-index:1;width:100%;max-width:430px;margin:26px 0 6px;perspective:1200px}
+.lp-laptop .screen{
+  position:relative;border:9px solid #0b1220;border-bottom:0;border-radius:14px 14px 4px 4px;
+  aspect-ratio:16/10;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.5);
+}
+.lp-laptop .shot{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(135deg,rgba(37,99,235,.20),rgba(11,18,32,.30)),
+    url('/assets/virus-particles-background.jpg') center/cover no-repeat,
+    radial-gradient(circle at 30% 25%,#1e3a8a 0%,#0b1220 72%);
+}
+.lp-laptop .cam{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#1e293b;z-index:2}
+.lp-laptop .base{
+  height:15px;margin:0 -22px;
+  background:linear-gradient(#cbd5e1,#94a3b8);
+  border-radius:0 0 12px 12px;position:relative;
+  box-shadow:0 14px 26px rgba(0,0,0,.35);
+}
+.lp-laptop .base::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:92px;height:6px;background:#64748b;border-radius:0 0 7px 7px}
+
 /* ── Right panel (form) ── */
 .right-panel{
   flex:0 0 auto;
@@ -191,6 +214,12 @@ a{text-decoration:none;color:inherit}
     </div>
     <div class="lp-tagline">Learn biology<br>with <em>clarity</em> &amp;<br><em>confidence.</em></div>
     <div class="lp-sub">Access your courses, practice tests, mock exams, and progress reports — all in one place.</div>
+
+    <!-- Laptop mockup -->
+    <div class="lp-laptop">
+      <div class="screen"><span class="cam"></span><div class="shot"></div></div>
+      <div class="base"></div>
+    </div>
   </div>
 
   <div class="lp-stats">

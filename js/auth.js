@@ -72,28 +72,42 @@ async function requireAuth(role) {
   return profile;
 }
 
-// True if the signed-in student is enrolled in a Revision course.
-// Populated by setupStudentNav() (cached in sessionStorage).
+// Enrolment flags, populated by setupStudentNav() (cached in sessionStorage).
 function isRevisionStudent() {
   try { return sessionStorage.getItem('drmai_is_revision') === '1'; } catch (_) { return false; }
 }
+function isBasicsStudent() {
+  try { return sessionStorage.getItem('drmai_is_basics') === '1'; } catch (_) { return false; }
+}
+// Revision-ONLY (not also in basics) — these students get the trimmed view.
+function isPureRevisionStudent() {
+  return isRevisionStudent() && !isBasicsStudent();
+}
 
-// ── Revision-aware sidebar ────────────────────────────────────────
-// Revision students get a focused menu (recordings, real exams,
-// summaries/cheat codes, retest material) and the two extra tabs; other
-// students keep the full menu and don't see the revision-only tabs.
+// ── Enrolment-aware sidebar ───────────────────────────────────────
+// Three cases:
+//   • Basics only   → the full standard menu (no revision-only tabs)
+//   • Revision only → a focused menu (recordings, real exams,
+//                     summaries/cheat codes, real test) + revision tabs
+//   • Basics + Revision → everything in one place (full menu + revision tabs)
 async function setupStudentNav(studentId) {
   const scroll = document.querySelector('.sidebar .sidebar-scroll');
   if (!scroll) return;
 
-  // Determine revision status (cached for the session).
-  let flag = sessionStorage.getItem('drmai_is_revision');
-  if (flag === null) {
+  // Determine basics/revision enrolment (cached for the session).
+  let rev = sessionStorage.getItem('drmai_is_revision');
+  let bas = sessionStorage.getItem('drmai_is_basics');
+  if (rev === null || bas === null) {
     const { data } = await sb.from('enrollments').select('courses(title)').eq('student_id', studentId);
-    flag = (data || []).some(e => /revision/i.test(e.courses?.title || '')) ? '1' : '0';
-    sessionStorage.setItem('drmai_is_revision', flag);
+    const titles = (data || []).map(e => e.courses?.title || '');
+    rev = titles.some(t => /revision/i.test(t)) ? '1' : '0';
+    bas = titles.some(t => /basics/i.test(t))   ? '1' : '0';
+    sessionStorage.setItem('drmai_is_revision', rev);
+    sessionStorage.setItem('drmai_is_basics', bas);
   }
-  const isRevision = flag === '1';
+  const isRevision    = rev === '1';
+  const isBasics      = bas === '1';
+  const pureRevision  = isRevision && !isBasics;   // trim the menu only for these
 
   // Inject the shared "Student Notes" tab (all students) + the revision tabs once.
   if (!scroll.querySelector('a[href="/portal/student-notes.html"]')) {
@@ -112,19 +126,23 @@ async function setupStudentNav(studentId) {
     if (a.getAttribute('href') === path) a.classList.add('active');
   });
 
+  // Revision-only tabs are visible to anyone enrolled in a revision course
+  // (revision-only OR basics+revision). Everyone else doesn't see them.
   if (!isRevision) {
     scroll.querySelectorAll('.nav-rev').forEach(el => { el.style.display = 'none'; });
-    return;
   }
 
-  // Revision: keep only the focused set.
+  // Only a PURE revision student gets the trimmed menu. Basics-only and
+  // basics+revision students keep the full menu (everything in one place).
+  if (!pureRevision) return;
+
   const ALLOW = ['/portal/', '/portal/lessons.html', '/portal/mock-tests.html',
                  '/portal/summaries.html', '/portal/retest.html', '/portal/student-notes.html',
                  '/portal/chat.html', '/portal/scores.html', '/portal/settings.html'];
   scroll.querySelectorAll('.nav-item').forEach(a => {
     if (!ALLOW.includes(a.getAttribute('href'))) a.style.display = 'none';
   });
-  // "Mock Tests" → "Real Exams" for revision students.
+  // "Mock Tests" → "Real Exams" for revision-only students.
   const mock = scroll.querySelector('a[href="/portal/mock-tests.html"]');
   if (mock) mock.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = 'Real Exams'; });
   // Hide section headers that have no visible items under them.

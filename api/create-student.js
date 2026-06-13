@@ -189,6 +189,12 @@ async function handleAdminAction(action, req, res, callerId) {
     if (!target || target.role !== 'admin') return res.status(404).json({ error: 'Admin not found' });
     if (target.is_owner) return res.status(403).json({ error: 'The main host cannot be deleted.' });
 
+    // Clear content this admin authored (created_by has no cascade rule), so
+    // the FK references don't block the delete. Best-effort per table.
+    for (const t of ['announcements', 'shared_notes', 'wayground_tests']) {
+      try { await supabaseAdmin.from(t).update({ created_by: null }).eq('created_by', admin_id); } catch (_) {}
+    }
+
     const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(admin_id);
     if (delErr) return res.status(500).json({ error: delErr.message });
     await supabaseAdmin.from('profiles').delete().eq('id', admin_id);

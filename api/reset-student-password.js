@@ -54,6 +54,13 @@ export default async function handler(req, res) {
   const { student_id } = req.body;
   if (!student_id) return res.status(400).json({ error: 'student_id is required' });
 
+  // Never let anyone but the owner reset the owner's password.
+  const { data: target } = await supabaseAdmin
+    .from('profiles').select('is_owner').eq('id', student_id).single();
+  if (target?.is_owner && student_id !== user.id) {
+    return res.status(403).json({ error: 'The main host’s password cannot be reset here.' });
+  }
+
   const password = generatePassword();
 
   const { data: updated, error } = await supabaseAdmin.auth.admin.updateUserById(student_id, { password });

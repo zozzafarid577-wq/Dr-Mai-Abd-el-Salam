@@ -141,7 +141,7 @@ export default async function handler(req, res) {
 // never createable, editable, or deletable here.
 async function handleAdminAction(action, req, res, callerId, callerEmail) {
   if (action === 'create') {
-    const { full_name, email } = req.body;
+    const { full_name, email, phone } = req.body;
     const perms = cleanPerms(req.body.perms);
     if (!full_name || !email) return res.status(400).json({ error: 'full_name and email are required' });
 
@@ -158,6 +158,7 @@ async function handleAdminAction(action, req, res, callerId, callerEmail) {
     const { error: profErr } = await supabaseAdmin.from('profiles').insert({
       id: uid,
       full_name,
+      phone: phone || null,
       role: 'admin',
       is_owner: false,
       admin_perms: perms,

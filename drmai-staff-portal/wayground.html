@@ -138,10 +138,23 @@ async function load() {
         <span class="wg-tag ${r.version === 2 ? 'v2' : ''}">V${r.version}</span>
         ${r.title ? `<strong style="flex-shrink:0">${escHtml(r.title)}</strong>` : ''}
         <a class="wg-url" href="${escAttr(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a>
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0" data-t="${r.test_number}" data-p="${r.part || 0}" data-v="${r.version}" data-title="${escAttr(r.title || '')}" data-url="${escAttr(r.url)}" onclick="editLink(this)">Edit</button>
         <button class="btn btn-ghost btn-sm" style="color:#dc2626;flex-shrink:0" onclick="del('${r.id}')">Delete</button>
       </div>`).join('');
     return `<div class="wg-test-block"><h4>Test ${escHtml(num)}</h4>${rows}</div>`;
   }).join('');
+}
+
+// Load an existing link into the form so its URL (or title) can be changed.
+function editLink(b) {
+  document.getElementById('f-test').value    = b.dataset.t;
+  document.getElementById('f-part').value    = b.dataset.p;
+  document.getElementById('f-version').value = b.dataset.v;
+  document.getElementById('f-title').value   = b.dataset.title || '';
+  document.getElementById('f-url').value     = b.dataset.url || '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('f-url').focus();
+  toast('Editing this link — change it and click “Add / update link”.', 'success');
 }
 
 async function addLink() {

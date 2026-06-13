@@ -161,9 +161,10 @@ function setupAdminNav(profile) {
   }
 
   // Page-level guard: bounce sub-admins off pages they can't access.
+  // The chatroom is shared by everyone, so never redirect away from it.
   const path = location.pathname.replace(/\/index\.html$/, '/');
   const need = ADMIN_PAGE_PERM[path];
-  if (need && !adminHasPerm(profile, need)) {
+  if (need && need !== 'chat' && !adminHasPerm(profile, need)) {
     location.replace('/drmai-staff-portal/');
     return true;
   }

@@ -129,10 +129,14 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Course *</label>
-          <select class="form-input" id="course-select">
-            <option value="">— Select a course —</option>
+          <label class="form-label">Enrollment *</label>
+          <select class="form-input" id="plan-select">
+            <option value="">— Select enrollment —</option>
+            <option value="revision">Revision only</option>
+            <option value="basics_revision">Basics + Revision</option>
+            <option value="basics">Basics only</option>
           </select>
+          <div class="form-hint" id="plan-hint" style="font-size:.72rem;color:var(--muted);margin-top:4px"></div>
         </div>
       </form>
 
@@ -142,6 +146,7 @@
         <div>Password: <span class="cred-field" id="cred-pw"></span></div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="copyCredentials()">Copy Credentials</button>
+          <button class="btn btn-primary btn-sm" id="email-cred-btn" onclick="emailNewCredentials(this)">Email credentials</button>
           <button class="btn btn-success btn-sm" id="wa-btn" onclick="sendWhatsApp()">
             <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.987-1.406C8.38 21.516 10.148 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             Send via WhatsApp
@@ -298,11 +303,26 @@ let lastCreated  = null;
   // Instead, show placeholder and note that email is in auth.users
 })();
 
+let basicsCourses = [], revisionCourses = [];
 function buildCourseSelect() {
+  basicsCourses   = courses.filter(c => /basics/i.test(c.title));
+  revisionCourses = courses.filter(c => /revision/i.test(c.title));
   const opts = '<option value="">— Select a course —</option>' +
     courses.map(c => `<option value="${c.id}">${escHtml(c.title)}</option>`).join('');
-  document.getElementById('course-select').innerHTML = opts;
-  document.getElementById('bulk-course').innerHTML = opts;
+  const bulk = document.getElementById('bulk-course');
+  if (bulk) bulk.innerHTML = opts;
+  const hint = document.getElementById('plan-hint');
+  if (hint && (!revisionCourses.length || !basicsCourses.length)) {
+    hint.textContent = `Found ${revisionCourses.length} revision and ${basicsCourses.length} basics course(s). Name courses with "Revision"/"Basics" so plans map correctly.`;
+  }
+}
+
+// Course IDs to enroll for a chosen plan (matched by course title).
+function planCourseIds(plan) {
+  if (plan === 'revision') return revisionCourses.map(c => c.id);
+  if (plan === 'basics')   return basicsCourses.map(c => c.id);
+  if (plan === 'basics_revision') return [...new Set([...basicsCourses, ...revisionCourses].map(c => c.id))];
+  return [];
 }
 
 // ── Bulk add ────────────────────────────────────────────────────
@@ -412,6 +432,7 @@ function renderTable(students) {
           ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="sendEval('${s.id}', this)" title="Email this parent a progress summary">Email Eval</button>`
           : `<button class="btn btn-ghost btn-sm" style="color:var(--muted)" disabled title="No parent email on file">Email Eval</button>`}
         <button class="btn btn-ghost btn-sm" onclick="openEditModal('${s.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="emailLogin('${s.id}', '${escHtml(s.full_name)}', this)" title="Reset password and email the new login">Email login</button>
         <button class="btn btn-ghost btn-sm" onclick="openResetModal('${s.id}', '${escHtml(s.full_name)}')">Reset PW</button>
         <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="openDeleteModal('${s.id}', '${escHtml(s.full_name)}')">Delete</button>
       </td>
@@ -479,7 +500,7 @@ function openAddModal() {
   document.getElementById('add-footer').style.display = '';
   document.getElementById('add-btn').textContent = 'Create Account';
   document.getElementById('add-btn').disabled = false;
-  document.getElementById('course-select').value = '';
+  document.getElementById('plan-select').value = '';
   document.getElementById('add-modal-overlay').classList.add('show');
 }
 
@@ -494,11 +515,12 @@ async function submitAddStudent() {
   const phone       = document.getElementById('add-phone').value.trim();
   const parentEmail = document.getElementById('add-parent-email').value.trim();
   const parentPhone = document.getElementById('add-parent-phone').value.trim();
-  const courseId    = document.getElementById('course-select').value;
-  const courseIds   = courseId ? [courseId] : [];
+  const plan        = document.getElementById('plan-select').value;
+  const courseIds   = planCourseIds(plan);
 
   if (!name || !email) { showAddAlert('Name and email are required.', 'error'); return; }
-  if (!courseId) { showAddAlert('Please select a course.', 'error'); return; }
+  if (!plan) { showAddAlert('Please choose an enrollment.', 'error'); return; }
+  if (!courseIds.length) { showAddAlert('No matching course found for that plan — create a Basics/Revision course first.', 'error'); return; }
 
   const btn = document.getElementById('add-btn');
   btn.textContent = 'Creating…';
@@ -549,6 +571,57 @@ function sendWhatsApp() {
   const phone = lastCreated.phone?.replace(/\D/g,'') || '';
   const text = encodeURIComponent(`Hi ${lastCreated.name}! Here are your login credentials for Dr. Mai's Student Portal:\n\nEmail: ${lastCreated.email}\nPassword: ${lastCreated.password}\n\nLogin at: ${location.origin}/login.html\n\nPlease change your password after logging in.`);
   window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+}
+
+// Email the credentials of the student we just created.
+async function emailNewCredentials(btn) {
+  if (!lastCreated) return;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await postCredentialsEmail({ to_email: lastCreated.email, to_name: lastCreated.name, password: lastCreated.password });
+    showToast('Credentials emailed to ' + lastCreated.email, 'success');
+    btn.textContent = 'Emailed ✓';
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+// For an existing student: reset their password and email the new login.
+async function emailLogin(studentId, name, btn) {
+  if (!confirm(`Reset ${name}'s password and email them the new login?`)) return;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const session = await getSession();
+    const resp = await fetch('/api/reset-student-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ student_id: studentId }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Reset failed');
+    if (!data.email) throw new Error('No email on file for this account.');
+    await postCredentialsEmail({ to_email: data.email, to_name: name, password: data.password });
+    showToast('New login emailed to ' + data.email, 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+async function postCredentialsEmail({ to_email, to_name, password }) {
+  const session = await getSession();
+  const resp = await fetch('/api/send-parent-result', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ action: 'credentials', to_email, to_name, password, login_url: location.origin + '/login.html' }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || 'Email failed');
+  return data;
 }
 
 function openEditModal(studentId) {

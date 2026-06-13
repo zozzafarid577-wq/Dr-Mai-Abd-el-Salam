@@ -51,8 +51,50 @@ export default async function handler(req, res) {
   const { data: { user }, error: authErr } = await anonClient.auth.getUser(token);
   if (authErr || !user) return res.status(401).json({ error: 'Invalid token' });
 
-  if (req.body?.action === 'evaluation') return sendEvaluations(req, res, user);
+  if (req.body?.action === 'evaluation')  return sendEvaluations(req, res, user);
+  if (req.body?.action === 'credentials') return sendCredentials(req, res, user);
   return sendTestResult(req, res, user);
+}
+
+// ── Admin emails login credentials to a student or another admin ──
+async function sendCredentials(req, res, user) {
+  let isAdmin = user.app_metadata?.role === 'admin';
+  if (!isAdmin) {
+    const { data: prof } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+    isAdmin = prof?.role === 'admin';
+  }
+  if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
+
+  const { to_email, to_name, password, login_url } = req.body;
+  if (!to_email || !password) return res.status(400).json({ error: 'to_email and password are required' });
+
+  const key = resolveBrevoKey();
+  if (!key) return res.status(500).json({ error: 'No Brevo API key found (set BREVO_API_KEY in Vercel).' });
+
+  const url = login_url || 'https://dr-mai-abd-el-salam.vercel.app/login.html';
+  const html = `<!DOCTYPE html><html><body style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#0d1117;background:#f4f6fb">
+<div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:14px;padding:22px 26px;color:#fff;margin-bottom:18px">
+  <div style="font-size:1.05rem;font-weight:800">Dr Mai Abd El Salam Portal</div>
+  <div style="font-size:.82rem;opacity:.8;margin-top:3px">Your login details</div>
+</div>
+<div style="background:#fff;border:1px solid #e4e7ef;border-radius:14px;padding:22px">
+  <p style="margin:0 0 12px;font-size:.92rem">Hello ${esc(to_name || '')},</p>
+  <p style="margin:0 0 14px;font-size:.88rem;color:#374151">Here are your login details for the portal:</p>
+  <div style="background:#f8fafc;border:1px solid #e4e7ef;border-radius:10px;padding:14px 16px;font-size:.9rem">
+    <div style="margin-bottom:6px"><strong>Email:</strong> ${esc(to_email)}</div>
+    <div><strong>Password:</strong> <span style="font-family:ui-monospace,monospace">${esc(password)}</span></div>
+  </div>
+  <p style="margin:16px 0"><a href="${esc(url)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:9px;font-size:.88rem">Sign in</a></p>
+  <p style="margin:0;font-size:.78rem;color:#8896ab">Please change your password after your first login.</p>
+</div>
+</body></html>`;
+
+  try {
+    await sendBrevoEmail(key, { toEmail: to_email, toName: to_name || to_email, subject: 'Your Dr Mai Portal login details', html });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+  return res.status(200).json({ sent: true });
 }
 
 // ── Existing flow: a student finishing a test emails their own parent ──

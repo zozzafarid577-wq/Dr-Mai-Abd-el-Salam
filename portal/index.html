@@ -177,8 +177,8 @@
     <!-- Stats -->
     <div class="stats-grid mb24">
       <div class="stat-card">
-        <div class="stat-icon" style="background:#eff6ff">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <div class="stat-icon" style="background:#EEF0F4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6B7C98" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         </div>
         <div class="stat-n" id="s-courses">—</div>
         <div class="stat-l">Courses</div>
@@ -287,7 +287,7 @@ function renderExamClocks() {
   if (!el) return;
   const now = Date.now();
   const clocks = [
-    { name: 'ACT Exam', date: nextExamDate(ACT_DATES), grad: 'linear-gradient(135deg,#1d4ed8,#0e2a82)' },
+    { name: 'ACT Exam', date: nextExamDate(ACT_DATES), grad: 'linear-gradient(135deg,#6B7C98,#445A74)' },
     { name: 'EST Exam', date: nextExamDate(EST_DATES), grad: 'linear-gradient(135deg,#ca8a04,#854d0e)' },
   ];
   el.innerHTML = clocks.map(c => {
@@ -482,9 +482,9 @@ async function loadUpcoming() {
 
   el.innerHTML = tests.map(t => {
     const isMock   = t.is_mock;
-    const iconBg   = isMock ? 'linear-gradient(135deg,#7c3aed,#4c1d95)' : 'linear-gradient(135deg,#2563eb,#1d4ed8)';
-    const badgeBg  = isMock ? '#f5f3ff' : '#eff6ff';
-    const badgeClr = isMock ? '#6d28d9'  : '#1d4ed8';
+    const iconBg   = isMock ? 'linear-gradient(135deg,#7c3aed,#4c1d95)' : 'linear-gradient(135deg,#6B7C98,#5A6B87)';
+    const badgeBg  = isMock ? '#f5f3ff' : '#EEF0F4';
+    const badgeClr = isMock ? '#6d28d9'  : '#6B7C98';
     const badgeTxt = isMock ? 'Mock'     : 'Practice';
     const page     = isMock ? '/portal/mock-tests.html' : '/portal/tests.html';
     return `

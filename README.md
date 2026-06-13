@@ -15,13 +15,13 @@ Vercel serverless functions in `api/`.
 | `api/_lib/`           | Dependency-free helpers shared by the functions (unit-tested)     |
 | `css/portal.css`      | Shared portal design system                                       |
 | `js/`                 | Client helpers (`auth.js`, `portal-nav.js`)                       |
-| `supabase-*.sql`      | Database setup + ordered migrations (`v2` … `v20`)                |
+| `supabase-*.sql`      | Database setup + ordered migrations (`v2` … `v21`)                |
 | `tests/`              | Vitest test suite for the API handlers + portal static checks     |
 
 ## Database setup
 
 Run `supabase-setup.sql` first, then each `supabase-migration-vN.sql` in
-order (v2 → v20) in the Supabase SQL editor.
+order (v2 → v21) in the Supabase SQL editor.
 
 Migration (`v19`) adds a public `lesson-media` storage bucket so admins
 can upload recordings and lesson PDFs directly (instead of relying on

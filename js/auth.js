@@ -67,7 +67,71 @@ async function requireAuth(role) {
     }
   }
 
+  if (profile.role === 'student') { try { await setupStudentNav(profile.id); } catch (_) {} }
+
   return profile;
+}
+
+// True if the signed-in student is enrolled in a Revision course.
+// Populated by setupStudentNav() (cached in sessionStorage).
+function isRevisionStudent() {
+  try { return sessionStorage.getItem('drmai_is_revision') === '1'; } catch (_) { return false; }
+}
+
+// ── Revision-aware sidebar ────────────────────────────────────────
+// Revision students get a focused menu (recordings, real exams,
+// summaries/cheat codes, retest material) and the two extra tabs; other
+// students keep the full menu and don't see the revision-only tabs.
+async function setupStudentNav(studentId) {
+  const scroll = document.querySelector('.sidebar .sidebar-scroll');
+  if (!scroll) return;
+
+  // Determine revision status (cached for the session).
+  let flag = sessionStorage.getItem('drmai_is_revision');
+  if (flag === null) {
+    const { data } = await sb.from('enrollments').select('courses(title)').eq('student_id', studentId);
+    flag = (data || []).some(e => /revision/i.test(e.courses?.title || '')) ? '1' : '0';
+    sessionStorage.setItem('drmai_is_revision', flag);
+  }
+  const isRevision = flag === '1';
+
+  // Inject the two revision tabs once.
+  if (!scroll.querySelector('a[href="/portal/summaries.html"]')) {
+    scroll.insertAdjacentHTML('beforeend', `
+      <div class="nav-section nav-rev">Revision</div>
+      <a href="/portal/summaries.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Summaries &amp; Cheat Codes</a>
+      <a href="/portal/retest.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Retest Material</a>`);
+  }
+
+  // Highlight the current page (covers the injected tabs too).
+  const path = location.pathname.replace(/\/index\.html$/, '/');
+  scroll.querySelectorAll('.nav-item').forEach(a => {
+    if (a.getAttribute('href') === path) a.classList.add('active');
+  });
+
+  if (!isRevision) {
+    scroll.querySelectorAll('.nav-rev').forEach(el => { el.style.display = 'none'; });
+    return;
+  }
+
+  // Revision: keep only the focused set.
+  const ALLOW = ['/portal/', '/portal/lessons.html', '/portal/mock-tests.html',
+                 '/portal/summaries.html', '/portal/retest.html', '/portal/scores.html', '/portal/settings.html'];
+  scroll.querySelectorAll('.nav-item').forEach(a => {
+    if (!ALLOW.includes(a.getAttribute('href'))) a.style.display = 'none';
+  });
+  // "Mock Tests" → "Real Exams" for revision students.
+  const mock = scroll.querySelector('a[href="/portal/mock-tests.html"]');
+  if (mock) mock.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = 'Real Exams'; });
+  // Hide section headers that have no visible items under them.
+  scroll.querySelectorAll('.nav-section').forEach(sec => {
+    let n = sec.nextElementSibling, visible = false;
+    while (n && !n.classList.contains('nav-section')) {
+      if (n.classList.contains('nav-item') && n.style.display !== 'none') visible = true;
+      n = n.nextElementSibling;
+    }
+    if (!visible) sec.style.display = 'none';
+  });
 }
 
 // ── Sign out ──────────────────────────────────────────────────────

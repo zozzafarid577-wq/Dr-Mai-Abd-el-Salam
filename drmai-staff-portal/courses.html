@@ -423,6 +423,16 @@
         <input type="text" class="form-input" id="pdf-title-input" placeholder="e.g. Animal Behavior Worksheet">
       </div>
       <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="pdf-category-input">
+          <option value="material">Material (normal lesson PDF)</option>
+          <option value="summary">Summary</option>
+          <option value="cheat">Cheat sheet</option>
+          <option value="retest">Retest material</option>
+        </select>
+        <div class="form-hint">Summaries &amp; cheat sheets show under “Summaries &amp; Cheat Codes”; retest under “Retest Material”.</div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Upload a PDF <span style="color:var(--muted);font-weight:400">(recommended)</span></label>
         <input type="file" class="form-input" id="pdf-file-input" accept="application/pdf" style="padding:8px">
         <div class="form-hint">Uploads straight to the portal — no Google Drive sharing needed.</div>
@@ -915,6 +925,7 @@ function openAddPdfModal(moduleId) {
   document.getElementById('pdf-title-input').value = '';
   document.getElementById('pdf-url-input').value   = '';
   document.getElementById('pdf-file-input').value  = '';
+  document.getElementById('pdf-category-input').value = 'material';
   document.getElementById('add-pdf-modal').classList.add('show');
 }
 function closeAddPdfModal() { document.getElementById('add-pdf-modal').classList.remove('show'); }
@@ -938,8 +949,9 @@ async function savePdf() {
     } catch (e) { showToast('Upload failed: ' + e.message, 'error'); return; }
   }
 
+  const category = document.getElementById('pdf-category-input').value || 'material';
   const { data, error } = await sb.from('module_pdfs')
-    .insert({ module_id: activeModuleId, title, file_url: url })
+    .insert({ module_id: activeModuleId, title, file_url: url, category })
     .select().single();
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
   (pdfMap[activeModuleId] ||= []).unshift(data);

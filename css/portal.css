@@ -522,3 +522,23 @@ html[data-theme="dark"] .bio-bg svg { opacity: .10; }
   background: #2563eb url('/assets/favicon.svg') center/cover no-repeat;
   box-shadow: 0 2px 8px rgba(37,99,235,.35);
 }
+
+/* ── LIGHT SIDEBAR ───────────────────────────────────────────────
+   The side panel uses light surfaces with dark text (white in light
+   mode, dark surface in dark mode) instead of the old navy sidebar. */
+.sidebar {
+  background: var(--surface);
+  background-image: none;
+  border-right: 1px solid var(--border);
+  box-shadow: 2px 0 18px rgba(15,23,42,.05);
+}
+.sidebar-brand { color: var(--text); border-bottom: 1px solid var(--border); }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+.nav-section { color: var(--muted); }
+.nav-item { color: var(--text-2); }
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(37,99,235,.10); color: var(--primary); }
+.sidebar-foot { border-top: 1px solid var(--border); }
+.user-name { color: var(--text); }
+.user-role { color: var(--muted); }
+.logout-btn { color: var(--muted); }

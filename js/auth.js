@@ -81,7 +81,32 @@ async function requireAuth(role) {
     } catch (_) {}
   }
 
+  try { markChatUnread(profile); } catch (_) {}
+
   return profile;
+}
+
+// ── Chatroom unread badge ─────────────────────────────────────────
+// Counts chat messages newer than the last time this user opened the
+// chatroom (stored in localStorage) and badges the Chatroom nav link.
+async function markChatUnread(profile) {
+  const links = document.querySelectorAll('a[href="/portal/chat.html"]');
+  if (!links.length) return;
+  let seen = null;
+  try { seen = localStorage.getItem('drmai_chat_seen'); } catch (_) {}
+  let q = sb.from('chat_messages').select('id', { count: 'exact', head: true });
+  if (seen) q = q.gt('created_at', seen);
+  if (profile?.id) q = q.neq('sender_id', profile.id);
+  const { count } = await q;
+  if (!count || count < 1) return;
+  links.forEach(a => {
+    if (a.querySelector('.chat-badge')) return;
+    const b = document.createElement('span');
+    b.className = 'chat-badge';
+    b.textContent = count > 99 ? '99+' : String(count);
+    b.style.cssText = 'margin-left:auto;background:#dc2626;color:#fff;font-size:.62rem;font-weight:800;border-radius:10px;padding:1px 7px;min-width:18px;text-align:center;line-height:1.5';
+    a.appendChild(b);
+  });
 }
 
 // ── Sub-admin permissions ─────────────────────────────────────────

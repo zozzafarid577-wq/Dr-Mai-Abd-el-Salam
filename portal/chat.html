@@ -155,6 +155,7 @@ const ADMIN_NAV = `
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
   updateThemeBtn();
+  try { localStorage.setItem('drmai_chat_seen', new Date().toISOString()); } catch (_) {}
 
   await loadInitial();
 
@@ -194,6 +195,7 @@ function addMessage(m, autoscroll) {
   if (!m || seen.has(m.id)) return;
   seen.add(m.id);
   if (!lastTs || m.created_at > lastTs) lastTs = m.created_at;
+  try { localStorage.setItem('drmai_chat_seen', lastTs); } catch (_) {}
   const empty = document.getElementById('empty');
   if (empty) empty.remove();
 

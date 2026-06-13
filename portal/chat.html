@@ -8,15 +8,9 @@
 <link rel="stylesheet" href="/css/portal.css">
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <style>
-html,body{height:100%}
-/* Chat fills the area beside the portal sidebar (74px icon rail on desktop,
-   full width on mobile where the sidebar is a drawer). */
-.chat-shell{position:fixed;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;background:var(--bg);z-index:1}
-@media(min-width:769px){.chat-shell{left:74px}}
-.chat-bar{height:58px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--border)}
-.chat-bar .logo{width:30px;height:30px;border-radius:8px;background:#2563eb url('/assets/favicon.svg') center/cover no-repeat;flex-shrink:0}
-.chat-title{font-size:.95rem;font-weight:800;color:var(--text);flex:1}
-.chat-back{font-size:.8rem;font-weight:700;color:var(--primary);display:inline-flex;align-items:center;gap:6px}
+/* Chat fills the main area beside the standard portal sidebar. */
+.main.chat-main{height:100vh;overflow:hidden}
+.chat-area{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
 .chat-scroll{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;max-width:820px;width:100%;margin:0 auto}
 .msg{display:flex;flex-direction:column;max-width:76%}
 .msg.me{align-self:flex-end;align-items:flex-end}
@@ -35,16 +29,10 @@ html[data-theme="dark"] .msg.admin .bubble{background:#2a2410}
 .chat-send{flex-shrink:0;height:44px;width:44px;border:none;border-radius:12px;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .chat-send:disabled{opacity:.5;cursor:not-allowed}
 .chat-empty{text-align:center;color:var(--muted);font-size:.85rem;margin:auto}
-/* Hide the global floating theme toggle here — it collides with Send on mobile.
-   A theme button lives in the top bar instead. */
-.theme-toggle{display:none!important}
-.bar-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.bar-btn svg{width:17px;height:17px}
 .bubble img{max-width:240px;max-height:240px;border-radius:10px;margin-top:2px;cursor:zoom-in;display:block}
 .msg.me .bubble img{margin-left:auto}
 .chat-attach{flex-shrink:0;height:44px;width:44px;border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center}
 .chat-attach svg{width:18px;height:18px}
-/* typing indicator */
 .typing{max-width:820px;margin:0 auto;padding:0 4px 6px;font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:7px}
 .typing.show{display:flex}
 .typing .dots{display:inline-flex;gap:3px}
@@ -87,21 +75,23 @@ html[data-theme="dark"] .msg.admin .bubble{background:#2a2410}
   </div>
 </aside>
 
-<div class="chat-shell">
-  <div class="chat-bar">
-    <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-    <div class="logo"></div>
-    <div class="chat-title">Community Chat</div>
-    <button class="bar-btn" id="theme-btn" onclick="toggleTheme()" title="Light / dark"></button>
-    <a class="chat-back" id="back-link" href="/portal/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</a>
-  </div>
-  <div class="chat-scroll" id="scroll"><div class="chat-empty" id="empty">Loading messages…</div></div>
-  <div class="typing" id="typing"><span id="typing-who"></span><span class="dots"><i></i><i></i><i></i></span></div>
-  <div class="chat-input-wrap">
-    <div class="chat-input-row">
-      <button class="chat-attach" id="attach-btn" onclick="document.getElementById('img-input').click()" title="Add a picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
-      <textarea class="chat-input" id="input" rows="1" placeholder="Write a message…" oninput="onType()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
-      <button class="chat-send" id="send-btn" onclick="send()" title="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+<div class="main chat-main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="page-title">Community Chat</span>
+    </div>
+  </header>
+
+  <div class="chat-area">
+    <div class="chat-scroll" id="scroll"><div class="chat-empty" id="empty">Loading messages…</div></div>
+    <div class="typing" id="typing"><span id="typing-who"></span><span class="dots"><i></i><i></i><i></i></span></div>
+    <div class="chat-input-wrap">
+      <div class="chat-input-row">
+        <button class="chat-attach" id="attach-btn" onclick="document.getElementById('img-input').click()" title="Add a picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+        <textarea class="chat-input" id="input" rows="1" placeholder="Write a message…" oninput="onType()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
+        <button class="chat-send" id="send-btn" onclick="send()" title="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
     </div>
   </div>
 </div>
@@ -112,13 +102,13 @@ html[data-theme="dark"] .msg.admin .bubble{background:#2a2410}
 <script>
 let profile = null;
 let isAdmin = false;
-let lastTs = null;          // most recent created_at we've rendered
-const seen = new Set();     // message ids already rendered
-let channel = null;         // realtime channel (messages + typing)
+let lastTs = null;
+const seen = new Set();
+let channel = null;
 const SEL = 'id, sender_id, sender_name, sender_role, body, image_url, created_at';
 
-// Admin sidebar (used when an admin opens the chatroom so they don't land on
-// a student-looking page). auth.js then injects the Wayground/Notes/Team tabs.
+// Admin sidebar (so an admin opening the chatroom sees the same menu as the
+// rest of the admin portal). auth.js then injects Wayground/Notes/Team.
 const ADMIN_NAV = `
   <div class="nav-section">Overview</div>
   <a href="/drmai-staff-portal/" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Dashboard</a>
@@ -133,8 +123,7 @@ const ADMIN_NAV = `
   <a href="/drmai-staff-portal/security.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security</a>`;
 
 (async () => {
-  // Render the correct sidebar for this user BEFORE auth augments it, so an
-  // admin sees the admin menu (not the student preview) in the chatroom.
+  // Render the correct sidebar for this user BEFORE auth augments it.
   try {
     const s = await getSession();
     const pre = s ? await getProfile(s.user.id) : null;
@@ -151,15 +140,12 @@ const ADMIN_NAV = `
   profile = await requireAuth();   // students and admins both allowed
   if (!profile) return;
   isAdmin = profile.role === 'admin';
-  document.getElementById('back-link').href = isAdmin ? '/drmai-staff-portal/' : '/portal/';
   document.getElementById('u-name').textContent = profile.full_name;
   document.getElementById('u-av').textContent   = initials(profile.full_name);
-  updateThemeBtn();
   try { localStorage.setItem('drmai_chat_seen', new Date().toISOString()); } catch (_) {}
 
   await loadInitial();
 
-  // Live updates via Realtime (messages + "is typing"), plus a slow poll.
   try {
     channel = sb.channel('chatroom', { config: { broadcast: { self: false } } })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => addMessage(payload.new, true))
@@ -239,10 +225,9 @@ async function send(imageUrl) {
   btn.disabled = false;
   if (error) { alert('Could not send: ' + error.message); return; }
   input.value = ''; autoGrow(input);
-  poll();   // pull our message in immediately
+  poll();
 }
 
-// ── Pictures ────────────────────────────────────────────────────
 async function onPickImage(inp) {
   const file = inp.files[0];
   inp.value = '';
@@ -262,7 +247,6 @@ async function onPickImage(inp) {
   btn.disabled = false; btn.style.opacity = '1';
 }
 
-// ── "Is typing…" indicator (ephemeral realtime broadcast) ───────
 let typingHideTimer = null, lastTypingSent = 0;
 function onType() {
   autoGrow(document.getElementById('input'));
@@ -281,21 +265,6 @@ function showTyping(name) {
   typingHideTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// ── Theme toggle (in the top bar; the global floating one is hidden here) ──
-function toggleTheme() {
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  if (dark) document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme', 'dark');
-  try { localStorage.setItem('theme', dark ? 'light' : 'dark'); } catch (_) {}
-  updateThemeBtn();
-}
-function updateThemeBtn() {
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  document.getElementById('theme-btn').innerHTML = dark
-    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-}
-
 async function del(id) {
   if (!confirm('Delete this message?')) return;
   const { error } = await sb.from('chat_messages').delete().eq('id', id);
@@ -303,11 +272,11 @@ async function del(id) {
   removeMessage(id);
 }
 
-function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
-function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 function autoGrow(t) { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 140) + 'px'; }
 function isNearBottom() { const s = document.getElementById('scroll'); return s.scrollHeight - s.scrollTop - s.clientHeight < 120; }
 function scrollToBottom() { const s = document.getElementById('scroll'); s.scrollTop = s.scrollHeight; }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 </script>
 </body>
 </html>

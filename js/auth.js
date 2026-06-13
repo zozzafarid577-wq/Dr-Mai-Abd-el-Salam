@@ -71,7 +71,7 @@ async function requireAuth(role) {
     try { await setupStudentNav(profile.id); } catch (_) {}
     try { installContentGuard(profile); } catch (_) {}
     // Watermark only on the PDF viewer and test pages — not the whole site.
-    try { if (/\/(viewer|take-test|attempt)\.html$/.test(location.pathname)) installWatermark(); } catch (_) {}
+    try { if (/\/(viewer|take-test|attempt)\.html$/.test(location.pathname)) installWatermark(profile); } catch (_) {}
   }
 
   if (profile.role === 'admin') {
@@ -197,16 +197,19 @@ function setupAdminNav(profile) {
 }
 
 // ── Watermark ─────────────────────────────────────────────────────
-// Tiles a faint, diagonal "Dr Mai Abd El Salam · +20 112 305 6296" across the
-// page so any screenshot of a PDF or test is branded. Used only on the PDF
-// viewer and test pages. Pointer-events:none so it never blocks the page.
-function installWatermark() {
+// Tiles a diagonal watermark across the PDF viewer and test pages so any
+// screenshot is branded and traceable. The student's name is shown
+// prominently (any leaked screenshot points back to them). Pointer-events:none.
+function installWatermark(profile) {
   if (window.__wmInstalled) return;
   window.__wmInstalled = true;
-  const line = 'Dr Mai Abd El Salam  •  +20 112 305 6296';
-  const svg  = `<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320">`
-    + `<text x="24" y="180" transform="rotate(-28 280 160)" fill="rgba(100,116,139,0.10)" `
-    + `font-family="Inter, system-ui, sans-serif" font-size="19" font-weight="700">${line}</text></svg>`;
+  const xmlEsc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const name = xmlEsc((profile && profile.full_name) || '');
+  const svg  = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="300">`
+    + `<text x="22" y="150" transform="rotate(-28 260 150)" fill="rgba(220,38,38,0.22)" `
+    + `font-family="Inter, system-ui, sans-serif" font-size="27" font-weight="900">${name}</text>`
+    + `<text x="22" y="184" transform="rotate(-28 260 150)" fill="rgba(71,85,105,0.20)" `
+    + `font-family="Inter, system-ui, sans-serif" font-size="15" font-weight="700">Dr Mai Abd El Salam  •  +20 112 305 6296</text></svg>`;
 
   function mount() {
     if (document.getElementById('wm-layer')) return;
@@ -274,6 +277,13 @@ function isBasicsStudent() {
 function isPureRevisionStudent() {
   return isRevisionStudent() && !isBasicsStudent();
 }
+// Which revision track the student is on (for ACT/EST-specific notes).
+function isActRevisionStudent() {
+  try { return sessionStorage.getItem('drmai_is_act') === '1'; } catch (_) { return false; }
+}
+function isEstRevisionStudent() {
+  try { return sessionStorage.getItem('drmai_is_est') === '1'; } catch (_) { return false; }
+}
 
 // ── Enrolment-aware sidebar ───────────────────────────────────────
 // Three cases:
@@ -295,9 +305,13 @@ async function setupStudentNav(studentId) {
     const titles = (data || []).map(e => e.courses?.title || '');
     rev = titles.some(t => /revision/i.test(t)) ? '1' : '0';
     bas = titles.some(t => /basics/i.test(t))   ? '1' : '0';
+    const act = titles.some(t => /revision/i.test(t) && /\bact\b/i.test(t)) ? '1' : '0';
+    const est = titles.some(t => /revision/i.test(t) && /\best\b/i.test(t)) ? '1' : '0';
     sessionStorage.setItem('drmai_nav_uid', studentId);
     sessionStorage.setItem('drmai_is_revision', rev);
     sessionStorage.setItem('drmai_is_basics', bas);
+    sessionStorage.setItem('drmai_is_act', act);
+    sessionStorage.setItem('drmai_is_est', est);
   }
   const isRevision    = rev === '1';
   const isBasics      = bas === '1';
@@ -311,8 +325,7 @@ async function setupStudentNav(studentId) {
       <a href="/portal/student-notes.html" class="nav-item nav-notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Student Notes</a>
       <div class="nav-section nav-rev">Revision</div>
       <a href="/portal/wayground.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Wayground Tests</a>
-      <a href="/portal/summaries.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Summaries &amp; Cheat Codes</a>
-      <a href="/portal/retest.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Real Test</a>`);
+      <a href="/portal/summaries.html" class="nav-item nav-rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Summaries &amp; Cheat Codes</a>`);
   }
 
   // Highlight the current page (covers the injected tabs too).
@@ -332,7 +345,7 @@ async function setupStudentNav(studentId) {
   if (!pureRevision) return;
 
   const ALLOW = ['/portal/', '/portal/lessons.html', '/portal/mock-tests.html',
-                 '/portal/summaries.html', '/portal/retest.html', '/portal/wayground.html',
+                 '/portal/summaries.html', '/portal/wayground.html',
                  '/portal/student-notes.html', '/portal/chat.html', '/portal/scores.html',
                  '/portal/settings.html'];
   scroll.querySelectorAll('.nav-item').forEach(a => {
@@ -357,7 +370,7 @@ async function setupStudentNav(studentId) {
 async function signOut() {
   // Clear the cached sidebar type so the next person on this tab is classified fresh.
   try {
-    ['drmai_nav_uid', 'drmai_is_revision', 'drmai_is_basics'].forEach(k => sessionStorage.removeItem(k));
+    ['drmai_nav_uid', 'drmai_is_revision', 'drmai_is_basics', 'drmai_is_act', 'drmai_is_est'].forEach(k => sessionStorage.removeItem(k));
   } catch (_) {}
   await sb.auth.signOut();
   location.replace('/login.html');

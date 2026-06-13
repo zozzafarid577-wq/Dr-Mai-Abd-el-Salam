@@ -226,21 +226,19 @@
       <div>
 
         <!-- Wayground tests (revision students only) -->
-        <a href="/portal/wayground.html" id="wg-card" class="card mb16" style="display:none;text-decoration:none;color:inherit">
-          <div style="display:flex;align-items:center;gap:12px;padding:4px 0">
-            <div style="width:42px;height:42px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6366f1,#4338ca)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:21px;height:21px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:.9rem;font-weight:800">Wayground Tests</div>
-              <div style="font-size:.74rem;color:var(--muted)" id="wg-sub">Open your assigned tests</div>
-            </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:18px;height:18px"><polyline points="9 18 15 12 9 6"/></svg>
+        <div id="wg-card" class="card mb16" style="display:none">
+          <div class="card-header">
+            <span class="card-title">Wayground Tests</span>
+            <a href="/portal/wayground.html" class="btn btn-ghost btn-xs">See all</a>
           </div>
-        </a>
+          <div class="card-body" id="wg-dash-list">
+            <div class="skeleton" style="height:44px;margin-bottom:8px"></div>
+            <div class="skeleton" style="height:44px"></div>
+          </div>
+        </div>
 
         <!-- Available Tests -->
-        <div class="card mb16">
+        <div class="card mb16" id="avail-tests-card">
           <div class="card-header">
             <span class="card-title">Available Tests</span>
             <a href="/portal/tests.html" class="btn btn-ghost btn-xs">See all</a>
@@ -334,12 +332,36 @@ async function loadWayground() {
   const card = document.getElementById('wg-card');
   if (!card) return;
   const { data, error } = await sb.from('wayground_tests')
-    .select('test_number', { count: 'exact' }).eq('is_active', true);
+    .select('test_number, version, part, title, url, is_active')
+    .eq('is_active', true)
+    .order('test_number').order('part').order('version');
   if (error) return;                         // table may not exist yet — leave hidden
   card.style.display = 'block';
-  const tests = new Set((data || []).map(r => r.test_number)).size;
-  const sub = document.getElementById('wg-sub');
-  if (sub) sub.textContent = tests ? `${tests} test${tests !== 1 ? 's' : ''} available` : 'Open your assigned tests';
+  // For revision students, Wayground tests replace the generic "Available Tests".
+  const avail = document.getElementById('avail-tests-card');
+  if (avail) avail.style.display = 'none';
+
+  const escAttr = s => escHtml(s).replace(/"/g, '&quot;');
+  const list = document.getElementById('wg-dash-list');
+  const rows = data || [];
+  if (!rows.length) {
+    list.innerHTML = '<div style="font-size:.8rem;color:var(--muted);text-align:center;padding:10px 0">No Wayground tests added yet.</div>';
+    return;
+  }
+  const byTest = {};
+  rows.forEach(r => { (byTest[r.test_number] ||= []).push(r); });
+  list.innerHTML = Object.keys(byTest).sort((a,b) => a - b).map(num => {
+    const items = byTest[num];
+    const title = items.find(r => r.title)?.title || `Test ${num}`;
+    const links = items.map(r => {
+      const lbl = (r.part ? `P${r.part} ` : '') + `V${r.version}`;
+      return `<a href="${escAttr(r.url)}" target="_blank" rel="noopener" style="font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:8px;background:${r.version === 2 ? '#f5f3ff' : '#eef2ff'};color:${r.version === 2 ? '#6d28d9' : '#4338ca'};text-decoration:none">${lbl}</a>`;
+    }).join('');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0"><div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(title)}</div><div style="font-size:.66rem;color:var(--muted)">Test ${escHtml(String(num))}</div></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">${links}</div>
+    </div>`;
+  }).join('');
 }
 
 async function loadStats() {

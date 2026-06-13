@@ -32,6 +32,23 @@ html[data-theme="dark"] .msg.admin .bubble{background:#2a2410}
 .chat-send{flex-shrink:0;height:44px;width:44px;border:none;border-radius:12px;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .chat-send:disabled{opacity:.5;cursor:not-allowed}
 .chat-empty{text-align:center;color:var(--muted);font-size:.85rem;margin:auto}
+/* Hide the global floating theme toggle here — it collides with Send on mobile.
+   A theme button lives in the top bar instead. */
+.theme-toggle{display:none!important}
+.bar-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bar-btn svg{width:17px;height:17px}
+.bubble img{max-width:240px;max-height:240px;border-radius:10px;margin-top:2px;cursor:zoom-in;display:block}
+.msg.me .bubble img{margin-left:auto}
+.chat-attach{flex-shrink:0;height:44px;width:44px;border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.chat-attach svg{width:18px;height:18px}
+/* typing indicator */
+.typing{max-width:820px;margin:0 auto;padding:0 4px 6px;font-size:.72rem;color:var(--muted);display:none;align-items:center;gap:7px}
+.typing.show{display:flex}
+.typing .dots{display:inline-flex;gap:3px}
+.typing .dots i{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:typeBlink 1.2s infinite}
+.typing .dots i:nth-child(2){animation-delay:.2s}
+.typing .dots i:nth-child(3){animation-delay:.4s}
+@keyframes typeBlink{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
 </style>
 </head>
 <body>
@@ -39,16 +56,20 @@ html[data-theme="dark"] .msg.admin .bubble{background:#2a2410}
   <div class="chat-bar">
     <div class="logo"></div>
     <div class="chat-title">Community Chat</div>
+    <button class="bar-btn" id="theme-btn" onclick="toggleTheme()" title="Light / dark"></button>
     <a class="chat-back" id="back-link" href="/portal/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</a>
   </div>
   <div class="chat-scroll" id="scroll"><div class="chat-empty" id="empty">Loading messages…</div></div>
+  <div class="typing" id="typing"><span id="typing-who"></span><span class="dots"><i></i><i></i><i></i></span></div>
   <div class="chat-input-wrap">
     <div class="chat-input-row">
-      <textarea class="chat-input" id="input" rows="1" placeholder="Write a message…" oninput="autoGrow(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
+      <button class="chat-attach" id="attach-btn" onclick="document.getElementById('img-input').click()" title="Add a picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+      <textarea class="chat-input" id="input" rows="1" placeholder="Write a message…" oninput="onType()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
       <button class="chat-send" id="send-btn" onclick="send()" title="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
     </div>
   </div>
 </div>
+<input type="file" id="img-input" accept="image/*" style="display:none" onchange="onPickImage(this)">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/auth.js"></script>
@@ -57,20 +78,24 @@ let profile = null;
 let isAdmin = false;
 let lastTs = null;          // most recent created_at we've rendered
 const seen = new Set();     // message ids already rendered
+let channel = null;         // realtime channel (messages + typing)
+const SEL = 'id, sender_id, sender_name, sender_role, body, image_url, created_at';
 
 (async () => {
   profile = await requireAuth();   // students and admins both allowed
   if (!profile) return;
   isAdmin = profile.role === 'admin';
   document.getElementById('back-link').href = isAdmin ? '/drmai-staff-portal/' : '/portal/';
+  updateThemeBtn();
 
   await loadInitial();
 
-  // Live updates via Realtime, plus a slow poll as a safety net.
+  // Live updates via Realtime (messages + "is typing"), plus a slow poll.
   try {
-    sb.channel('chatroom')
+    channel = sb.channel('chatroom', { config: { broadcast: { self: false } } })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => addMessage(payload.new, true))
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, payload => removeMessage(payload.old?.id))
+      .on('broadcast', { event: 'typing' }, ({ payload }) => showTyping(payload?.name))
       .subscribe();
   } catch (_) {}
   setInterval(poll, 4000);
@@ -78,7 +103,7 @@ const seen = new Set();     // message ids already rendered
 
 async function loadInitial() {
   const { data } = await sb.from('chat_messages')
-    .select('id, sender_id, sender_name, sender_role, body, created_at')
+    .select(SEL)
     .order('created_at', { ascending: true })
     .limit(200);
   const scroll = document.getElementById('scroll');
@@ -91,7 +116,7 @@ async function loadInitial() {
 async function poll() {
   if (!lastTs) return;
   const { data } = await sb.from('chat_messages')
-    .select('id, sender_id, sender_name, sender_role, body, created_at')
+    .select(SEL)
     .gt('created_at', lastTs)
     .order('created_at', { ascending: true });
   (data || []).forEach(m => addMessage(m, true));
@@ -110,9 +135,11 @@ function addMessage(m, autoscroll) {
   el.className = `msg${mine ? ' me' : ''}${admin ? ' admin' : ''}`;
   el.id = 'm-' + m.id;
   const canDelete = mine || isAdmin;
+  const img = m.image_url ? `<img src="${escHtml(m.image_url)}" alt="image" onclick="window.open('${escHtml(m.image_url)}','_blank')">` : '';
+  const text = m.body ? escHtml(m.body) : '';
   el.innerHTML = `
     <div class="msg-head">${escHtml(mine ? 'You' : m.sender_name)}${admin ? '<span class="msg-admin-badge">Dr Mai</span>' : ''}</div>
-    <div class="bubble">${escHtml(m.body)}</div>
+    <div class="bubble">${text}${text && img ? '<br>' : ''}${img}</div>
     <div class="msg-time">${timeAgo(m.created_at)}${canDelete ? ` · <span class="msg-del" onclick="del('${m.id}')">delete</span>` : ''}</div>`;
   document.getElementById('scroll').appendChild(el);
 
@@ -126,10 +153,10 @@ function removeMessage(id) {
   if (el) el.remove();
 }
 
-async function send() {
+async function send(imageUrl) {
   const input = document.getElementById('input');
   const body = input.value.trim();
-  if (!body) return;
+  if (!body && !imageUrl) return;
   const btn = document.getElementById('send-btn');
   btn.disabled = true;
   const { error } = await sb.from('chat_messages').insert({
@@ -137,11 +164,66 @@ async function send() {
     sender_name: profile.full_name,
     sender_role: profile.role,
     body,
+    image_url: imageUrl || null,
   });
   btn.disabled = false;
   if (error) { alert('Could not send: ' + error.message); return; }
   input.value = ''; autoGrow(input);
   poll();   // pull our message in immediately
+}
+
+// ── Pictures ────────────────────────────────────────────────────
+async function onPickImage(inp) {
+  const file = inp.files[0];
+  inp.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('Please choose an image.'); return; }
+  if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return; }
+  const btn = document.getElementById('attach-btn');
+  btn.disabled = true; btn.style.opacity = '.5';
+  try {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = `${profile.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await sb.storage.from('chat-uploads').upload(path, file, { contentType: file.type, cacheControl: '3600' });
+    if (upErr) throw new Error(upErr.message + ' (has migration v23 — the chat-uploads bucket — been run?)');
+    const url = sb.storage.from('chat-uploads').getPublicUrl(path).data.publicUrl;
+    await send(url);
+  } catch (e) { alert('Could not upload image: ' + e.message); }
+  btn.disabled = false; btn.style.opacity = '1';
+}
+
+// ── "Is typing…" indicator (ephemeral realtime broadcast) ───────
+let typingHideTimer = null, lastTypingSent = 0;
+function onType() {
+  autoGrow(document.getElementById('input'));
+  const now = Date.now();
+  if (channel && now - lastTypingSent > 1500) {
+    lastTypingSent = now;
+    try { channel.send({ type: 'broadcast', event: 'typing', payload: { name: profile.full_name } }); } catch (_) {}
+  }
+}
+function showTyping(name) {
+  if (!name) return;
+  const el = document.getElementById('typing');
+  document.getElementById('typing-who').textContent = `${name} is typing`;
+  el.classList.add('show');
+  clearTimeout(typingHideTimer);
+  typingHideTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── Theme toggle (in the top bar; the global floating one is hidden here) ──
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (dark) document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', 'dark');
+  try { localStorage.setItem('theme', dark ? 'light' : 'dark'); } catch (_) {}
+  updateThemeBtn();
+}
+function updateThemeBtn() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.getElementById('theme-btn').innerHTML = dark
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 }
 
 async function del(id) {

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
    Dr Mai Portal — Design System v2
    ═══════════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&family=Open+Sans:wght@300;400;500;600&display=swap');
 
 :root {
   --side: 248px;
@@ -50,13 +50,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 300;
   background: var(--bg); color: var(--text);
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
 a { text-decoration: none; color: inherit; }
 img { display: block; max-width: 100%; }
 button, input, select, textarea { font-family: inherit; }
+h1, h2, h3, h4, h5, h6, .page-title, .card-title, .stat-n, .welcome-name {
+  font-family: 'Montserrat', system-ui, sans-serif;
+}
 
 /* ── SIDEBAR ─────────────────────────────────────────────────── */
 .sidebar {
@@ -265,35 +269,36 @@ button, input, select, textarea { font-family: inherit; }
 /* ── BUTTONS ─────────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: .8rem; font-weight: 700; padding: 9px 18px;
-  border-radius: 9px; border: 1.5px solid transparent;
-  cursor: pointer; transition: all .18s; font-family: inherit;
-  line-height: 1; text-decoration: none; letter-spacing: -.01em;
+  font-size: .8rem; font-weight: 600; padding: 9px 18px;
+  border-radius: 9999px; border: 1.5px solid transparent;
+  cursor: pointer; transition: all .22s; font-family: 'Montserrat', inherit;
+  line-height: 1; text-decoration: none; letter-spacing: .01em;
 }
 .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .btn-primary {
-  background: linear-gradient(135deg, #6B7C98, #5A6B87);
-  color: #fff; border-color: #5A6B87;
-  box-shadow: 0 2px 10px rgba(107,124,152,.28);
+  background: #5E5653; color: #fff; border-color: #5E5653;
+  box-shadow: 3px 3px 12px rgba(94,86,83,.22);
 }
-.btn-primary:hover {
-  background: linear-gradient(135deg, #5A6B87, #4A5A75);
-  box-shadow: 0 4px 16px rgba(107,124,152,.40);
-  transform: translateY(-1px);
+.btn-primary:hover { background: #4a4340; box-shadow: 4px 4px 16px rgba(94,86,83,.32); transform: translateY(-1px); }
+.btn-outline {
+  background: #fff; color: var(--text); border-color: var(--border);
+  box-shadow: 3px 3px 10px rgba(0,0,0,.07), -1px -1px 5px rgba(255,255,255,.8);
 }
-.btn-outline { background: transparent; color: var(--text); border-color: var(--border); }
-.btn-outline:hover { border-color: #b4bfcc; background: #f8fafc; }
+.btn-outline:hover { border-color: #c8c4c5; box-shadow: 4px 4px 14px rgba(0,0,0,.10); transform: translateY(-1px); }
 .btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
-.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-ghost:hover { background: var(--bg); color: var(--text); border-radius: 9999px; }
 .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); box-shadow: 0 2px 8px rgba(220,38,38,.2); }
 .btn-danger:hover { background: #b91c1c; box-shadow: 0 4px 14px rgba(220,38,38,.3); transform: translateY(-1px); }
 .btn-success { background: var(--success); color: #fff; border-color: var(--success); box-shadow: 0 2px 8px rgba(5,150,105,.2); }
 .btn-success:hover { background: #047857; transform: translateY(-1px); }
-.btn-white { background: rgba(255,255,255,.95); color: #5E5653; border-color: rgba(255,255,255,.9); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
-.btn-white:hover { background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+.btn-white {
+  background: rgba(255,255,255,.95); color: #5E5653; border-color: rgba(255,255,255,.9);
+  font-weight: 600; box-shadow: 3px 3px 12px rgba(0,0,0,.10), -1px -1px 6px rgba(255,255,255,.6);
+}
+.btn-white:hover { background: #fff; box-shadow: 4px 4px 16px rgba(0,0,0,.14); }
 .btn-sm  { padding: 7px 14px; font-size: .75rem; }
-.btn-xs  { padding: 4px 10px; font-size: .68rem; border-radius: 7px; }
-.btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 9px; }
+.btn-xs  { padding: 4px 10px; font-size: .68rem; }
+.btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 50%; }
 
 /* ── FORM ────────────────────────────────────────────────────── */
 .form-group { margin-bottom: 18px; }

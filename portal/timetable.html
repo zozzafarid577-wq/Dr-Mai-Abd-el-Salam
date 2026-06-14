@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="/css/portal.css">
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <style>
-.cd-banner { border-radius:16px;padding:22px 24px;margin-bottom:26px;color:#fff;background:linear-gradient(135deg,#1d4ed8,#0e2a82);box-shadow:var(--shadow-md); }
+.cd-banner { border-radius:16px;padding:22px 24px;margin-bottom:26px;color:#fff;background:linear-gradient(135deg,#6B7C98,#445A74);box-shadow:var(--shadow-md); }
 .cd-label { font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;opacity:.85; }
 .cd-event { font-size:1.05rem;font-weight:800;margin:6px 0 14px; }
 .cd-clock { display:flex;gap:10px;flex-wrap:wrap; }
@@ -18,17 +18,17 @@
 
 .tt-tabs { display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap; }
 .tt-tab { padding:8px 18px;border-radius:22px;border:1.5px solid var(--border);background:var(--surface);font-size:.82rem;font-weight:700;cursor:pointer;color:var(--text-2); }
-.tt-tab.act.active { background:#1d4ed8;border-color:#1d4ed8;color:#fff; }
+.tt-tab.act.active { background:#6B7C98;border-color:#6B7C98;color:#fff; }
 .tt-tab.est.active { background:#f4c20d;border-color:#f4c20d;color:#3a2f00; }
 
 .exam-card { border:1px solid var(--border);border-radius:13px;padding:16px 18px;margin-bottom:12px;background:var(--surface);border-left-width:5px; }
-.exam-card.act { border-left-color:#1d4ed8; }
+.exam-card.act { border-left-color:#6B7C98; }
 .exam-card.est { border-left-color:#f4c20d; }
 .exam-card.past { opacity:.5; }
 .exam-head { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px; }
 .exam-title { font-size:.98rem;font-weight:800;color:var(--text); }
 .type-pill { font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 9px;border-radius:20px; }
-.type-pill.act { background:#dbeafe;color:#1d4ed8; }
+.type-pill.act { background:#EEF0F4;color:#6B7C98; }
 .type-pill.est { background:#fef3c7;color:#92670a; }
 .next-pill { font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 9px;border-radius:20px;background:#dcfce7;color:#166534; }
 .exam-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px; }
@@ -155,7 +155,7 @@ function tickCountdown() {
   ev.textContent = countdownTarget.label;
   banner.style.background = countdownTarget.type === 'est'
     ? 'linear-gradient(135deg,#f4c20d,#b88600)'
-    : 'linear-gradient(135deg,#1d4ed8,#0e2a82)';
+    : 'linear-gradient(135deg,#6B7C98,#445A74)';
   const d = Math.floor(diff/86400000);
   const h = Math.floor(diff%86400000/3600000);
   const m = Math.floor(diff%3600000/60000);

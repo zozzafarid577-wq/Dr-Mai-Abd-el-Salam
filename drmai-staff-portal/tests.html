@@ -1030,7 +1030,7 @@ function renderBankList(qs) {
     const typeLabel  = BP_TYPE_LABELS[q.question_type] || q.question_type;
     const checked    = bpSelectedIds.has(q.id) ? ' checked' : '';
     const grouped    = Array.isArray(q.statements) && q.statements.length;
-    const courseName = q.courses?.title ? `<span style="background:#eff6ff;color:#1d4ed8;padding:1px 6px;border-radius:4px;font-size:.62rem;font-weight:700">${escHtml(q.courses.title)}</span> ` : '';
+    const courseName = q.courses?.title ? `<span style="background:#EEF0F4;color:#6B7C98;padding:1px 6px;border-radius:4px;font-size:.62rem;font-weight:700">${escHtml(q.courses.title)}</span> ` : '';
     const preview    = grouped
       ? `${escHtml(q.question_text)} — ${q.statements.length} statements, ${(q.options||[]).length} terms`
       : `${escHtml(q.question_text.slice(0, 120))}${q.question_text.length > 120 ? '…' : ''}`;

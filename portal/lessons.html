@@ -372,8 +372,14 @@ function openPlayer(lessonId, title, provider, videoId) {
     iframe.src = ''; iframe.style.display = 'none';
     video.src = videoId; video.style.display = 'block';
     video.play().catch(() => {});
+  } else if (provider === 'gdrive') {
+    // Google Drive: email-restricted files can't authenticate inside an iframe
+    // (browsers block third-party cookies). Open in a new tab where Google can
+    // properly sign the user in with their authorized account.
+    window.open(`https://drive.google.com/file/d/${encodeURIComponent(videoId)}/view`, '_blank');
+    return; // don't open the modal
   } else {
-    // YouTube privacy embed or Drive preview via iframe.
+    // YouTube privacy embed via iframe.
     video.pause(); video.removeAttribute('src'); video.style.display = 'none';
     iframe.style.display = 'block';
     iframe.src = Video.videoEmbedUrl(provider, videoId);

@@ -670,7 +670,8 @@ function renderModules() {
             <button class="icon-btn" title="Move down" onclick="moveModule('${m.id}','down')" ${idx===mods.length-1?'disabled style="opacity:.3"':''}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
-            <label class="toggle-pill" title="${m.is_active?'Hide from students':'Show to students'}">
+            <span class="status-tag ${m.is_active?'on':'off'}">${m.is_active?'Done':'Coming soon'}</span>
+            <label class="toggle-pill" title="${m.is_active?'Marked Done — students see this lesson. Click to set Coming soon.':'Coming soon — students see it greyed/locked. Click to mark Done.'}">
               <input type="checkbox" ${m.is_active?'checked':''} onchange="toggleModuleActive('${m.id}',${m.is_active})">
               <div class="toggle-track"></div>
               <div class="toggle-thumb"></div>
@@ -722,11 +723,11 @@ function renderModuleDetail(m) {
     ${tests.map(t => `
       <div class="test-row">
         <div style="flex:1">
-          <div class="test-row-title">${escHtml(t.title)} ${t.is_mock ? '<span class="badge badge-warning" style="font-size:.6rem">Mock</span>' : ''} ${!t.is_active ? '<span class="badge badge-danger" style="font-size:.6rem">Hidden</span>' : ''}</div>
+          <div class="test-row-title">${escHtml(t.title)} ${t.is_mock ? '<span class="badge badge-warning" style="font-size:.6rem">Mock</span>' : ''} ${!t.is_active ? '<span class="badge badge-info" style="font-size:.6rem">Coming soon</span>' : ''}</div>
           <div class="test-row-meta">${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'}</div>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="openEditTestModal('${t.id}','${m.id}')">Edit</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleTestActive('${t.id}','${m.id}',${t.is_active})">${t.is_active ? 'Hide' : 'Show'}</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleTestActive('${t.id}','${m.id}',${t.is_active})">${t.is_active ? 'Set Coming soon' : 'Mark Done'}</button>
         <button class="icon-btn" style="color:#dc2626" onclick="deleteTest('${t.id}','${m.id}')" title="Delete">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>

@@ -131,6 +131,14 @@ body {
 .qa-tt { font-size: .85rem; font-weight: 700; letter-spacing: -.01em; }
 .qa-sb { font-size: .72rem; color: var(--muted); margin-top: 1px; }
 
+/* ── Done / Coming-soon status tag ── */
+.status-tag {
+  font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  padding: 2px 8px; border-radius: 20px; flex-shrink: 0; white-space: nowrap;
+}
+.status-tag.on  { background: #F0EDEE; color: #5E5653; }
+.status-tag.off { background: #F2EFE9; color: #8a7468; }
+
 /* ── Tables ── */
 .tbl th { background: #F7F4F5; font-size: .64rem; }
 .tbl td { padding: 14px 18px; }

@@ -145,7 +145,7 @@ const LETTERS = ['A','B','C','D','E'];
 
   const [{ data: mods }, { data: testsData }, { data: attempts }] = await Promise.all([
     sb.from('modules').select('id, title, course_id, order_index').in('course_id', courseIds).order('order_index'),
-    sb.from('practice_tests').select('id, title, module_id, module_ids, course_id, time_limit_min, is_active, open_at, close_at').in('course_id', courseIds).eq('is_active', true).eq('is_mock', false).order('created_at'),
+    sb.from('practice_tests').select('id, title, module_id, module_ids, course_id, time_limit_min, is_active, open_at, close_at').in('course_id', courseIds).eq('is_mock', false).order('created_at'),
     sb.from('test_attempts').select('id, test_id, percentage, passed, completed_at').eq('student_id', profile.id).order('completed_at', { ascending: false })
   ]);
 
@@ -234,23 +234,25 @@ function renderTestCard(t) {
 
   // Scheduling state
   const now = Date.now();
+  const comingSoon = t.is_active === false;          // not published / done yet
   const notYet  = t.open_at  && new Date(t.open_at).getTime()  > now;
   const closed  = t.close_at && new Date(t.close_at).getTime() < now;
   let scheduleBadge = '';
-  if (notYet)  scheduleBadge = `<span class="badge badge-info" style="font-size:.62rem">Opens ${fmtDate(t.open_at)}</span>`;
+  if (comingSoon) scheduleBadge = `<span class="badge" style="font-size:.62rem">Coming soon</span>`;
+  else if (notYet)  scheduleBadge = `<span class="badge badge-info" style="font-size:.62rem">Opens ${fmtDate(t.open_at)}</span>`;
   else if (closed) scheduleBadge = `<span class="badge badge-danger" style="font-size:.62rem">Closed</span>`;
   else if (t.close_at) scheduleBadge = `<span class="badge badge-warning" style="font-size:.62rem">Closes ${fmtDate(t.close_at)}</span>`;
-  const locked = notYet || closed;
+  const locked = comingSoon || notYet || closed;
 
   const actionBtn = locked
-    ? `<button class="btn btn-outline btn-sm" disabled style="opacity:.6;cursor:not-allowed">${notYet ? 'Opens ' + fmtDate(t.open_at) : 'Closed'}</button>`
+    ? `<button class="btn btn-outline btn-sm" disabled style="opacity:.6;cursor:not-allowed">${comingSoon ? 'Coming soon' : notYet ? 'Opens ' + fmtDate(t.open_at) : 'Closed'}</button>`
     : `<button class="btn btn-primary btn-sm" onclick="startTest('${t.id}')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             ${myAttempts.length ? 'Retake' : 'Start Test'}
           </button>`;
 
   return `
-    <div class="test-card">
+    <div class="test-card"${comingSoon ? ' style="opacity:.6"' : ''}>
       <div class="test-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
       </div>
@@ -269,13 +271,15 @@ function isLocked(t) {
   const now = Date.now();
   const notYet = t.open_at  && new Date(t.open_at).getTime()  > now;
   const closed = t.close_at && new Date(t.close_at).getTime() < now;
-  return notYet || closed;
+  return t.is_active === false || notYet || closed;
 }
 
 function startTest(testId) {
   const t = tests.find(x => x.id === testId);
   if (t && isLocked(t)) {
-    showToast(new Date(t.open_at).getTime() > Date.now() ? 'This test is not open yet.' : 'This test has closed.', 'warning');
+    const msg = t.is_active === false ? 'This test is not available yet.'
+              : new Date(t.open_at).getTime() > Date.now() ? 'This test is not open yet.' : 'This test has closed.';
+    showToast(msg, 'warning');
     return;
   }
   // Take the test on a dedicated full page (shows score + review + emails parent)

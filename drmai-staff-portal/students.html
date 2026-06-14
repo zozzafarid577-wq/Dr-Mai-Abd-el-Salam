@@ -931,8 +931,10 @@ async function openEditModal(studentId) {
   // Fetch the login email from auth (not stored in profiles)
   try {
     const session = await getSession();
-    const resp = await fetch(`/api/get-student-email?student_id=${studentId}`, {
-      headers: { Authorization: 'Bearer ' + session.access_token }
+    const resp = await fetch('/api/reset-student-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ student_id: studentId, action: 'get_email' }),
     });
     const data = await resp.json();
     document.getElementById('edit-email').value       = data.email || '';
@@ -977,10 +979,10 @@ async function saveEdit() {
   if (newEmail && newEmail !== origEmail) {
     try {
       const session = await getSession();
-      const resp = await fetch('/api/update-student-email', {
+      const resp = await fetch('/api/reset-student-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ student_id: id, email: newEmail }),
+        body: JSON.stringify({ student_id: id, action: 'set_email', email: newEmail }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || 'Email update failed');

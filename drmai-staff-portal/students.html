@@ -30,9 +30,9 @@
 }
 .row-actions-btn:hover { background:var(--surface); border-color:var(--primary); color:var(--text); }
 .row-actions-menu {
-  display:none; position:absolute; right:0; top:calc(100% + 4px); z-index:200;
+  display:none; position:fixed; z-index:2000;
   background:var(--card); border:1px solid var(--border); border-radius:12px;
-  box-shadow:0 8px 28px rgba(15,23,42,.12); min-width:180px; padding:5px;
+  box-shadow:0 8px 28px rgba(15,23,42,.12); min-width:200px; padding:5px;
 }
 .row-actions-menu.open { display:block; }
 .row-actions-menu button {
@@ -895,15 +895,24 @@ async function saveCourses() {
 
 function toggleActionMenu(id, e) {
   e.stopPropagation();
+  const btn = e.currentTarget;
   const menu = document.getElementById('ram-' + id);
   const isOpen = menu.classList.contains('open');
   closeAllMenus();
-  if (!isOpen) menu.classList.add('open');
+  if (isOpen) return;
+  // Position as fixed near the button so the table's overflow can't clip it.
+  const r = btn.getBoundingClientRect();
+  const width = 200;
+  menu.style.top  = (r.bottom + 4) + 'px';
+  menu.style.left = Math.max(8, Math.min(r.right - width, window.innerWidth - width - 8)) + 'px';
+  menu.classList.add('open');
 }
 function closeAllMenus() {
   document.querySelectorAll('.row-actions-menu.open').forEach(m => m.classList.remove('open'));
 }
 document.addEventListener('click', closeAllMenus);
+window.addEventListener('resize', closeAllMenus);
+document.querySelector('.content')?.addEventListener('scroll', closeAllMenus, true);
 
 async function openEditModal(studentId) {
   const s = allStudents.find(x => x.id === studentId);

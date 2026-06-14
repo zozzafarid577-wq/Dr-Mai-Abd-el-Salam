@@ -270,10 +270,10 @@ function renderLessons() {
     // ── Videos ──
     const videosHtml = lessons.length ? lessons.map(lesson => {
       const done = completedSet.has(lesson.id);
-      const vid = lesson.video_id || lesson.youtube_id;
-      const provider = lesson.video_provider || 'youtube';
-      const isSoon = !vid;
-      const click = !isSoon ? `onclick="openPlayer('${lesson.id}','${escAttr(lesson.title)}','${provider}','${escAttr(vid)}')"` : '';
+      const hasVideo = !!(lesson.video_id || lesson.youtube_id);
+      const isSoon = !hasVideo;
+      // video_id / file ID is never placed in the HTML — fetched server-side on click.
+      const click = !isSoon ? `onclick="openPlayer('${lesson.id}','${escAttr(lesson.title)}')"` : '';
       return `
         <div class="res-row${done?' done':''}${isSoon?' soon':''}" ${click}>
           <div class="res-ic vid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></div>
@@ -362,31 +362,43 @@ function escAttr(s) {
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/'/g,'\\&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function openPlayer(lessonId, title, provider, videoId) {
-  if (!videoId) { showToast('No recording available for this lesson yet.', 'warning'); return; }
+async function openPlayer(lessonId, title) {
   document.getElementById('player-title').textContent = title;
   const iframe = document.getElementById('player-iframe');
   const video  = document.getElementById('player-video');
-  if (provider === 'upload') {
-    // Uploaded file → play directly with an HTML5 <video> element.
-    iframe.src = ''; iframe.style.display = 'none';
-    video.src = videoId; video.style.display = 'block';
-    video.play().catch(() => {});
-  } else if (provider === 'gdrive') {
-    // Google Drive: email-restricted files can't authenticate inside an iframe
-    // (browsers block third-party cookies). Open in a new tab where Google can
-    // properly sign the user in with their authorized account.
-    window.open(`https://drive.google.com/file/d/${encodeURIComponent(videoId)}/view`, '_blank');
-    return; // don't open the modal
-  } else {
-    // YouTube privacy embed via iframe.
-    video.pause(); video.removeAttribute('src'); video.style.display = 'none';
-    iframe.style.display = 'block';
-    iframe.src = Video.videoEmbedUrl(provider, videoId);
-  }
-  // Identify the viewer on-screen (deters casual screen-recording / re-sharing).
+
+  // Show modal immediately with a loading state.
+  iframe.src = ''; iframe.style.display = 'block';
+  video.pause(); video.removeAttribute('src'); video.style.display = 'none';
   document.getElementById('player-wm').textContent = `${profile.full_name} · ${profile.email || ''}`;
   document.getElementById('player-modal-overlay').classList.add('show');
+  iframe.srcdoc = '<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></body>';
+
+  // Fetch embed URL from server — video_id never touches the browser.
+  let embedUrl, provider;
+  try {
+    const sess = await sb.auth.getSession();
+    const tok  = sess.data.session?.access_token;
+    const resp = await fetch('/api/student-activity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+      body: JSON.stringify({ action: 'video-url', lesson_id: lessonId }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { closePlayer(); showToast(data.error || 'Video unavailable.', 'warning'); return; }
+    embedUrl = data.url; provider = data.provider;
+  } catch (e) {
+    closePlayer(); showToast('Could not load video.', 'error'); return;
+  }
+
+  if (provider === 'upload') {
+    iframe.srcdoc = ''; iframe.style.display = 'none';
+    video.src = embedUrl; video.style.display = 'block';
+    video.play().catch(() => {});
+  } else {
+    iframe.removeAttribute('srcdoc');
+    iframe.src = embedUrl;
+  }
 
   // Mark as complete
   if (!completedSet.has(lessonId)) {

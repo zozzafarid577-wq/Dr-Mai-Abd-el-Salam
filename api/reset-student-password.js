@@ -51,14 +51,35 @@ export default async function handler(req, res) {
   }
   if (!isAdmin) return res.status(403).json({ error: 'Forbidden' });
 
-  const { student_id } = req.body;
+  const { student_id, action, email } = req.body;
   if (!student_id) return res.status(400).json({ error: 'student_id is required' });
 
-  // Never let anyone but the owner reset the owner's password.
+  // Never let anyone but the owner act on the owner's account.
   const { data: target } = await supabaseAdmin
     .from('profiles').select('is_owner').eq('id', student_id).single();
   if (target?.is_owner && student_id !== user.id) {
-    return res.status(403).json({ error: 'The main host’s password cannot be reset here.' });
+    return res.status(403).json({ error: 'The main host’s account cannot be changed here.' });
+  }
+
+  // ── Read the student's login email (auth.users isn't readable client-side).
+  if (action === 'get_email') {
+    const { data: u, error: e } = await supabaseAdmin.auth.admin.getUserById(student_id);
+    if (e) return res.status(500).json({ error: e.message });
+    return res.status(200).json({ email: u?.user?.email || null });
+  }
+
+  // ── Change the student's login email.
+  if (action === 'set_email') {
+    if (!email) return res.status(400).json({ error: 'email is required' });
+    const { error: e } = await supabaseAdmin.auth.admin.updateUserById(student_id, { email });
+    if (e) return res.status(500).json({ error: e.message });
+    try {
+      await supabaseAdmin.from('security_events').insert({
+        student_id: user.id, student_name: user.email,
+        event_type: 'admin_action', detail: `Changed email for ${student_id} to ${email}`, page: 'admin',
+      });
+    } catch (_) {}
+    return res.status(200).json({ ok: true, email });
   }
 
   const password = generatePassword();

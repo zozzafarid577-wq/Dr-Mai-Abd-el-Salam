@@ -38,7 +38,8 @@ export default async function handler(req, res) {
   if (action === 'leaderboard')      return leaderboard(req, res, user, userClient);
   if (action === 'flashcard-review') return flashcardReview(req, res, user, userClient);
   if (action === 'signed-pdf')       return signedPdf(req, res, user);
-  return res.status(400).json({ error: "action must be 'leaderboard', 'flashcard-review' or 'signed-pdf'" });
+  if (action === 'video-url')        return videoUrl(req, res, user);
+  return res.status(400).json({ error: "action must be 'leaderboard', 'flashcard-review', 'signed-pdf' or 'video-url'" });
 }
 
 // Returns a short-lived URL for a lesson PDF, but only after confirming the
@@ -94,6 +95,50 @@ async function signedPdf(req, res, user) {
     }
   }
   return res.status(200).json({ url: fileUrl, title, signed: false });
+}
+
+// Returns the embed URL for a lesson video, after confirming enrollment.
+// The video_id / Drive file ID is never sent to the browser — only the
+// final embeddable URL is returned, so students cannot extract or share it.
+async function videoUrl(req, res, user) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const { lesson_id } = req.body || {};
+  if (!lesson_id) return res.status(400).json({ error: 'lesson_id is required' });
+
+  // Fetch lesson + course via service role.
+  const { data: lesson, error: lErr } = await supabaseAdmin
+    .from('lessons')
+    .select('id, video_id, youtube_id, video_provider, modules(course_id)')
+    .eq('id', lesson_id)
+    .single();
+  if (lErr || !lesson) return res.status(404).json({ error: 'Lesson not found' });
+
+  const courseId = lesson.modules?.course_id;
+  if (!courseId) return res.status(404).json({ error: 'Lesson not linked to a course' });
+
+  // Enforce enrollment.
+  const { data: enrol } = await supabaseAdmin
+    .from('enrollments')
+    .select('course_id')
+    .eq('student_id', user.id)
+    .eq('course_id', courseId)
+    .maybeSingle();
+  if (!enrol) return res.status(403).json({ error: 'Not enrolled in this course' });
+
+  const rawId   = lesson.video_id || lesson.youtube_id;
+  const provider = lesson.video_provider || 'youtube';
+  if (!rawId) return res.status(404).json({ error: 'No video for this lesson yet' });
+
+  let embedUrl;
+  if (provider === 'gdrive') {
+    embedUrl = `https://drive.google.com/file/d/${rawId}/preview`;
+  } else {
+    const params = 'autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1';
+    embedUrl = `https://www.youtube-nocookie.com/embed/${rawId}?${params}`;
+  }
+
+  return res.status(200).json({ url: embedUrl, provider });
 }
 
 async function leaderboard(req, res, user, userClient) {

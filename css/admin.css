@@ -82,7 +82,9 @@ body {
 .stat-card:hover { transform: translateY(-3px); box-shadow: 0 16px 38px rgba(15,23,42,.12); }
 .stat-card .stat-icon {
   width: 46px; height: 46px; border-radius: 13px; margin-bottom: 14px;
-  box-shadow: inset 0 0 0 1px rgba(15,23,42,.04);
+  background: transparent !important;
+  border: 1.5px solid var(--border);
+  box-shadow: none;
 }
 .stat-n { font-size: 2.1rem; letter-spacing: -.055em; }
 .stat-l { font-size: .68rem; letter-spacing: .06em; }
@@ -108,18 +110,20 @@ body {
 /* ── Quick-action tiles ── */
 .qa-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .qa-tile {
-  display: flex; align-items: center; gap: 13px;
+  display: flex; align-items: center; gap: 14px;
   background: var(--card); border: 1px solid rgba(15,23,42,.07);
-  border-radius: 16px; padding: 16px 18px; cursor: pointer;
+  border-radius: 16px; padding: 18px 20px; cursor: pointer;
   box-shadow: 0 4px 16px rgba(15,23,42,.05);
   transition: transform .18s cubic-bezier(.34,1.4,.64,1), box-shadow .18s, border-color .18s;
 }
-.qa-tile:hover { transform: translateY(-3px); border-color: #AB978C; box-shadow: 0 14px 32px rgba(107,124,152,.18); }
+.qa-tile:hover { transform: translateY(-2px); border-color: var(--border); box-shadow: 0 10px 28px rgba(107,124,152,.12); }
+/* no box — bare doodle icon */
 .qa-ic {
-  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; color: #fff;
+  width: auto; height: auto; border-radius: 0; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: none !important; color: var(--text);
 }
-.qa-ic svg { width: 19px; height: 19px; }
+.qa-ic svg { width: 26px; height: 26px; stroke-width: 1.5; }
 .qa-tx { min-width: 0; }
 .qa-tt { font-size: .85rem; font-weight: 700; letter-spacing: -.01em; }
 .qa-sb { font-size: .72rem; color: var(--muted); margin-top: 1px; }

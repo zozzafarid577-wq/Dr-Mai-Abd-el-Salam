@@ -19,11 +19,11 @@
 .tt-tabs { display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap; }
 .tt-tab { padding:8px 18px;border-radius:22px;border:1.5px solid var(--border);background:var(--surface);font-size:.82rem;font-weight:700;cursor:pointer;color:var(--text-2); }
 .tt-tab.act.active { background:#6B7C98;border-color:#6B7C98;color:#fff; }
-.tt-tab.est.active { background:#f4c20d;border-color:#f4c20d;color:#3a2f00; }
+.tt-tab.est.active { background:#AB978C;border-color:#AB978C;color:#3a2f00; }
 
 .exam-card { border:1px solid var(--border);border-radius:13px;padding:16px 18px;margin-bottom:12px;background:var(--surface);border-left-width:5px; }
 .exam-card.act { border-left-color:#6B7C98; }
-.exam-card.est { border-left-color:#f4c20d; }
+.exam-card.est { border-left-color:#AB978C; }
 .exam-card.past { opacity:.5; }
 .exam-head { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px; }
 .exam-title { font-size:.98rem;font-weight:800;color:var(--text); }
@@ -154,7 +154,7 @@ function tickCountdown() {
   if (diff <= 0) { pickCountdown(); diff = countdownTarget ? countdownTarget.date - Date.now() : 0; }
   ev.textContent = countdownTarget.label;
   banner.style.background = countdownTarget.type === 'est'
-    ? 'linear-gradient(135deg,#f4c20d,#b88600)'
+    ? 'linear-gradient(135deg,#AB978C,#8a7468)'
     : 'linear-gradient(135deg,#6B7C98,#445A74)';
   const d = Math.floor(diff/86400000);
   const h = Math.floor(diff%86400000/3600000);

@@ -24,6 +24,9 @@
 .lesson-acc.open .lesson-acc-chev { transform:rotate(90deg); }
 .lesson-acc-body { display:none;padding:4px 16px 16px; }
 .lesson-acc.open .lesson-acc-body { display:block; }
+.lesson-acc.soon { opacity:.6; }
+.lesson-acc.soon .lesson-acc-head:hover { background:transparent; }
+.lesson-acc.soon .lesson-acc-title { color:var(--muted); }
 .sec-label { font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:14px 0 8px; }
 .res-row { display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:7px;cursor:pointer;transition:border-color .15s; }
 .res-row:hover { border-color:var(--primary); }
@@ -173,13 +176,13 @@ let attemptsByTest = {};    // test_id -> best %
 
   const [{ data: modules }, { data: mPdfs }, { data: lPdfs }, { data: tests }, { data: attempts }] = await Promise.all([
     sb.from('modules')
-      .select('id, title, order_index, course_id, lessons(id, title, youtube_id, video_provider, video_id, order_index, duration_min)')
+      .select('id, title, order_index, course_id, is_active, lessons(id, title, youtube_id, video_provider, video_id, order_index, duration_min)')
       .in('course_id', courseIds)
       .order('order_index'),
     sb.from('module_pdfs').select('id, title, module_id, created_at').order('created_at', { ascending: false }),
     sb.from('lesson_pdfs').select('id, title, created_at, lessons(module_id)').order('created_at', { ascending: false }),
     sb.from('practice_tests').select('id, title, module_id, module_ids, course_id, time_limit_min, is_active, is_mock, open_at, close_at')
-      .in('course_id', courseIds).eq('is_active', true).eq('is_mock', false).order('created_at'),
+      .in('course_id', courseIds).eq('is_mock', false).order('created_at'),
     sb.from('test_attempts').select('test_id, percentage').eq('student_id', profile.id),
   ]);
 
@@ -292,20 +295,37 @@ function renderLessons() {
     const testsHtml = tests.length ? tests.map(t => {
       const best = attemptsByTest[t.id];
       const now = Date.now();
+      const comingSoon = t.is_active === false;          // not published / done yet
       const notYet = t.open_at && new Date(t.open_at).getTime() > now;
       const closed = t.close_at && new Date(t.close_at).getTime() < now;
-      const locked = notYet || closed;
+      const locked = comingSoon || notYet || closed;
       const click = locked ? '' : `onclick="location.href='/portal/take-test.html?id=${encodeURIComponent(t.id)}'"`;
-      const meta = locked ? (notYet ? 'Opens ' + fmtDate(t.open_at) : 'Closed')
+      const meta = comingSoon ? 'Coming soon'
+                 : locked ? (notYet ? 'Opens ' + fmtDate(t.open_at) : 'Closed')
                           : (best !== undefined ? 'Best: ' + best + '%' : (t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'));
       return `
         <div class="res-row${locked?' soon':''}" ${click}>
           <div class="res-ic test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
           <div class="res-name">${escHtml(t.title)}</div>
           <span class="res-meta">${meta}</span>
-          ${locked ? '' : '<span class="res-tag" style="color:var(--primary);border-color:var(--primary)">' + (best !== undefined ? 'Retake' : 'Start') + '</span>'}
+          ${comingSoon ? '<span class="res-tag">Coming Soon</span>' : locked ? '' : '<span class="res-tag" style="color:var(--primary);border-color:var(--primary)">' + (best !== undefined ? 'Retake' : 'Start') + '</span>'}
         </div>`;
     }).join('') : '<div class="res-empty">No practice tests yet.</div>';
+
+    // Lesson not marked "done" by the instructor yet → show greyed, locked.
+    if (mod.is_active === false) {
+      return `
+        <div class="lesson-acc soon" id="acc-${mod.id}">
+          <div class="lesson-acc-head" style="cursor:default">
+            <div class="lesson-acc-icon" style="background:#cfcccd">${mi + 1}</div>
+            <div class="lesson-acc-info">
+              <div class="lesson-acc-title">${escHtml(mod.title)}</div>
+              <div class="lesson-acc-sub"><span class="pill">Coming soon</span></div>
+            </div>
+            <svg class="lesson-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+        </div>`;
+    }
 
     return `
       <div class="lesson-acc${mi === 0 ? ' open' : ''}" id="acc-${mod.id}">

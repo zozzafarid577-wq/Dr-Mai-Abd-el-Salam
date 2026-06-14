@@ -61,6 +61,8 @@ button, input, select, textarea { font-family: inherit; }
 h1, h2, h3, h4, h5, h6, .page-title, .card-title, .stat-n, .welcome-name {
   font-family: 'Montserrat', system-ui, sans-serif;
 }
+/* soft hand-drawn "doodle" line icons */
+svg { stroke-linecap: round; stroke-linejoin: round; }
 
 /* ── SIDEBAR ─────────────────────────────────────────────────── */
 .sidebar {
@@ -256,14 +258,14 @@ h1, h2, h3, h4, h5, h6, .page-title, .card-title, .stat-n, .welcome-name {
   background: #f1f5f9; color: #64748b;
 }
 .b-blue   { background: #EEF0F4; color: #6B7C98; }
-.b-green  { background: #f0fdf4; color: #15803d; }
+.b-green  { background: #F0EDEE; color: #5E5653; }
 .b-red    { background: #fef2f2; color: #b91c1c; }
-.b-yellow { background: #fffbeb; color: #92400e; }
-.b-gray   { background: #f1f5f9; color: #64748b; }
-.b-purple { background: #faf5ff; color: #6d28d9; }
-.badge-success { background: #f0fdf4; color: #15803d; }
+.b-yellow { background: #F2EFE9; color: #8a7468; }
+.b-gray   { background: #F0EDEE; color: #7B7F8A; }
+.b-purple { background: #EEF0F4; color: #6B7C98; }
+.badge-success { background: #F0EDEE; color: #5E5653; }
 .badge-danger  { background: #fef2f2; color: #b91c1c; }
-.badge-warning { background: #fffbeb; color: #92400e; }
+.badge-warning { background: #F2EFE9; color: #8a7468; }
 .badge-info    { background: #EEF0F4; color: #6B7C98; }
 
 /* ── BUTTONS ─────────────────────────────────────────────────── */

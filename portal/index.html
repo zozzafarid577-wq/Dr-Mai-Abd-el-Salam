@@ -184,22 +184,22 @@
         <div class="stat-l">Courses</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#f0fdf4">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <div class="stat-icon" style="background:#F0EDEE">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#AB978C" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
         </div>
         <div class="stat-n" id="s-lessons">—</div>
         <div class="stat-l">Lessons</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#faf5ff">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        <div class="stat-icon" style="background:#F0EDEE">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6B7C98" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
         </div>
         <div class="stat-n" id="s-score">—</div>
         <div class="stat-l">Avg Score</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fff7ed">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        <div class="stat-icon" style="background:#F0EDEE">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#AB978C" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
         </div>
         <div class="stat-n" id="s-assign">—</div>
         <div class="stat-l">Assignments</div>
@@ -288,7 +288,7 @@ function renderExamClocks() {
   const now = Date.now();
   const clocks = [
     { name: 'ACT Exam', date: nextExamDate(ACT_DATES), grad: 'linear-gradient(135deg,#6B7C98,#445A74)' },
-    { name: 'EST Exam', date: nextExamDate(EST_DATES), grad: 'linear-gradient(135deg,#ca8a04,#854d0e)' },
+    { name: 'EST Exam', date: nextExamDate(EST_DATES), grad: 'linear-gradient(135deg,#AB978C,#8a7468)' },
   ];
   el.innerHTML = clocks.map(c => {
     const diff = new Date(c.date + 'T00:00:00').getTime() - now;
@@ -355,7 +355,7 @@ async function loadWayground() {
     const title = items.find(r => r.title)?.title || `Test ${num}`;
     const links = items.map(r => {
       const lbl = (r.part ? `P${r.part} ` : '') + `V${r.version}`;
-      return `<a href="${escAttr(r.url)}" target="_blank" rel="noopener" style="font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:8px;background:${r.version === 2 ? '#f5f3ff' : '#eef2ff'};color:${r.version === 2 ? '#6d28d9' : '#4338ca'};text-decoration:none">${lbl}</a>`;
+      return `<a href="${escAttr(r.url)}" target="_blank" rel="noopener" style="font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:8px;background:${r.version === 2 ? '#F0EDEE' : '#F0EDEE'};color:${r.version === 2 ? '#5A6B87' : '#5A6B87'};text-decoration:none">${lbl}</a>`;
     }).join('');
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0"><div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(title)}</div><div style="font-size:.66rem;color:var(--muted)">Test ${escHtml(String(num))}</div></div>
@@ -482,9 +482,9 @@ async function loadUpcoming() {
 
   el.innerHTML = tests.map(t => {
     const isMock   = t.is_mock;
-    const iconBg   = isMock ? 'linear-gradient(135deg,#7c3aed,#4c1d95)' : 'linear-gradient(135deg,#6B7C98,#5A6B87)';
-    const badgeBg  = isMock ? '#f5f3ff' : '#EEF0F4';
-    const badgeClr = isMock ? '#6d28d9'  : '#6B7C98';
+    const iconBg   = isMock ? 'linear-gradient(135deg,#6B7C98,#445A74)' : 'linear-gradient(135deg,#6B7C98,#5A6B87)';
+    const badgeBg  = isMock ? '#F0EDEE' : '#EEF0F4';
+    const badgeClr = isMock ? '#5A6B87'  : '#6B7C98';
     const badgeTxt = isMock ? 'Mock'     : 'Practice';
     const page     = isMock ? '/portal/mock-tests.html' : '/portal/tests.html';
     return `

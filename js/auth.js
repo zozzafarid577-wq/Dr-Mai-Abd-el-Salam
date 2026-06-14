@@ -455,9 +455,9 @@ function escHtml(str) {
 
 // Themed gradient for courses that have no thumbnail
 const COURSE_GRADIENTS = [
-  'linear-gradient(135deg,#1a56db,#0e38b1)',
-  'linear-gradient(135deg,#7c3aed,#4c1d95)',
-  'linear-gradient(135deg,#0891b2,#164e63)',
+  'linear-gradient(135deg,#6B7C98,#5A6B87)',
+  'linear-gradient(135deg,#6B7C98,#445A74)',
+  'linear-gradient(135deg,#7B7F8A,#164e63)',
   'linear-gradient(135deg,#059669,#064e3b)',
   'linear-gradient(135deg,#d97706,#78350f)',
 ];

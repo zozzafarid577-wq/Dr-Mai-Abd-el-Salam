@@ -10,7 +10,7 @@
 <style>
 .test-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;transition:border-color .15s; }
 .test-card:hover { border-color:var(--primary); }
-.test-icon { width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.test-icon { width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#6B7C98,#445A74);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
 .test-icon svg { width:22px;height:22px;color:#fff; }
 .test-info { flex:1;min-width:0; }
 .test-name { font-size:.92rem;font-weight:700;color:var(--text); }
@@ -25,7 +25,7 @@
 .q-opt { display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:9px;cursor:pointer;transition:all .15s;font-size:.88rem;font-weight:500; }
 .q-opt:hover { border-color:var(--primary);background:rgba(26,86,219,.04); }
 .q-opt.selected { border-color:var(--primary);background:rgba(26,86,219,.08); }
-.q-opt.correct { border-color:#16a34a;background:#f0fdf4;color:#166534; }
+.q-opt.correct { border-color:#6B7C98;background:#F0EDEE;color:#166534; }
 .q-opt.wrong { border-color:#dc2626;background:#fef2f2;color:#991b1b; }
 .opt-letter { width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0; }
 .q-nav { display:flex;justify-content:space-between;align-items:center;margin-top:24px; }
@@ -37,7 +37,7 @@
 .result-score { font-size:3rem;font-weight:900;color:var(--primary); }
 .result-label { font-size:.88rem;color:var(--muted);margin-top:4px; }
 .result-badge { display:inline-block;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;margin-top:8px; }
-.mock-banner { background:linear-gradient(135deg,#7c3aed,#4c1d95);border-radius:12px;padding:16px 20px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:14px; }
+.mock-banner { background:linear-gradient(135deg,#6B7C98,#445A74);border-radius:12px;padding:16px 20px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:14px; }
 .mock-banner svg { width:28px;height:28px;flex-shrink:0;opacity:.9; }
 .mock-banner-text .title { font-size:.95rem;font-weight:700; }
 .mock-banner-text .sub { font-size:.78rem;opacity:.8;margin-top:2px; }
@@ -181,7 +181,7 @@ function renderTests() {
           <div class="test-meta">${escHtml(t.courses?.title || '')} · ${t.time_limit_min ? t.time_limit_min + ' min' : 'Untimed'} · ${myAttempts.length} attempt${myAttempts.length !== 1 ? 's' : ''}${best !== null ? ' · Best: ' + best + '%' : ''}</div>
           ${myAttempts.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${attemptBadges}</div>` : ''}
           <div class="test-actions">
-            <button class="btn btn-primary btn-sm" onclick="startTest('${t.id}')" style="background:linear-gradient(135deg,#7c3aed,#4c1d95)">
+            <button class="btn btn-primary btn-sm" onclick="startTest('${t.id}')" style="background:linear-gradient(135deg,#6B7C98,#445A74)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               ${myAttempts.length ? 'Retake' : 'Start Mock'}
             </button>

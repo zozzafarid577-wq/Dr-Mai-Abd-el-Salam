@@ -77,4 +77,4 @@ database — plus static checks over every portal page (inline-JS syntax,
 duplicate/broken sidebar links). CI runs it on every pull request
 (`.github/workflows/ci.yml`).
 
-# Vercel redeploy trigger: 2026-05-30T22:37:40Z
+# Vercel redeploy trigger: 2026-06-14T14:10:00Z
